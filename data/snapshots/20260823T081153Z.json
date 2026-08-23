@@ -1,0 +1,2086 @@
+{
+ "confidence_gate": 0.5,
+ "config": {
+  "buyer_premium": 0.0,
+  "dead_rate": 0.1,
+  "per_unit_handling": 3.0,
+  "pickup_cost": 0.0,
+  "recovery": 0.55,
+  "sales_tax": 0.0,
+  "target_roi": 0.6
+ },
+ "generated_at": "2026-08-23T08:34:43Z",
+ "lots": [
+  {
+   "account_id": 227,
+   "asset_id": 1839,
+   "ceiling": 17365.266968570504,
+   "ceiling_sources": {
+    "govdeals_singles": 17365.27
+   },
+   "confidence": 0.39,
+   "current_bid": 1825.0,
+   "end_date": "August 24, 2026 03:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 8595.8071494424,
+   "floor": 6793.450449919597,
+   "grade": "C",
+   "headroom": 2788.3794684015,
+   "lot_key": "227-1839",
+   "max_bid": 4613.3794684015,
+   "mix": [
+    {
+     "chassis": "3190",
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 253,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 2.3265507544281734,
+   "state": "TN",
+   "title": "253 Dell 3190 windows laptops",
+   "units": 253
+  },
+  {
+   "account_id": 30467,
+   "asset_id": 26,
+   "ceiling": 20591.225654431426,
+   "ceiling_sources": {
+    "govdeals_singles": 20591.23
+   },
+   "confidence": 0.39,
+   "current_bid": 2800.0,
+   "end_date": "September 05, 2026 03:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 10192.656698943556,
+   "floor": 8055.474841801893,
+   "grade": "C",
+   "headroom": 2670.410436839722,
+   "lot_key": "30467-26",
+   "max_bid": 5470.410436839722,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 300,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 1.7547720807955556,
+   "state": "ON",
+   "title": "Large Lot of 300+ Laptop AC Adapters \u2013 Lenovo ThinkPad, HP, Motorola, TopSync \u2013 Mixed 65W/72W/90W/170W",
+   "units": 300
+  },
+  {
+   "account_id": 8439,
+   "asset_id": 1418,
+   "ceiling": 13796.121188469057,
+   "ceiling_sources": {
+    "govdeals_singles": 13796.12
+   },
+   "confidence": 0.39,
+   "current_bid": 1222.0,
+   "end_date": "August 26, 2026 03:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 6829.079988292184,
+   "floor": 5397.168144007269,
+   "grade": "C",
+   "headroom": 2443.174992682614,
+   "lot_key": "8439-1418",
+   "max_bid": 3665.174992682614,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": false,
+     "qty": 201,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 2.7419616374203746,
+   "state": "MN",
+   "title": "Lot of 201 Dell Latitude/other office laptops. UNTESTED/AS IS. NO HDDS",
+   "units": 201
+  },
+  {
+   "account_id": 8439,
+   "asset_id": 1419,
+   "ceiling": 13864.75860731716,
+   "ceiling_sources": {
+    "govdeals_singles": 13864.76
+   },
+   "confidence": 0.39,
+   "current_bid": 1333.0,
+   "end_date": "August 26, 2026 04:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 6863.055510621995,
+   "floor": 5424.019726813274,
+   "grade": "C",
+   "headroom": 2350.409694138747,
+   "lot_key": "8439-1419",
+   "max_bid": 3683.409694138747,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": false,
+     "qty": 202,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 2.539481954936563,
+   "state": "MN",
+   "title": "Lot of 202 Dell Latitude/other office laptops. UNTESTED/AS IS. NO HDDS",
+   "units": 202
+  },
+  {
+   "account_id": 8439,
+   "asset_id": 1417,
+   "ceiling": 15580.69407851978,
+   "ceiling_sources": {
+    "govdeals_singles": 15580.69
+   },
+   "confidence": 0.39,
+   "current_bid": 3000.0,
+   "end_date": "August 24, 2026 04:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 7712.443568867292,
+   "floor": 6095.309296963433,
+   "grade": "C",
+   "headroom": 1139.2772305420576,
+   "lot_key": "8439-1417",
+   "max_bid": 4139.277230542058,
+   "mix": [
+    {
+     "chassis": "2010",
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": false,
+     "qty": 227,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 1.0952033601921467,
+   "state": "MN",
+   "title": "Lot of 227 Apple Macbook Pro/Air laptops. (majority 2010-2017) UNTESTED/AS IS. NO HDDS",
+   "units": 227
+  },
+  {
+   "account_id": 28050,
+   "asset_id": 1804,
+   "ceiling": 5961.077701068629,
+   "ceiling_sources": {
+    "govdeals_singles": 5961.08
+   },
+   "confidence": 0.74,
+   "current_bid": 1100.0,
+   "end_date": "August 25, 2026 04:24 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 2950.7334620289716,
+   "floor": 2332.027838306478,
+   "grade": "C",
+   "headroom": 495.2084137681072,
+   "lot_key": "28050-1804",
+   "max_bid": 1595.2084137681072,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": "celeron",
+     "form_factor": null,
+     "generation": null,
+     "has_drive": true,
+     "qty": 83,
+     "ram_gb": 4
+    }
+   ],
+   "roi_at_current": 1.1873487487242191,
+   "state": "OK",
+   "title": "(LOT OF 83 ) HP Chromebox G2 (Model 7LJ57UT#ABA) 32GB SSD, 1.8GHz, 4GB RAM, Celeron 3867U",
+   "units": 83
+  },
+  {
+   "account_id": 4788,
+   "asset_id": 15199,
+   "ceiling": 3431.870942405238,
+   "ceiling_sources": {
+    "govdeals_singles": 3431.87
+   },
+   "confidence": 0.39,
+   "current_bid": 913.0,
+   "end_date": "August 30, 2026 02:08 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 1698.776116490593,
+   "floor": 1342.5791403003157,
+   "grade": "F",
+   "headroom": -1.2649271933794353,
+   "lot_key": "4788-15199",
+   "max_bid": 911.7350728066206,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 50,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 0.5980960644314139,
+   "state": "OH",
+   "title": "Lot of 50 Dell Laptops",
+   "units": 50
+  },
+  {
+   "account_id": 29404,
+   "asset_id": 293,
+   "ceiling": 2580.958621421805,
+   "ceiling_sources": {
+    "govdeals_singles": 2580.96
+   },
+   "confidence": 0.39,
+   "current_bid": 930.0,
+   "end_date": "August 27, 2026 02:31 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 1277.5745176037938,
+   "floor": 1009.694497623101,
+   "grade": "F",
+   "headroom": -224.51592649762893,
+   "lot_key": "29404-293",
+   "max_bid": 705.4840735023711,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "tower",
+     "generation": null,
+     "has_drive": null,
+     "qty": 31,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 0.24885094584926076,
+   "state": "VA",
+   "title": "Tower Desktop Computers - Lot of 31 Dell / Lenovo / HP 8th-10th Gen \u2705",
+   "units": 31
+  },
+  {
+   "account_id": 20746,
+   "asset_id": 2223,
+   "ceiling": 24684.602318679932,
+   "ceiling_sources": {
+    "govdeals_singles": 24684.6
+   },
+   "confidence": 0.39,
+   "current_bid": 7000.0,
+   "end_date": "August 26, 2026 10:57 AM EST",
+   "exact_manifest": false,
+   "expected_revenue": 12218.878147746567,
+   "floor": 9656.841039727875,
+   "grade": "F",
+   "headroom": -422.20115765839546,
+   "lot_key": "20746-2223",
+   "max_bid": 6577.7988423416045,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 353,
+     "ram_gb": 2
+    }
+   ],
+   "roi_at_current": 0.5161779560425074,
+   "state": "PA",
+   "title": "353 Lenovo Laptops ThinkPad X201 Tablet i7 (2GB RAM)",
+   "units": 353
+  },
+  {
+   "account_id": 7484,
+   "asset_id": 44158,
+   "ceiling": 3685.992758464591,
+   "ceiling_sources": {
+    "govdeals_singles": 3685.99
+   },
+   "confidence": 0.99,
+   "current_bid": 1200.0,
+   "end_date": "August 25, 2026 07:20 PM EST",
+   "exact_manifest": true,
+   "expected_revenue": 1824.5664154399728,
+   "floor": 1441.9939070739767,
+   "grade": "F",
+   "headroom": -182.64599035001697,
+   "lot_key": "7484-44158",
+   "max_bid": 1017.354009649983,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": "i7-8700",
+     "form_factor": "sff",
+     "generation": 8,
+     "has_drive": false,
+     "qty": 1,
+     "ram_gb": 32
+    },
+    {
+     "chassis": null,
+     "cpu": "i7-8700",
+     "form_factor": "sff",
+     "generation": 8,
+     "has_drive": false,
+     "qty": 10,
+     "ram_gb": 16
+    },
+    {
+     "chassis": null,
+     "cpu": "i7-8700",
+     "form_factor": "sff",
+     "generation": 8,
+     "has_drive": false,
+     "qty": 2,
+     "ram_gb": 8
+    },
+    {
+     "chassis": null,
+     "cpu": "i7-8700",
+     "form_factor": "sff",
+     "generation": 8,
+     "has_drive": false,
+     "qty": 1,
+     "ram_gb": 4
+    },
+    {
+     "chassis": null,
+     "cpu": "i5-8500",
+     "form_factor": "sff",
+     "generation": 8,
+     "has_drive": false,
+     "qty": 1,
+     "ram_gb": 16
+    },
+    {
+     "chassis": null,
+     "cpu": "i5-8500",
+     "form_factor": "sff",
+     "generation": 8,
+     "has_drive": false,
+     "qty": 21,
+     "ram_gb": 8
+    },
+    {
+     "chassis": null,
+     "cpu": "i5-8500",
+     "form_factor": "sff",
+     "generation": 8,
+     "has_drive": false,
+     "qty": 5,
+     "ram_gb": 4
+    }
+   ],
+   "roi_at_current": 0.37911293684049346,
+   "state": "IA",
+   "title": "Lot of 41 Various Models of Dell OptiPlex SFF Computers",
+   "units": 41
+  },
+  {
+   "account_id": 20211,
+   "asset_id": 12504,
+   "ceiling": 17150.886322996514,
+   "ceiling_sources": {
+    "govdeals_singles": 17150.89
+   },
+   "confidence": 0.39,
+   "current_bid": 5227.99,
+   "end_date": "August 26, 2026 09:34 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 8489.688729883275,
+   "floor": 6709.5827906567365,
+   "grade": "F",
+   "headroom": -539.934543822953,
+   "lot_key": "20211-12504",
+   "max_bid": 4688.055456177047,
+   "mix": [
+    {
+     "chassis": "2639",
+     "cpu": null,
+     "form_factor": "tower",
+     "generation": null,
+     "has_drive": null,
+     "qty": 206,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 0.4522242990294673,
+   "state": "WA",
+   "title": "Desktop CPU (ct.206) (ID #12504) (Off-Site) (26-2639-5) 676",
+   "units": 206
+  },
+  {
+   "account_id": 432,
+   "asset_id": 42355,
+   "ceiling": 1715.935471202619,
+   "ceiling_sources": {
+    "govdeals_singles": 1715.94
+   },
+   "confidence": 0.39,
+   "current_bid": 1025.0,
+   "end_date": "August 24, 2026 02:20 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 849.3880582452965,
+   "floor": 671.2895701501578,
+   "grade": "F",
+   "headroom": -569.1324635966897,
+   "lot_key": "432-42355",
+   "max_bid": 455.8675364033103,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 25,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.22782903795882134,
+   "state": "MD",
+   "title": "LOT OF 25 LAPTOPS",
+   "units": 25
+  },
+  {
+   "account_id": 7547,
+   "asset_id": 5775,
+   "ceiling": 3405.452481384809,
+   "ceiling_sources": {
+    "govdeals_singles": 3405.45
+   },
+   "confidence": 0.39,
+   "current_bid": 1550.0,
+   "end_date": "August 25, 2026 07:30 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 1685.6989782854805,
+   "floor": 1332.2439979595588,
+   "grade": "F",
+   "headroom": -664.4381385715747,
+   "lot_key": "7547-5775",
+   "max_bid": 885.5618614284253,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "aio",
+     "generation": null,
+     "has_drive": null,
+     "qty": 56,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.018801526027077704,
+   "state": "AZ",
+   "title": "iMacs All-In-One Lot of 56 - Functional",
+   "units": 56
+  },
+  {
+   "account_id": 4474,
+   "asset_id": 133,
+   "ceiling": 892.2864450253619,
+   "ceiling_sources": {
+    "govdeals_singles": 892.29
+   },
+   "confidence": 0.39,
+   "current_bid": 1026.0,
+   "end_date": "August 28, 2026 12:24 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 441.6817902875542,
+   "floor": 349.07057647808205,
+   "grade": "F",
+   "headroom": -788.9488810702787,
+   "lot_key": "4474-133",
+   "max_bid": 237.05111892972133,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 13,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.5852753142839867,
+   "state": "SC",
+   "title": "Lot of 13 Surface Pro 7+ Laptops",
+   "units": 13
+  },
+  {
+   "account_id": 29404,
+   "asset_id": 273,
+   "ceiling": 8236.490261772571,
+   "ceiling_sources": {
+    "govdeals_singles": 8236.49
+   },
+   "confidence": 0.39,
+   "current_bid": 3025.0,
+   "end_date": "August 26, 2026 02:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 4077.0626795774233,
+   "floor": 3222.1899367207575,
+   "grade": "F",
+   "headroom": -836.8358252641106,
+   "lot_key": "29404-273",
+   "max_bid": 2188.1641747358894,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 120,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 0.2044498314852063,
+   "state": "VA",
+   "title": "Dell Laptops - Lot of 120 Tested Latitude Laptops 5th-11th Gen \u2705",
+   "units": 120
+  },
+  {
+   "account_id": 29731,
+   "asset_id": 89,
+   "ceiling": 1098.1987015696761,
+   "ceiling_sources": {
+    "govdeals_singles": 1098.2
+   },
+   "confidence": 0.39,
+   "current_bid": 1200.0,
+   "end_date": "August 27, 2026 02:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 543.6083572769898,
+   "floor": 429.625324896101,
+   "grade": "F",
+   "headroom": -908.2447767018814,
+   "lot_key": "29731-89",
+   "max_bid": 291.75522329811855,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 16,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.5644163803870275,
+   "state": "NJ",
+   "title": "lot of (16) TRANSIT CASE for 12 Notebooks, Laptops",
+   "units": 16
+  },
+  {
+   "account_id": 29404,
+   "asset_id": 287,
+   "ceiling": 8236.490261772571,
+   "ceiling_sources": {
+    "govdeals_singles": 8236.49
+   },
+   "confidence": 0.39,
+   "current_bid": 3100.0,
+   "end_date": "August 26, 2026 01:16 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 4077.0626795774233,
+   "floor": 3222.1899367207575,
+   "grade": "F",
+   "headroom": -911.8358252641106,
+   "lot_key": "29404-287",
+   "max_bid": 2188.1641747358894,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 120,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": 0.17834181490676973,
+   "state": "VA",
+   "title": "Dell Laptops - Lot of 120 Dell Latitude / Precision 5th-11th Gen \u2705",
+   "units": 120
+  },
+  {
+   "account_id": 4753,
+   "asset_id": 19878,
+   "ceiling": 69.23894717354176,
+   "ceiling_sources": {
+    "govdeals_singles": 69.24
+   },
+   "confidence": 0.39,
+   "current_bid": 960.0,
+   "end_date": "August 24, 2026 04:45 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 34.273278850903175,
+   "floor": 27.08690616040538,
+   "grade": "F",
+   "headroom": -941.5792007181856,
+   "lot_key": "4753-19878",
+   "max_bid": 18.42079928181448,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9644098869668711,
+   "state": "AR",
+   "title": "Lot of Computers & Computer Equipment",
+   "units": 1
+  },
+  {
+   "account_id": 4753,
+   "asset_id": 19966,
+   "ceiling": 60.81165145330016,
+   "ceiling_sources": {
+    "govdeals_singles": 60.81
+   },
+   "confidence": 0.39,
+   "current_bid": 1000.0,
+   "end_date": "August 26, 2026 07:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 30.10176746938358,
+   "floor": 23.79007139213498,
+   "grade": "F",
+   "headroom": -984.1863953316353,
+   "lot_key": "4753-19966",
+   "max_bid": 15.813604668364736,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "aio",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9699882677274341,
+   "state": "AR",
+   "title": "LOT OF COMPUTERS  AND ALL-IN-ONES  ON 1 PALLET",
+   "units": 1
+  },
+  {
+   "account_id": 7484,
+   "asset_id": 44135,
+   "ceiling": 3319.9255091397245,
+   "ceiling_sources": {
+    "govdeals_singles": 3958.45,
+    "static_table": 2681.4
+   },
+   "confidence": 0.99,
+   "current_bid": 1300.0,
+   "end_date": "August 24, 2026 06:45 PM EST",
+   "exact_manifest": true,
+   "expected_revenue": 1643.3631270241638,
+   "floor": 1548.5820574936374,
+   "grade": "F",
+   "headroom": -452.89804560989774,
+   "lot_key": "7484-44135",
+   "max_bid": 847.1019543901023,
+   "mix": [
+    {
+     "chassis": "7490",
+     "cpu": "i5-10505",
+     "form_factor": "aio",
+     "generation": 10,
+     "has_drive": false,
+     "qty": 2,
+     "ram_gb": 8
+    },
+    {
+     "chassis": "7480",
+     "cpu": "i5-10505",
+     "form_factor": "aio",
+     "generation": 10,
+     "has_drive": false,
+     "qty": 6,
+     "ram_gb": 8
+    },
+    {
+     "chassis": "7470",
+     "cpu": "i5-9500",
+     "form_factor": "aio",
+     "generation": 9,
+     "has_drive": false,
+     "qty": 20,
+     "ram_gb": 8
+    },
+    {
+     "chassis": "7460",
+     "cpu": "i5-8500",
+     "form_factor": "aio",
+     "generation": 8,
+     "has_drive": false,
+     "qty": 32,
+     "ram_gb": 8
+    }
+   ],
+   "roi_at_current": 0.11038049123254308,
+   "state": "IA",
+   "title": "Lot of 60 Dell OptiPlex AIO Computers - No SSD's",
+   "units": 60
+  },
+  {
+   "account_id": 8445,
+   "asset_id": 47379,
+   "ceiling": 69.23894717354176,
+   "ceiling_sources": {
+    "govdeals_singles": 69.24
+   },
+   "confidence": 0.39,
+   "current_bid": 1225.0,
+   "end_date": "August 26, 2026 08:50 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 34.273278850903175,
+   "floor": 27.08690616040538,
+   "grade": "F",
+   "headroom": -1206.5792007181856,
+   "lot_key": "8445-47379",
+   "max_bid": 18.42079928181448,
+   "mix": [
+    {
+     "chassis": "2144",
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9720901638021961,
+   "state": "WA",
+   "title": "Pallet of Think Centre Computers\u00a0(ID #47379) (I1-1R) (26-2144-1) 39411",
+   "units": 1
+  },
+  {
+   "account_id": 11227,
+   "asset_id": 17568,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 1225.0,
+   "end_date": "August 26, 2026 02:15 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -1206.7652985438676,
+   "lot_key": "11227-17568",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9723326365392412,
+   "state": "TN",
+   "title": "LAPTOPS",
+   "units": 1
+  },
+  {
+   "account_id": 430,
+   "asset_id": 37455,
+   "ceiling": 5054.443143668548,
+   "ceiling_sources": {
+    "govdeals_singles": 5054.44
+   },
+   "confidence": 0.39,
+   "current_bid": 2611.0,
+   "end_date": "August 24, 2026 06:45 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 2501.9493561159316,
+   "floor": 1977.3441497095928,
+   "grade": "F",
+   "headroom": -1266.281652427543,
+   "lot_key": "430-37455",
+   "max_bid": 1344.718347572457,
+   "mix": [
+    {
+     "chassis": "800",
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 73,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.11591895543606659,
+   "state": "MO",
+   "title": "Lot of (73) HP ELITEDESK 800 COMPUTERS.",
+   "units": 73
+  },
+  {
+   "account_id": 29404,
+   "asset_id": 290,
+   "ceiling": 4053.927876613603,
+   "ceiling_sources": {
+    "govdeals_singles": 4053.93
+   },
+   "confidence": 0.39,
+   "current_bid": 2425.0,
+   "end_date": "August 27, 2026 04:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 2006.6942989237336,
+   "floor": 1585.9334732467614,
+   "grade": "F",
+   "headroom": -1314.8160631726666,
+   "lot_key": "29404-290",
+   "max_bid": 1110.1839368273334,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "sff",
+     "generation": null,
+     "has_drive": null,
+     "qty": 48,
+     "ram_gb": 8
+    }
+   ],
+   "roi_at_current": -0.21888116040337344,
+   "state": "VA",
+   "title": "Dell SFF Desktop Computers - Lot of 48 Intel 8th-13th Gen OptiPlex 8GB RAM \u2705",
+   "units": 48
+  },
+  {
+   "account_id": 26019,
+   "asset_id": 3165,
+   "ceiling": 1372.748376962095,
+   "ceiling_sources": {
+    "govdeals_singles": 1372.75
+   },
+   "confidence": 0.39,
+   "current_bid": 1691.0,
+   "end_date": "August 24, 2026 01:47 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 679.5104465962371,
+   "floor": 537.0316561201262,
+   "grade": "F",
+   "headroom": -1326.305970877352,
+   "lot_key": "26019-3165",
+   "max_bid": 364.69402912264815,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 20,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.6119300704761638,
+   "state": "FL",
+   "title": "Lot of (20) BIOS Tested HP EliteBook & ProBook Laptops with i5 11th and 12th Gen Processors",
+   "units": 20
+  },
+  {
+   "account_id": 3473,
+   "asset_id": 4984,
+   "ceiling": 5351.425327890414,
+   "ceiling_sources": {
+    "govdeals_singles": 5351.43
+   },
+   "confidence": 0.39,
+   "current_bid": 2825.0,
+   "end_date": "August 28, 2026 01:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 2648.9555373057556,
+   "floor": 2093.5262825078785,
+   "grade": "F",
+   "headroom": -1433.4027891839028,
+   "lot_key": "3473-4984",
+   "max_bid": 1391.5972108160972,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "aio",
+     "generation": null,
+     "has_drive": null,
+     "qty": 88,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.1424553132710406,
+   "state": "KY",
+   "title": "88 Dell all in one computers and 2 printers.  Computers.  (HopCC)",
+   "units": 88
+  },
+  {
+   "account_id": 28868,
+   "asset_id": 114,
+   "ceiling": 900.1063132560429,
+   "ceiling_sources": {
+    "govdeals_singles": 900.11
+   },
+   "confidence": 0.74,
+   "current_bid": 1000.0,
+   "end_date": "August 26, 2026 02:32 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 445.55262506174125,
+   "floor": 352.12978008526994,
+   "grade": "F",
+   "headroom": -760.5296093364118,
+   "lot_key": "28868-114",
+   "max_bid": 239.47039066358826,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": "i5-4310",
+     "form_factor": null,
+     "generation": 4,
+     "has_drive": null,
+     "qty": 13,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.571171679440095,
+   "state": "CA",
+   "title": "Lot of 13 Panasonic FZ-G1 i5-4310 8gb Boots to BIOS",
+   "units": 13
+  },
+  {
+   "account_id": 11227,
+   "asset_id": 17567,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 1525.0,
+   "end_date": "August 26, 2026 02:10 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -1506.7652985438676,
+   "lot_key": "11227-17567",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9777647105171389,
+   "state": "TN",
+   "title": "LAPTOPS",
+   "units": 1
+  },
+  {
+   "account_id": 26712,
+   "asset_id": 237,
+   "ceiling": 0.0,
+   "ceiling_sources": {
+    "govdeals_singles": 0.0
+   },
+   "confidence": 0.39,
+   "current_bid": 1525.0,
+   "end_date": "September 01, 2026 01:03 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 0.0,
+   "floor": 0.0,
+   "grade": "F",
+   "headroom": -1525.0,
+   "lot_key": "26712-237",
+   "max_bid": 0.0,
+   "mix": [
+    {
+     "chassis": "5000",
+     "cpu": null,
+     "form_factor": "workstation",
+     "generation": null,
+     "has_drive": false,
+     "qty": 12,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -1.0,
+   "state": "KY",
+   "title": "12 IBM FlashSystem 5000 Enclosures w/ 3 Nodes + 2 HPE ML350 Gen10 Dual Xeon Servers \u2013 No Drives",
+   "units": 12
+  },
+  {
+   "account_id": 28085,
+   "asset_id": 82,
+   "ceiling": 4723.196866098907,
+   "ceiling_sources": {
+    "govdeals_singles": 4723.2
+   },
+   "confidence": 0.39,
+   "current_bid": 3000.0,
+   "end_date": "August 24, 2026 09:56 AM EST",
+   "exact_manifest": false,
+   "expected_revenue": 2337.982448718959,
+   "floor": 1847.7575918143118,
+   "grade": "F",
+   "headroom": -1730.7609695506508,
+   "lot_key": "28085-82",
+   "max_bid": 1269.2390304493492,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 64,
+     "ram_gb": 8
+    }
+   ],
+   "roi_at_current": -0.2675493581707522,
+   "state": "GA",
+   "title": "Lot of 64 Lenovo ThinkPad L13 Intel(R)Core(TM)-i5 8GB RAM 256GB M.2 NVMe 14 Inch 10th 11th Gen Laptops",
+   "units": 64
+  },
+  {
+   "account_id": 1328,
+   "asset_id": 16095,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 2025.0,
+   "end_date": "August 30, 2026 04:45 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -2006.7652985438676,
+   "lot_key": "1328-16095",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9832467838610395,
+   "state": "AL",
+   "title": "Lot of Laptops",
+   "units": 1
+  },
+  {
+   "account_id": 432,
+   "asset_id": 42376,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 2034.0,
+   "end_date": "August 26, 2026 09:19 AM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -2015.7652985438676,
+   "lot_key": "432-42376",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9833208039618008,
+   "state": "MD",
+   "title": "Dell Laptop Computers & Docking Stations (26 Items)",
+   "units": 1
+  },
+  {
+   "account_id": 430,
+   "asset_id": 37454,
+   "ceiling": 5192.921038015632,
+   "ceiling_sources": {
+    "govdeals_singles": 5192.92
+   },
+   "confidence": 0.39,
+   "current_bid": 3505.0,
+   "end_date": "August 24, 2026 06:40 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 2570.4959138177383,
+   "floor": 2031.5179620304036,
+   "grade": "F",
+   "headroom": -2123.440053863914,
+   "lot_key": "430-37454",
+   "max_bid": 1381.5599461360864,
+   "mix": [
+    {
+     "chassis": "800",
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 75,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.31085900433840796,
+   "state": "MO",
+   "title": "Lot of (75) HP ELITEDESK 800 Computers.",
+   "units": 75
+  },
+  {
+   "account_id": 4753,
+   "asset_id": 19877,
+   "ceiling": 69.23894717354176,
+   "ceiling_sources": {
+    "govdeals_singles": 69.24
+   },
+   "confidence": 0.39,
+   "current_bid": 2480.0,
+   "end_date": "August 24, 2026 04:15 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 34.273278850903175,
+   "floor": 27.08690616040538,
+   "grade": "F",
+   "headroom": -2461.5792007181853,
+   "lot_key": "4753-19877",
+   "max_bid": 18.42079928181448,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9861968268824393,
+   "state": "AR",
+   "title": "lot of computers, monitors, printers and misc. office equipment on 5 pallets",
+   "units": 1
+  },
+  {
+   "account_id": 11227,
+   "asset_id": 17564,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 2525.0,
+   "end_date": "August 26, 2026 01:55 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -2506.7652985438676,
+   "lot_key": "11227-17564",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9865603155340933,
+   "state": "TN",
+   "title": "LAPTOPS APPROX 150",
+   "units": 1
+  },
+  {
+   "account_id": 116,
+   "asset_id": 1767,
+   "ceiling": 69.23894717354176,
+   "ceiling_sources": {
+    "govdeals_singles": 69.24
+   },
+   "confidence": 0.39,
+   "current_bid": 2535.0,
+   "end_date": "August 24, 2026 06:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 34.273278850903175,
+   "floor": 27.08690616040538,
+   "grade": "F",
+   "headroom": -2516.5792007181853,
+   "lot_key": "116-1767",
+   "max_bid": 18.42079928181448,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9864959500193446,
+   "state": "FL",
+   "title": "Lot of used Computers, Monitors, and Misc. Parts",
+   "units": 1
+  },
+  {
+   "account_id": 30279,
+   "asset_id": 96,
+   "ceiling": 1384.7789434708352,
+   "ceiling_sources": {
+    "govdeals_singles": 1384.78
+   },
+   "confidence": 0.39,
+   "current_bid": 2900.0,
+   "end_date": "August 26, 2026 11:42 AM EST",
+   "exact_manifest": false,
+   "expected_revenue": 685.4655770180635,
+   "floor": 541.7381232081076,
+   "grade": "F",
+   "headroom": -2531.58401436371,
+   "lot_key": "30279-96",
+   "max_bid": 368.4159856362897,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 20,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.7684237915479516,
+   "state": "ON",
+   "title": "Lot of 20 x Zebra VC80x Vehicle Mount Computer - VC80X-10SSRAABAA03",
+   "units": 20
+  },
+  {
+   "account_id": 11227,
+   "asset_id": 17566,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 2576.51,
+   "end_date": "August 26, 2026 02:05 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -2558.275298543868,
+   "lot_key": "11227-17566",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9868286913678133,
+   "state": "TN",
+   "title": "LAPTOPS APPROX 150",
+   "units": 1
+  },
+  {
+   "account_id": 432,
+   "asset_id": 42371,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 2614.0,
+   "end_date": "August 25, 2026 09:26 AM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -2595.7652985438676,
+   "lot_key": "432-42371",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9870173777876148,
+   "state": "MD",
+   "title": "Laptops",
+   "units": 1
+  },
+  {
+   "account_id": 4788,
+   "asset_id": 15172,
+   "ceiling": 3637.783198949552,
+   "ceiling_sources": {
+    "govdeals_singles": 3637.78
+   },
+   "confidence": 0.39,
+   "current_bid": 3602.0,
+   "end_date": "August 23, 2026 12:22 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 1800.7026834800286,
+   "floor": 1423.1338887183344,
+   "grade": "F",
+   "headroom": -2635.560822824982,
+   "lot_key": "4788-15172",
+   "max_bid": 966.4391771750177,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 53,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.5212170477319786,
+   "state": "OH",
+   "title": "Lot of 53 Dell Laptops",
+   "units": 53
+  },
+  {
+   "account_id": 4753,
+   "asset_id": 19999,
+   "ceiling": 69.23894717354176,
+   "ceiling_sources": {
+    "govdeals_singles": 69.24
+   },
+   "confidence": 0.39,
+   "current_bid": 3000.0,
+   "end_date": "September 09, 2026 07:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 34.273278850903175,
+   "floor": 27.08690616040538,
+   "grade": "F",
+   "headroom": -2981.5792007181853,
+   "lot_key": "4753-19999",
+   "max_bid": 18.42079928181448,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.988586986729636,
+   "state": "AR",
+   "title": "COMPUTERS",
+   "units": 1
+  },
+  {
+   "account_id": 9163,
+   "asset_id": 60,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 3000.0,
+   "end_date": "August 29, 2026 08:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -2981.7652985438676,
+   "lot_key": "9163-60",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": "7320",
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9886861397503124,
+   "state": "NJ",
+   "title": "Bulk Auction: 40 Dell Latitude 7320 Touchscreen Laptops",
+   "units": 1
+  },
+  {
+   "account_id": 5815,
+   "asset_id": 590,
+   "ceiling": 2470.9470785317712,
+   "ceiling_sources": {
+    "govdeals_singles": 2470.95
+   },
+   "confidence": 0.39,
+   "current_bid": 3650.0,
+   "end_date": "August 25, 2026 02:30 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 1223.1188038732269,
+   "floor": 966.6569810162272,
+   "grade": "F",
+   "headroom": -2993.5507475792333,
+   "lot_key": "5815-590",
+   "max_bid": 656.4492524207667,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 36,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.6745293230779066,
+   "state": "ON",
+   "title": "Lot of 36 Dell laptops",
+   "units": 36
+  },
+  {
+   "account_id": 4753,
+   "asset_id": 19992,
+   "ceiling": 69.23894717354176,
+   "ceiling_sources": {
+    "govdeals_singles": 69.24
+   },
+   "confidence": 0.39,
+   "current_bid": 3020.0,
+   "end_date": "September 08, 2026 08:54 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 34.273278850903175,
+   "floor": 27.08690616040538,
+   "grade": "F",
+   "headroom": -3001.5792007181853,
+   "lot_key": "4753-19992",
+   "max_bid": 18.42079928181448,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9886624945911666,
+   "state": "AR",
+   "title": "LOT OF COMPUTERS AND TVS ON 2 PALLET.",
+   "units": 1
+  },
+  {
+   "account_id": 11227,
+   "asset_id": 17569,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 3050.0,
+   "end_date": "August 26, 2026 02:20 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -3031.7652985438676,
+   "lot_key": "11227-17569",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9888714306158493,
+   "state": "TN",
+   "title": "LAPTOPS",
+   "units": 1
+  },
+  {
+   "account_id": 29404,
+   "asset_id": 285,
+   "ceiling": 6863.741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 6863.74
+   },
+   "confidence": 0.39,
+   "current_bid": 5051.0,
+   "end_date": "August 26, 2026 01:09 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 3397.552232981186,
+   "floor": 2685.1582806006313,
+   "grade": "F",
+   "headroom": -3227.529854386759,
+   "lot_key": "29404-285",
+   "max_bid": 1823.4701456132411,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 100,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.36506218781887756,
+   "state": "VA",
+   "title": "Mixed Laptops 6th-12th Gen - Lot of 100 Dell / HP / Lenovo / Surface \u2705",
+   "units": 100
+  },
+  {
+   "account_id": 30231,
+   "asset_id": 256,
+   "ceiling": 6081.165145330016,
+   "ceiling_sources": {
+    "govdeals_singles": 6081.17
+   },
+   "confidence": 0.39,
+   "current_bid": 5000.0,
+   "end_date": "August 27, 2026 07:20 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 3010.176746938358,
+   "floor": 2379.007139213498,
+   "grade": "F",
+   "headroom": -3418.6395331635263,
+   "lot_key": "30231-256",
+   "max_bid": 1581.3604668364737,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "aio",
+     "generation": null,
+     "has_drive": null,
+     "qty": 100,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.43204212321917773,
+   "state": "MA",
+   "title": "A lot of 100 ELO 15\" AIO Point of Sale POS System ESY15I4-C ",
+   "units": 100
+  },
+  {
+   "account_id": 11227,
+   "asset_id": 17565,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 3801.51,
+   "end_date": "August 26, 2026 02:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -3783.275298543868,
+   "lot_key": "11227-17565",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.9910696719604333,
+   "state": "TN",
+   "title": "LAPTOPS APPROX 150",
+   "units": 1
+  },
+  {
+   "account_id": 29404,
+   "asset_id": 286,
+   "ceiling": 8236.490261772571,
+   "ceiling_sources": {
+    "govdeals_singles": 8236.49
+   },
+   "confidence": 0.39,
+   "current_bid": 6001.0,
+   "end_date": "August 26, 2026 01:30 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 4077.0626795774233,
+   "floor": 3222.1899367207575,
+   "grade": "F",
+   "headroom": -3812.8358252641106,
+   "lot_key": "29404-286",
+   "max_bid": 2188.1641747358894,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 120,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.359053186672312,
+   "state": "VA",
+   "title": "Mixed Laptops 8th-11th Gen - Lot of 120 Dell / HP / Lenovo \u2705",
+   "units": 120
+  },
+  {
+   "account_id": 20746,
+   "asset_id": 1326,
+   "ceiling": 8099.215424076361,
+   "ceiling_sources": {
+    "govdeals_singles": 8099.22
+   },
+   "confidence": 0.39,
+   "current_bid": 6000.0,
+   "end_date": "August 24, 2026 12:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 4009.1116349177996,
+   "floor": 3168.4867711087445,
+   "grade": "F",
+   "headroom": -3848.3052281763753,
+   "lot_key": "20746-1326",
+   "max_bid": 2151.6947718236247,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 118,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.3690412913254958,
+   "state": "PA",
+   "title": "118 HP EliteBook ProBook Laptops 650 G1 650 G2 820 G3 840 G2 840 G5 Intel i5 i7",
+   "units": 118
+  },
+  {
+   "account_id": 19490,
+   "asset_id": 82,
+   "ceiling": 7687.390910987733,
+   "ceiling_sources": {
+    "govdeals_singles": 7687.39
+   },
+   "confidence": 0.39,
+   "current_bid": 6000.0,
+   "end_date": "August 26, 2026 05:30 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 3805.258500938928,
+   "floor": 3007.377274272707,
+   "grade": "F",
+   "headroom": -3957.71343691317,
+   "lot_key": "19490-82",
+   "max_bid": 2042.28656308683,
+   "mix": [
+    {
+     "chassis": "2015",
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 112,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.3994225850790833,
+   "state": "NY",
+   "title": "112 Apple 13\" Laptops (Used)MacBook Air- (2015) with hard drives & chargers.",
+   "units": 112
+  },
+  {
+   "account_id": 29404,
+   "asset_id": 288,
+   "ceiling": 8236.490261772571,
+   "ceiling_sources": {
+    "govdeals_singles": 8236.49
+   },
+   "confidence": 0.39,
+   "current_bid": 6400.0,
+   "end_date": "August 26, 2026 01:45 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 4077.0626795774233,
+   "floor": 3222.1899367207575,
+   "grade": "F",
+   "headroom": -4211.83582526411,
+   "lot_key": "29404-288",
+   "max_bid": 2188.1641747358894,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 120,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.3968842189974226,
+   "state": "VA",
+   "title": "Dell Precision / Latitude Laptops - Lot of 120 Dell 8th-11th Gen \u2705",
+   "units": 120
+  },
+  {
+   "account_id": 2938,
+   "asset_id": 2381,
+   "ceiling": 83.25672972328404,
+   "ceiling_sources": {
+    "govdeals_singles": 83.26
+   },
+   "confidence": 0.39,
+   "current_bid": 5000.0,
+   "end_date": "August 27, 2026 07:20 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 41.2120812130256,
+   "floor": 32.57079024590649,
+   "grade": "F",
+   "headroom": -4977.242449241859,
+   "lot_key": "2938-2381",
+   "max_bid": 22.757550758140997,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "tower",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.99176252624165,
+   "state": "NV",
+   "title": "Lot of Dell Desktops & Laptops",
+   "units": 1
+  },
+  {
+   "account_id": 11805,
+   "asset_id": 65,
+   "ceiling": 83.25672972328404,
+   "ceiling_sources": {
+    "govdeals_singles": 83.26
+   },
+   "confidence": 0.39,
+   "current_bid": 5000.0,
+   "end_date": "August 24, 2026 04:30 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 41.2120812130256,
+   "floor": 32.57079024590649,
+   "grade": "F",
+   "headroom": -4977.242449241859,
+   "lot_key": "11805-65",
+   "max_bid": 22.757550758140997,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "tower",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.99176252624165,
+   "state": "CA",
+   "title": "Bulk IT & Tech Equipment Lot (Desktops, Chromebooks, iPads, Printers & Accessories)",
+   "units": 1
+  },
+  {
+   "account_id": 6246,
+   "asset_id": 723,
+   "ceiling": 10089.700570671399,
+   "ceiling_sources": {
+    "govdeals_singles": 10089.7
+   },
+   "confidence": 0.39,
+   "current_bid": 7889.5,
+   "end_date": "August 26, 2026 07:56 AM EST",
+   "exact_manifest": false,
+   "expected_revenue": 4994.401782482343,
+   "floor": 3947.1826724829275,
+   "grade": "F",
+   "headroom": -5208.998885948536,
+   "lot_key": "6246-723",
+   "max_bid": 2680.5011140514644,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 147,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.400467945203488,
+   "state": "MA",
+   "title": "147 Misc Laptops Pallet 1",
+   "units": 147
+  },
+  {
+   "account_id": 29404,
+   "asset_id": 289,
+   "ceiling": 0.0,
+   "ceiling_sources": {
+    "govdeals_singles": 0.0
+   },
+   "confidence": 0.39,
+   "current_bid": 6100.0,
+   "end_date": "August 27, 2026 01:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 0.0,
+   "floor": 0.0,
+   "grade": "F",
+   "headroom": -6100.0,
+   "lot_key": "29404-289",
+   "max_bid": 0.0,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "micro",
+     "generation": null,
+     "has_drive": null,
+     "qty": 149,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -1.0,
+   "state": "VA",
+   "title": "USFF Desktop Computers - Lot of 149 Dell / Lenovo 8th-11th Gen \u2705",
+   "units": 149
+  },
+  {
+   "account_id": 32255,
+   "asset_id": 14,
+   "ceiling": 28595.685182672747,
+   "ceiling_sources": {
+    "govdeals_singles": 28595.69
+   },
+   "confidence": 0.39,
+   "current_bid": 18000.0,
+   "end_date": "August 26, 2026 02:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 14154.86416542301,
+   "floor": 11186.892244247423,
+   "grade": "F",
+   "headroom": -10392.209896610619,
+   "lot_key": "32255-14",
+   "max_bid": 7607.790103389381,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": null,
+     "generation": null,
+     "has_drive": null,
+     "qty": 413,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.26426195927943186,
+   "state": "FL",
+   "title": "Mix lot of 413 computers ",
+   "units": 413
+  },
+  {
+   "account_id": 6246,
+   "asset_id": 682,
+   "ceiling": 20934.41274867195,
+   "ceiling_sources": {
+    "govdeals_singles": 20934.41
+   },
+   "confidence": 0.39,
+   "current_bid": 18472.5,
+   "end_date": "August 26, 2026 07:55 AM EST",
+   "exact_manifest": false,
+   "expected_revenue": 10362.534310592619,
+   "floor": 8189.732755831925,
+   "grade": "F",
+   "headroom": -12910.916055879614,
+   "lot_key": "6246-682",
+   "max_bid": 5561.583944120386,
+   "mix": [
+    {
+     "chassis": "3490",
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 305,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.4655043553530564,
+   "state": "MA",
+   "title": "305 Dell Laptops Model 3490 Pallet 27",
+   "units": 305
+  },
+  {
+   "account_id": 11961,
+   "asset_id": 61,
+   "ceiling": 68.63741884810476,
+   "ceiling_sources": {
+    "govdeals_singles": 68.64
+   },
+   "confidence": 0.39,
+   "current_bid": 26509.0,
+   "end_date": "August 31, 2026 07:30 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 33.97552232981186,
+   "floor": 26.851582806006313,
+   "grade": "F",
+   "headroom": -26490.76529854387,
+   "lot_key": "11961-61",
+   "max_bid": 18.23470145613241,
+   "mix": [
+    {
+     "chassis": "1750",
+     "cpu": null,
+     "form_factor": "laptop",
+     "generation": null,
+     "has_drive": null,
+     "qty": 1,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.998718485126365,
+   "state": "SK",
+   "title": "LOT of one thousand seven hundred and fifty (1750) Lenovo 100e 2nd Generation Laptops",
+   "units": 1
+  },
+  {
+   "account_id": 31551,
+   "asset_id": 54,
+   "ceiling": 76013.39423735833,
+   "ceiling_sources": {
+    "govdeals_singles": 76013.39
+   },
+   "confidence": 0.39,
+   "current_bid": 59074.0,
+   "end_date": "August 24, 2026 01:00 PM EST",
+   "exact_manifest": false,
+   "expected_revenue": 37626.630147492375,
+   "floor": 29737.131494512618,
+   "grade": "F",
+   "headroom": -38296.35615781727,
+   "lot_key": "31551-54",
+   "max_bid": 20777.643842182733,
+   "mix": [
+    {
+     "chassis": null,
+     "cpu": null,
+     "form_factor": "tower",
+     "generation": null,
+     "has_drive": null,
+     "qty": 913,
+     "ram_gb": null
+    }
+   ],
+   "roi_at_current": -0.3912828992688856,
+   "state": "GA",
+   "title": "Lot of ( 913 ) - 3 Pallets of 913 units HP Laptops & Mini Desktops Mix models with Charger Ready for Pickup",
+   "units": 913
+  }
+ ],
+ "model_fit": {
+  "bulk_k": 0.39120909930236614,
+  "bulk_n": 13,
+  "bulk_r2": -0.017881582435523402,
+  "single_n": 565,
+  "single_r2": 0.9435107150312394
+ },
+ "run_id": "20260823T081153Z",
+ "screened": 60
+}
