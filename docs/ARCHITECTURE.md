@@ -11,7 +11,8 @@ Decisions locked in with the owner (2026-08-23):
 |---|---|
 | Hosting budget | Free tier only: GitHub Actions, MongoDB Atlas M0, Vercel Hobby |
 | Web UI depth | Single-user interactive workbench (watchlist, notes, live assumptions) |
-| Scan cadence | Hourly baseline + tight bursts as auctions close |
+| Scan cadence | Close-time-weighted baseline + one targeted burst window per weekday, sized to fit private-repo Actions minutes (2,000/month) |
+| Repo visibility | Stays private; schedules fit the free-minute cap (§5) |
 | eBay | Yes — official Browse/Insights API via a free developer account |
 
 ## 1. What exists today (baseline)
@@ -28,7 +29,7 @@ Two structural problems drive most of this plan:
 
 1. **Git is the database.** Every scan commits ~10–15k bid observations of
    JSON into the repo. That bloats history unboundedly, can't be queried by a
-   web app, and makes concurrent writers (hourly scan + burst scan + web app)
+   web app, and makes concurrent writers (scheduled scan + burst scan + web app)
    impossible.
 2. **Nothing runs on a schedule**, but the whole value of `bid_history.jsonl`
    is temporal density — especially the final-hour surge, which is currently
@@ -43,8 +44,8 @@ Two structural problems drive most of this plan:
                                 │ deploys via        │ deploys via
         GitHub Actions (cron)   │ Actions            │ Vercel git integration
    ┌────────────────────────────▼─────────┐   ┌──────▼──────────────────────┐
-   │ scan.yml      hourly full sweep      │   │ Vercel (Hobby)              │
-   │ burst.yml     */15 gate → 2-min poll │   │  Next.js workbench          │
+   │ scan.yml      9×/day, close-weighted │   │ Vercel (Hobby)              │
+   │ burst.yml     peak-window 2-min poll │   │  Next.js workbench          │
    │ fit.yml       daily refit + eBay     │   │  Auth.js (email allowlist)  │
    │ archive.yml   weekly dump + prune    │   │  TS valuation (live regrade)│
    └──────┬───────────────────────────────┘   └──────┬──────────────────────┘
@@ -136,9 +137,9 @@ Indexes: `lots {status, auction_end_utc}`, `lots {location.state}`,
 
 ### Fitting 512 MB, honestly
 
-A bid observation is ~180 B in BSON. Naive hourly writes for ~1,500 open lots
-are ~1.1M docs/month (~200 MB/month) — the M0 would fill in ~2 months. Three
-mitigations, all in the plan:
+A bid observation is ~180 B in BSON. Naive writes at 9 scans/day for ~1,500
+open lots are ~400k docs/month (~75 MB/month) — the M0 would fill within a
+year, sooner if the corpus grows. Three mitigations, all in the plan:
 
 1. **Change-only writes** (above). Most lots' bids don't move most hours;
    this is a 5–10× reduction and loses nothing (a flat bid between two
@@ -161,37 +162,60 @@ archive takes over from there.
 
 ## 5. Ingestion & scheduling — GitHub Actions
 
-### The minutes problem (decision needed)
+### The minutes budget
 
-Free private repos get **2,000 Actions minutes/month**. Hourly scans (~5 min
-× 24/day ≈ 3,600 min/month) alone blow through that. Public repos get
-**unlimited** minutes on standard runners. Recommendation: **make the repo
-public**. Nothing in it is secret (the GovDeals key is public by nature; eBay
-and Mongo credentials live in Actions/Vercel secrets, never in git; user state
-lives only in Mongo). The real cost is competitive: another GovDeals bidder
-could find and run the tool. If that risk is unacceptable, the private-repo
-fallback is: scans every 3 h (~600 min/month) + bursts only for watchlisted
-lots — a real loss of curve resolution. The rest of this plan assumes public.
+The repo stays **private**, so the hard constraint is the free tier's
+**2,000 Actions minutes/month (~66 min/day)**, with each job billed rounded
+**up** to the nearest minute — which rules out frequent tiny gate jobs (a
+20-second run bills as 1 minute; a `*/15` gate would cost ~2,900 min/month
+while idle). The schedule below is therefore shaped by when lots actually
+close. From the harvested corpus (n=8,645): ~90% of lots close between
+12:00–00:00 UTC, weekdays outnumber weekends ~4:1, and 22:00–23:59 UTC is the
+single heaviest band (~21% of all closings).
+
+| Job | Cadence | Est. cost/month |
+|---|---|---|
+| `scan.yml` | 9×/day, dense in the closing band | ~1,100 min |
+| `burst.yml` | 1×/weekday, 20 min, peak window | ~440 min |
+| `fit.yml` | daily, ~4 min | ~120 min |
+| `archive.yml` | weekly, ~4 min | ~16 min |
+| `ci.yml` | on PR/push | ~150 min |
+| **Total** | | **~1,830 min** (headroom ~170) |
+
+What this buys vs. an unconstrained schedule: baseline bid curves at 2–3 h
+resolution instead of 1 h, and ~2-minute final-surge resolution for lots
+closing in one peak window per weekday (watchlist and A/B grades first)
+instead of for every interesting lot. Escape hatch if that ever hurts: a
+**self-hosted runner** on any spare machine makes minutes unlimited while
+keeping the repo private — the workflows only change `runs-on`, nothing else.
+Given the nature of this project, a spare desktop is likely on hand; this is
+the recommended upgrade path before paying for anything.
 
 ### Workflows
 
-**`scan.yml` — hourly (`0 * * * *`)**
-`pcps scan`: sweep live lots across the query list, upsert `lots`, write
-change-only `bid_observations`, sweep a few sold pages to catch new closures,
-mark newly-sold lots, fetch manifests for new bulk lots (budgeted), grade all
-open lots with the latest model and write `latest_grade` onto each lot.
-Concurrency group `scan` with `cancel-in-progress: false` so runs never
-overlap. Cron jitter (3–15 min on shared runners) is fine — observations carry
-their true `observed_at`.
+**`scan.yml` — 9×/day, close-time-weighted**
+Crons: `0 12,14,16,18,20,22 * * *` (every 2 h through the closing band),
+plus `0 0,3,8 * * *` (overnight coverage). Each run (~4 min): sweep live lots
+across the query list, upsert `lots`, write change-only `bid_observations`,
+sweep a few sold pages to catch new closures, mark newly-sold lots, fetch
+manifests for new bulk lots (budgeted), grade all open lots with the latest
+model and write `latest_grade` onto each lot. The 00:00 UTC run doubles as
+last-look coverage for the 600-lot midnight-close cohort. Concurrency group
+`scan` with `cancel-in-progress: false` so runs never overlap. Cron jitter
+(3–15 min on shared runners) is fine — observations carry their true
+`observed_at`.
 
-**`burst.yml` — gate every 15 min (`*/15 * * * *`), cheap when idle**
-Step 1 queries Mongo: open lots with `auction_end_utc` within 90 minutes AND
-(grade ≥ B or watchlisted). If none: exit (a ~20-second run). If some: loop
-for up to 13 minutes polling **only those lots** via the detail endpoint every
-~2 minutes, writing observations with `source: "burst"`. Successive gate
-firings chain the coverage, so the final 90 minutes of any interesting auction
-gets ~2-minute resolution — the data that makes late-surge behaviour
-analysable — without any always-on worker.
+**`burst.yml` — one targeted window per weekday (`40 22 * * 1-5`)**
+Queries Mongo for open lots with `auction_end_utc` before 23:59 UTC AND
+(watchlisted or grade ≥ B), then polls **only those lots** via the detail
+endpoint every ~2 minutes for up to 20 minutes, writing observations with
+`source: "burst"`. This sits on the empirical peak (the 23:00 UTC close
+cohort is the largest of the day), so the budget's one burst lands where the
+most late-surge data is. The window (cron + duration) lives in a single
+workflow env var; the weekly health routine (§8) re-checks the close-time
+histogram and proposes a new window if seller behaviour drifts. Watched lots
+closing outside the window rely on the 2-hourly scans — worth knowing when
+deciding how long to leave a bid to the last minute.
 
 **`fit.yml` — daily (`30 9 * * *` UTC)**
 `pcps fit`: rebuild observations from Mongo, refit the single-unit model and
@@ -329,9 +353,10 @@ sole writer of market data.
 |---|---|
 | GovDeals changes/protects the maestro API | `raw_extra` preserves unknown fields; weekly routine diffs schema; client is one file (`api.py`); polite pacing (0.35 s) and honest UA keep the footprint low |
 | Atlas M0 fills | Change-only writes, post-close downsampling, weekly archive+prune, usage on `/ops` and in weekly review |
-| Actions cron jitter/skips | Observations timestamped at capture; burst gate at */15 self-heals gaps; `job_runs` staleness alerting |
+| Actions cron jitter/skips | Observations timestamped at capture; overlapping scan coverage self-heals gaps; `job_runs` staleness alerting |
 | Marketplace Insights application denied | Browse-with-haircut path works from day one; Insights is an upgrade, not a dependency |
-| Public repo reveals the edge | Owner decision in §5; private fallback cadence documented |
+| Free Actions minutes exhausted mid-month | Budget in §5 carries ~170 min headroom; `job_runs` tracks spend; if it ever pinches, a self-hosted runner on a spare machine lifts the cap entirely without going public |
+| Seller close-time behaviour drifts away from the burst window | Weekly health routine recomputes the close-hour histogram and proposes a new window |
 | TS/Python grading drift | Golden parity test in CI blocks merge on any divergence |
 
 ## 11. Roadmap
@@ -346,10 +371,11 @@ Monorepo restructure (`pipeline/` + pyproject + `pcps` CLI); `store/mongo.py`;
 asset contains the full backfilled history.
 
 **Phase 2 — Scheduled ingestion**
-`scan.yml` hourly, `burst.yml` gate, `fit.yml` daily, `ci.yml`, `job_runs` +
-failure-issue alerting. Repo-visibility decision lands here. *Done when:* 48 h
-pass with no manual action and the bid curve of a closing lot shows ~2-min
-final-hour resolution.
+`scan.yml` on the close-weighted schedule, `burst.yml` peak window, `fit.yml`
+daily, `ci.yml`, `job_runs` + failure-issue alerting — all inside the §5
+minutes budget. *Done when:* 48 h pass with no manual action, a lot closing
+in the peak window shows ~2-min final-surge resolution, and projected
+month-end Actions spend (from `job_runs`) is under 2,000 min.
 
 **Phase 3 — eBay in the blend**
 Developer account, secrets, `pcps ebay-refresh` in `fit.yml`, `ebay_comps`
