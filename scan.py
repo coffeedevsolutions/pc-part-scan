@@ -30,7 +30,7 @@ def backfill():
     run = ds.run_id()
     observed = ds.utcnow()
     sold = harvest._load("sold_raw.json", {})
-    live = harvest._load("live_raw.json", {})
+    live = harvest.load_live()
     mans = harvest._load("manifests.json", {})
 
     if sold:
@@ -82,7 +82,7 @@ def main():
     cfg = grade.Config(target_roi=a.target_roi, recovery=a.recovery,
                        buyer_premium=a.buyer_premium)
 
-    live = harvest._load("live_raw.json", {})
+    live = harvest.load_live()
     if a.states:
         want = {s.strip().upper() for s in a.states.split(",") if s.strip()}
         live = {k: v for k, v in live.items()

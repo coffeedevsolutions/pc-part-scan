@@ -222,3 +222,98 @@ if __name__ == "__main__":
     build_observations(sold, max_detail=md)
     _p("\n=== sweeping live lots ===")
     sweep_live()
+
+
+def build_observations_from_dataset(max_detail: int = 0) -> dict:
+    """Rebuild priced observations from the committed dataset alone.
+
+    cache/ is scratch and gitignored, so a fresh clone has none of it. The
+    durable record -- data/sold.json plus data/manifests/ -- is enough to
+    rebuild every observation, which is what lets a scheduled run start from a
+    bare checkout.
+    """
+    sold_lots = ds.read_json(ds.SOLD, {})
+    manifests = ds.all_manifests()
+    singles, baskets = [], []
+
+    for key, lot in sold_lots.items():
+        title = lot.get("title") or ""
+        price = lot.get("final_price")
+        if not price or price <= 0:
+            continue
+        n = specs.parse_unit_count(title)
+        if n is None:
+            continue
+
+        if n == 1:
+            m = specs.machine_from_text(title, 1)
+            if m.cpu:
+                singles.append({
+                    "key": key, "price": float(price), "title": title,
+                    "machine": m.to_dict(),
+                    "end": lot.get("auction_end"),
+                    "state": (lot.get("location") or {}).get("state"),
+                })
+            continue
+        if n < 5:
+            continue
+
+        man = manifests.get(key)
+        mix = man["machines"] if man else []
+        units = sum(m.get("qty", 1) for m in mix)
+        baskets.append({
+            "key": key, "price": float(price), "title": title,
+            "stated_units": n, "manifest_units": units,
+            "exact": bool(mix) and abs(units - n) <= max(1, n * 0.05),
+            "mix": mix,
+            "fallback": specs.machine_from_text(title, n).to_dict(),
+            "end": lot.get("auction_end"),
+            "state": (lot.get("location") or {}).get("state"),
+        })
+
+    obs = {"singles": singles, "baskets": baskets}
+    _save("observations.json", obs)
+    _p(f"observations (from dataset): {len(singles)} singles, {len(baskets)} baskets "
+       f"({sum(1 for b in baskets if b['exact'])} with exact manifests)")
+    return obs
+
+
+def load_observations() -> dict:
+    """Prefer the scratch cache when present, else rebuild from the dataset."""
+    obs = _load("observations.json", None)
+    if obs and obs.get("singles"):
+        return obs
+    return build_observations_from_dataset()
+
+
+def load_live() -> dict:
+    """Open lots: scratch cache if present, else reconstruct from the dataset.
+
+    The dataset stores lots in normalized form, so this maps the fields the
+    grader needs back onto the raw API shape it expects.
+    """
+    live = _load("live_raw.json", None)
+    if live:
+        return live
+    out = {}
+    for key, lot in ds.read_json(ds.LOTS, {}).items():
+        if lot.get("status") != "open":
+            continue
+        hist = [r for r in ds.read_jsonl(ds.BID_HISTORY) if r.get("key") == key]
+        bid = hist[-1]["current_bid"] if hist else 0.0
+        out[key] = {
+            "accountId": lot["account_id"], "assetId": lot["asset_id"],
+            "assetShortDescription": lot.get("title"),
+            "currentBid": bid,
+            "companyName": lot.get("seller"),
+            "locationState": (lot.get("location") or {}).get("state"),
+            "locationCity": (lot.get("location") or {}).get("city"),
+            "assetAuctionEndDate": lot.get("auction_end"),
+            "assetAuctionEndDateUtc": lot.get("auction_end_utc"),
+            "assetAuctionEndDateDisplay": lot.get("auction_end") or "",
+            "categoryDescription": lot.get("category"),
+            "currencyCode": lot.get("currency"),
+            "isSoldAuction": False,
+        }
+    _p(f"live lots (from dataset): {len(out)}")
+    return out

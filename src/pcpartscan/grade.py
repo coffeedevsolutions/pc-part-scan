@@ -198,7 +198,11 @@ def value_lot(rec: dict, single, basket, table, ebay, cfg: Config,
 
 
 def load_models():
-    obs = harvest._load("observations.json", {"singles": [], "baskets": []})
+    obs = harvest.load_observations()
+    if not obs.get("singles"):
+        raise SystemExit(
+            "no priced observations available. Run `python scan.py --full` "
+            "to harvest the sold archive first.")
     single = pricing.fit_single_model(obs["singles"])
     try:
         basket = pricing.fit_basket_model(obs["baskets"], single)
