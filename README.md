@@ -8,6 +8,9 @@ underneath it is not bot-protected — so this runs headless with no browser and
 no scraping of rendered HTML. See [docs/API.md](docs/API.md) for the endpoints
 and the three non-obvious headers you need.
 
+The plan for evolving this into a scheduled, MongoDB-backed system with a web
+workbench is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## What it does
 
 1. **Harvest** the sold archive (all sellers) and currently open lots.
