@@ -1,0 +1,161 @@
+{
+ "key": "7484-38822",
+ "machines": [
+  {
+   "chassis": "9020",
+   "cpu": "i7-4790",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 16
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4790",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 14,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4790",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 4
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4770",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 5,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i5-4670",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 24,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i5-4590",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 6,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7020",
+   "cpu": "i7-4790",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7020",
+   "cpu": "i5-4590",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 8,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "XE2",
+   "cpu": "i5-4570s",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i7-3770",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 4,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i5-3570",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 5,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i5-3550",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i5-3570",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i5-3550",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i5-3550",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 4
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i5-2400",
+   "form_factor": "sff",
+   "generation": 2,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 4
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i3-2100",
+   "form_factor": "sff",
+   "generation": 2,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 4
+  }
+ ],
+ "parsed_at": "2026-08-23T01:47:18Z",
+ "source_files": [],
+ "unit_total": 87
+}

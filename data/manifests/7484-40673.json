@@ -1,0 +1,71 @@
+{
+ "key": "7484-40673",
+ "machines": [
+  {
+   "chassis": "7490",
+   "cpu": "i5-10505",
+   "form_factor": "aio",
+   "generation": 10,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7470",
+   "cpu": "i5-9500",
+   "form_factor": "aio",
+   "generation": 9,
+   "has_drive": false,
+   "qty": 5,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7460",
+   "cpu": "i5-8500",
+   "form_factor": "aio",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 7,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7450",
+   "cpu": "i5-6500",
+   "form_factor": "aio",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 19,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7440",
+   "cpu": "i5-6500",
+   "form_factor": "aio",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 8,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9030",
+   "cpu": "i5-4690s",
+   "form_factor": "aio",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9030",
+   "cpu": "i5-4590s",
+   "form_factor": "aio",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 7,
+   "ram_gb": 8
+  }
+ ],
+ "parsed_at": "2026-08-23T01:47:18Z",
+ "source_files": [],
+ "unit_total": 48
+}

@@ -1,0 +1,323 @@
+{
+ "key": "7484-40014",
+ "machines": [
+  {
+   "chassis": "9020",
+   "cpu": "i7-4790",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 16
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4790",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4770",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 5,
+   "ram_gb": 16
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4770",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 13,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4770",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 4
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i5-4690",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 4,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i5-4670",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 14,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i5-4590",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4790",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 16
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4790",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4770",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 32
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4770",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 24
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4770",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 18,
+   "ram_gb": 16
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i7-4770",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i5-4590",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 24
+  },
+  {
+   "chassis": "7020",
+   "cpu": "i7-4790",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 16
+  },
+  {
+   "chassis": "7020",
+   "cpu": "i7-4790",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7020",
+   "cpu": "i5-4690",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7020",
+   "cpu": "i5-4590",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 4,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i7-3770",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 16
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i7-3770",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i7-3770",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 4
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i5-3570",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 5,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i5-3550",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i7-3770",
+   "form_factor": "tower",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9010",
+   "cpu": "i5-3570",
+   "form_factor": "tower",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i5-3550",
+   "form_factor": "sff",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i5-3570",
+   "form_factor": "tower",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i7-2600",
+   "form_factor": "sff",
+   "generation": 2,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i5-2500",
+   "form_factor": "sff",
+   "generation": 2,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i7-2600",
+   "form_factor": "tower",
+   "generation": 2,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i5-2400",
+   "form_factor": "tower",
+   "generation": 2,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i5-2400",
+   "form_factor": "sff",
+   "generation": 2,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "g3420",
+   "form_factor": "sff",
+   "generation": null,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7010",
+   "cpu": "i7-4790",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 16
+  }
+ ],
+ "parsed_at": "2026-08-23T01:47:18Z",
+ "source_files": [],
+ "unit_total": 106
+}

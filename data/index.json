@@ -1,0 +1,29 @@
+{
+ "counts": {
+  "bid_observations": 3997,
+  "lots": 3997,
+  "manifests": 43,
+  "open_lots": 1180,
+  "snapshots": 3,
+  "sold_lots": 2813
+ },
+ "files": {
+  "bid_history": "bid_history.jsonl",
+  "components": "components.json",
+  "lots": "lots.json",
+  "models": "models.json",
+  "sold": "sold.json"
+ },
+ "last_config": {
+  "buyer_premium": 0.0,
+  "dead_rate": 0.1,
+  "per_unit_handling": 3.0,
+  "pickup_cost": 0.0,
+  "recovery": 0.55,
+  "sales_tax": 0.0,
+  "target_roi": 0.6
+ },
+ "last_run_id": "20260823T015100Z",
+ "schema_version": 2,
+ "updated_at": "2026-08-23T01:51:08Z"
+}

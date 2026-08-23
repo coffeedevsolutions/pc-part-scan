@@ -1,0 +1,98 @@
+{
+ "key": "7484-41773",
+ "machines": [
+  {
+   "chassis": null,
+   "cpu": "i7-7700",
+   "form_factor": "tower",
+   "generation": 7,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-6700",
+   "form_factor": "tower",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 29,
+   "ram_gb": 32
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-6700",
+   "form_factor": "tower",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "e5-1620",
+   "form_factor": "tower",
+   "generation": null,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 64
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-4790",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-4770",
+   "form_factor": "tower",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 6,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-3770",
+   "form_factor": "tower",
+   "generation": 3,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-2600",
+   "form_factor": "tower",
+   "generation": 2,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-4790",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-4770",
+   "form_factor": "sff",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 16
+  }
+ ],
+ "parsed_at": "2026-08-23T01:47:18Z",
+ "source_files": [],
+ "unit_total": 50
+}

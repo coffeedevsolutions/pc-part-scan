@@ -1,0 +1,98 @@
+{
+ "key": "7484-42274",
+ "machines": [
+  {
+   "chassis": null,
+   "cpu": "i7-7600u",
+   "form_factor": "laptop",
+   "generation": 7,
+   "has_drive": true,
+   "qty": 4,
+   "ram_gb": 256
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-7300u",
+   "form_factor": "laptop",
+   "generation": 7,
+   "has_drive": true,
+   "qty": 2,
+   "ram_gb": 256
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-7300u",
+   "form_factor": "laptop",
+   "generation": 7,
+   "has_drive": true,
+   "qty": 7,
+   "ram_gb": 256
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-7300u",
+   "form_factor": "laptop",
+   "generation": 7,
+   "has_drive": true,
+   "qty": 1,
+   "ram_gb": 256
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-6600u",
+   "form_factor": "laptop",
+   "generation": 6,
+   "has_drive": true,
+   "qty": 2,
+   "ram_gb": 256
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-6600u",
+   "form_factor": "laptop",
+   "generation": 6,
+   "has_drive": true,
+   "qty": 2,
+   "ram_gb": 512
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-6600u",
+   "form_factor": "laptop",
+   "generation": 6,
+   "has_drive": true,
+   "qty": 7,
+   "ram_gb": 256
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-6300u",
+   "form_factor": "laptop",
+   "generation": 6,
+   "has_drive": true,
+   "qty": 1,
+   "ram_gb": 256
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-6300u",
+   "form_factor": "laptop",
+   "generation": 6,
+   "has_drive": true,
+   "qty": 3,
+   "ram_gb": 256
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-6300u",
+   "form_factor": "laptop",
+   "generation": 6,
+   "has_drive": true,
+   "qty": 8,
+   "ram_gb": 256
+  }
+ ],
+ "parsed_at": "2026-08-23T01:47:18Z",
+ "source_files": [],
+ "unit_total": 37
+}

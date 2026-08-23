@@ -1,0 +1,35 @@
+{
+ "key": "7484-39335",
+ "machines": [
+  {
+   "chassis": null,
+   "cpu": "i7-8700",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-8500",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 32
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-8500",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  }
+ ],
+ "parsed_at": "2026-08-23T01:47:18Z",
+ "source_files": [],
+ "unit_total": 5
+}

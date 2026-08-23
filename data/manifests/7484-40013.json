@@ -1,0 +1,71 @@
+{
+ "key": "7484-40013",
+ "machines": [
+  {
+   "chassis": "7070",
+   "cpu": "i5-9500",
+   "form_factor": "sff",
+   "generation": 9,
+   "has_drive": false,
+   "qty": 8,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7060",
+   "cpu": "i7-8700",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 32
+  },
+  {
+   "chassis": "7060",
+   "cpu": "i5-8500",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 8,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7050",
+   "cpu": "i5-7500",
+   "form_factor": "sff",
+   "generation": 7,
+   "has_drive": false,
+   "qty": 34,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7050",
+   "cpu": "i5-6500",
+   "form_factor": "sff",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7040",
+   "cpu": "i5-6500",
+   "form_factor": "sff",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "5040",
+   "cpu": "i5-6500",
+   "form_factor": "sff",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 5,
+   "ram_gb": 8
+  }
+ ],
+ "parsed_at": "2026-08-23T01:47:18Z",
+ "source_files": [],
+ "unit_total": 61
+}

@@ -1,0 +1,26 @@
+{
+ "key": "7484-39217",
+ "machines": [
+  {
+   "chassis": null,
+   "cpu": "i5-9500",
+   "form_factor": "sff",
+   "generation": 9,
+   "has_drive": false,
+   "qty": 7,
+   "ram_gb": 8
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-9500",
+   "form_factor": "sff",
+   "generation": 9,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 4
+  }
+ ],
+ "parsed_at": "2026-08-23T01:47:18Z",
+ "source_files": [],
+ "unit_total": 9
+}

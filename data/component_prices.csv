@@ -1,0 +1,17 @@
+key,value_usd,note
+_ram_per_8gb,0.66,added per 8GB of RAM
+i5-10310u,71.93,seeded from fitted single-unit model
+i5-10500,71.93,seeded from fitted single-unit model
+i5-13600,183.66,seeded from fitted single-unit model
+i5-8250u,52.1,seeded from fitted single-unit model
+i5-8265u,48.94,seeded from fitted single-unit model
+i5-8350u,52.58,seeded from fitted single-unit model
+i5-8365u,57.05,seeded from fitted single-unit model
+i5-9500,44.03,seeded from fitted single-unit model
+i7-10610u,97.98,seeded from fitted single-unit model
+i7-10700,112.08,seeded from fitted single-unit model
+i7-11700,213.65,seeded from fitted single-unit model
+i7-6600u,73.45,seeded from fitted single-unit model
+i7-8650u,72.36,seeded from fitted single-unit model
+i7-8665u,83.47,seeded from fitted single-unit model
+i7-9700,128.12,seeded from fitted single-unit model

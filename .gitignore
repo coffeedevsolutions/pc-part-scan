@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local scratch from the legacy harvester. The dataset under data/ is the
+# durable artifact; cache/ is just a re-fetchable working area.
+cache/
+report.md
+report.json
+*.log
+.DS_Store
+
+# Downloaded spec PDFs are re-fetchable; the parsed result lives in
+# data/manifests/ instead.
+attachments/

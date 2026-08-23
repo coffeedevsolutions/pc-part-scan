@@ -1,0 +1,134 @@
+{
+ "key": "7484-40659",
+ "machines": [
+  {
+   "chassis": "5090",
+   "cpu": "i5-10500t",
+   "form_factor": "micro",
+   "generation": 10,
+   "has_drive": false,
+   "qty": 10,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7070",
+   "cpu": "i7-9700t",
+   "form_factor": "micro",
+   "generation": 9,
+   "has_drive": false,
+   "qty": 3,
+   "ram_gb": 16
+  },
+  {
+   "chassis": "7070",
+   "cpu": "i5-9600t",
+   "form_factor": "micro",
+   "generation": 9,
+   "has_drive": false,
+   "qty": 5,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7070",
+   "cpu": "i5-9500t",
+   "form_factor": "micro",
+   "generation": 9,
+   "has_drive": false,
+   "qty": 6,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7060",
+   "cpu": "i5-8600",
+   "form_factor": "micro",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 4,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "3060",
+   "cpu": "i5-8500t",
+   "form_factor": "micro",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7040",
+   "cpu": "i5-6500t",
+   "form_factor": "micro",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 21,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "9020",
+   "cpu": "i5-4590t",
+   "form_factor": "micro",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 59,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "3020",
+   "cpu": "i5-4590t",
+   "form_factor": "micro",
+   "generation": 4,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "3020",
+   "cpu": "i5-8500t",
+   "form_factor": "micro",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "3020",
+   "cpu": "i5-7500t",
+   "form_factor": "micro",
+   "generation": 7,
+   "has_drive": false,
+   "qty": 9,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "3020",
+   "cpu": "i5-7500t",
+   "form_factor": "micro",
+   "generation": 7,
+   "has_drive": false,
+   "qty": 7,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "3020",
+   "cpu": "i3-6100t",
+   "form_factor": "micro",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 8,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "3020",
+   "cpu": "i3-6100t",
+   "form_factor": "micro",
+   "generation": 6,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 4
+  }
+ ],
+ "parsed_at": "2026-08-23T01:47:18Z",
+ "source_files": [],
+ "unit_total": 137
+}
