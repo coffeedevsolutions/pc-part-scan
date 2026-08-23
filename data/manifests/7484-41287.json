@@ -1,0 +1,46 @@
+{
+ "key": "7484-41287",
+ "machines": [
+  {
+   "chassis": "7480",
+   "cpu": "i7-10700",
+   "form_factor": "sff",
+   "generation": 10,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 16
+  },
+  {
+   "chassis": "7480",
+   "cpu": "i5-10500",
+   "form_factor": "sff",
+   "generation": 10,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7470",
+   "cpu": "i5-9500",
+   "form_factor": "sff",
+   "generation": 9,
+   "has_drive": false,
+   "qty": 5,
+   "ram_gb": 8
+  },
+  {
+   "chassis": "7460",
+   "cpu": "i5-8500",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 24,
+   "ram_gb": 8
+  }
+ ],
+ "parsed_at": "2026-08-23T04:20:44Z",
+ "source_files": [
+  "7484_41287_1.pdf"
+ ],
+ "unit_total": 31
+}

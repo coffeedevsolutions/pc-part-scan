@@ -1,0 +1,73 @@
+{
+ "key": "7484-44158",
+ "machines": [
+  {
+   "chassis": null,
+   "cpu": "i7-8700",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 32
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-8700",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 10,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-8700",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 2,
+   "ram_gb": 8
+  },
+  {
+   "chassis": null,
+   "cpu": "i7-8700",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 4
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-8500",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 1,
+   "ram_gb": 16
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-8500",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 21,
+   "ram_gb": 8
+  },
+  {
+   "chassis": null,
+   "cpu": "i5-8500",
+   "form_factor": "sff",
+   "generation": 8,
+   "has_drive": false,
+   "qty": 5,
+   "ram_gb": 4
+  }
+ ],
+ "parsed_at": "2026-08-23T04:34:42Z",
+ "source_files": [
+  "7484_44158_1.pdf"
+ ],
+ "unit_total": 41
+}

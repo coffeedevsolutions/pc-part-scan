@@ -182,7 +182,9 @@
    "ram_gb": 16
   }
  ],
- "parsed_at": "2026-08-23T01:47:18Z",
- "source_files": [],
+ "parsed_at": "2026-08-23T04:12:47Z",
+ "source_files": [
+  "7484_41629_1.pdf"
+ ],
  "unit_total": 42
 }

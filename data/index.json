@@ -1,11 +1,11 @@
 {
  "counts": {
-  "bid_observations": 3997,
-  "lots": 3997,
-  "manifests": 43,
-  "open_lots": 1180,
-  "snapshots": 3,
-  "sold_lots": 2813
+  "bid_observations": 19699,
+  "lots": 8589,
+  "manifests": 47,
+  "open_lots": 1472,
+  "snapshots": 4,
+  "sold_lots": 7113
  },
  "files": {
   "bid_history": "bid_history.jsonl",
@@ -23,7 +23,7 @@
   "sales_tax": 0.0,
   "target_roi": 0.6
  },
- "last_run_id": "20260823T015100Z",
+ "last_run_id": "20260823T040824Z",
  "schema_version": 2,
- "updated_at": "2026-08-23T01:51:08Z"
+ "updated_at": "2026-08-23T04:34:46Z"
 }
