@@ -318,6 +318,42 @@ def cmd_burst(a) -> int:
     return 0
 
 
+def cmd_triage_queue(a) -> int:
+    from . import routine
+    print(json.dumps(routine.triage_queue(a.limit), indent=1))
+    return 0
+
+
+def cmd_triage_fetch(a) -> int:
+    from . import routine
+    for p in routine.triage_fetch(a.key, a.out):
+        print(p)
+    return 0
+
+
+def cmd_save_manifest(a) -> int:
+    from . import routine
+    with open(a.file) as f:
+        payload = json.load(f)
+    result = routine.save_llm_manifest(
+        a.key, payload["machines"], payload.get("source_files", []),
+        allow_mismatch=a.allow_mismatch)
+    print(json.dumps(result))
+    return 0
+
+
+def cmd_digest(a) -> int:
+    from . import routine
+    print(json.dumps(routine.digest(), indent=1, default=str))
+    return 0
+
+
+def cmd_health(a) -> int:
+    from . import routine
+    print(json.dumps(routine.health(), indent=1, default=str))
+    return 0
+
+
 def cmd_archive(a) -> int:
     from .store import mongo
     db = mongo.get_db()
@@ -369,9 +405,30 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("archive", help="dump collections to jsonl.gz")
     p.add_argument("--out", default="dump")
 
+    p = sub.add_parser("triage-queue",
+                       help="bulk lots whose spec sheet defeated the parser (JSON)")
+    p.add_argument("--limit", type=int, default=10)
+
+    p = sub.add_parser("triage-fetch", help="download a lot's PDF attachments")
+    p.add_argument("--key", required=True)
+    p.add_argument("--out", default="attachments")
+
+    p = sub.add_parser("save-manifest",
+                       help="store a model-extracted manifest (validated)")
+    p.add_argument("--key", required=True)
+    p.add_argument("--file", required=True,
+                   help='JSON: {"machines": [...], "source_files": [...]}')
+    p.add_argument("--allow-mismatch", action="store_true")
+
+    sub.add_parser("digest", help="daily digest inputs (JSON)")
+    sub.add_parser("health", help="weekly health-review inputs (JSON)")
+
     a = ap.parse_args(argv)
     return {"smoke": cmd_smoke, "backfill": cmd_backfill, "scan": cmd_scan,
-            "burst": cmd_burst, "archive": cmd_archive}[a.cmd](a)
+            "burst": cmd_burst, "archive": cmd_archive,
+            "triage-queue": cmd_triage_queue, "triage-fetch": cmd_triage_fetch,
+            "save-manifest": cmd_save_manifest,
+            "digest": cmd_digest, "health": cmd_health}[a.cmd](a)
 
 
 if __name__ == "__main__":
