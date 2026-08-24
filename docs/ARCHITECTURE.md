@@ -206,16 +206,20 @@ last-look coverage for the 600-lot midnight-close cohort. Concurrency group
 `observed_at`.
 
 **`burst.yml` — one targeted window per weekday (`40 22 * * 1-5`)**
-Queries Mongo for open lots with `auction_end_utc` before 23:59 UTC AND
-(watchlisted or grade ≥ B), then polls **only those lots** via the detail
-endpoint every ~2 minutes for up to 20 minutes, writing observations with
-`source: "burst"`. This sits on the empirical peak (the 23:00 UTC close
-cohort is the largest of the day), so the budget's one burst lands where the
-most late-surge data is. The window (cron + duration) lives in a single
-workflow env var; the weekly health routine (§8) re-checks the close-time
-histogram and proposes a new window if seller behaviour drifts. Watched lots
-closing outside the window rely on the 2-hourly scans — worth knowing when
-deciding how long to leave a bid to the last minute.
+Queries Mongo for open lots closing within the horizon (~100 min), groups
+them **by seller**, and polls one `accountIds`-scoped search per seller every
+~2.5 minutes for up to 20 minutes — the detail endpoint carries no bid
+fields (see docs/API.md), so per-seller search is the cheapest way to read
+current bids, and one request covers every closing lot that seller has.
+Observations land with `source: "burst"`; change-only writes keep volume
+proportional to what actually moved, and the accompanying lot upserts
+refresh `auction_end_utc`, capturing sniping-driven end-time extensions.
+This sits on the empirical peak (the 23:00 UTC close cohort is the largest
+of the day), so the budget's one burst lands where the most late-surge data
+is. The weekly health routine (§8) re-checks the close-time histogram and
+proposes a new window if seller behaviour drifts. Watched lots closing
+outside the window rely on the 2-hourly scans — worth knowing when deciding
+how long to leave a bid to the last minute.
 
 **`fit.yml` — daily (`30 9 * * *` UTC)**
 `pcps fit`: rebuild observations from Mongo, refit the single-unit model and

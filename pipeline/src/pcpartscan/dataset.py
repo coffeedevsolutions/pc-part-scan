@@ -248,6 +248,11 @@ def open_lots_raw() -> dict[str, dict]:
     return out
 
 
+def save_grades(vals: list, run: str) -> int:
+    """No-op in file mode: each run's snapshot already carries the grades."""
+    return 0
+
+
 def upsert_sold(records: list[dict], observed_at: str) -> dict:
     sold = read_json(SOLD, {})
     added = 0

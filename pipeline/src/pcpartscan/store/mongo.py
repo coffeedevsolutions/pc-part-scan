@@ -191,6 +191,25 @@ def sold_lots() -> dict[str, dict]:
     return {d["_id"]: d for d in get_db().sold.find({})}
 
 
+def open_lots_closing_before(cutoff_iso: str, now_iso: str) -> list[dict]:
+    """Open lots whose auction ends inside (now, cutoff] -- burst targets."""
+    return list(get_db().lots.find(
+        {"status": "open",
+         "auction_end_utc": {"$gt": now_iso, "$lte": cutoff_iso}},
+        {"account_id": 1, "auction_end_utc": 1}))
+
+
+def save_grades(vals: list, run: str) -> int:
+    """Denormalise the latest grade onto each lot for cheap board queries."""
+    ops = [UpdateOne({"_id": v.lot_key}, {"$set": {"latest_grade": {
+        "run_id": run, "grade": v.grade, "max_bid": round(v.max_bid, 2),
+        "headroom": round(v.headroom, 2), "confidence": v.confidence,
+    }}}) for v in vals]
+    if not ops:
+        return 0
+    return get_db().lots.bulk_write(ops, ordered=False).matched_count
+
+
 def open_lots_raw() -> dict[str, dict]:
     """Open lots mapped back onto the raw API shape the grader expects."""
     out = {}

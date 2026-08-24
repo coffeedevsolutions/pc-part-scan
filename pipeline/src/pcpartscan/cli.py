@@ -209,6 +209,8 @@ def cmd_scan(a) -> int:
         })
         idx = ds.update_index(run, {"last_config": asdict(cfg)})
 
+        ds.save_grades(vals, run)
+
         print("\n" + grade.report(vals, top=a.top))
         print(f"\nrun {run}")
         print(f"dataset: {json.dumps(idx['counts'])}")
@@ -217,6 +219,83 @@ def cmd_scan(a) -> int:
     except Exception as e:
         if is_mongo:
             ds.job_finish("scan", run, status="error", error=str(e))
+        raise
+    return 0
+
+
+def cmd_burst(a) -> int:
+    """Tight-loop bid sampling for lots closing soon.
+
+    The detail endpoint carries no bid fields, so a burst polls per SELLER:
+    one /search/list scoped to accountIds=[acct] returns the current bid for
+    every lot that seller has live, covering all of their closing lots in a
+    single request. Change-only writes keep the volume proportional to what
+    actually moved, and the upserts refresh auction_end_utc so sniping-driven
+    extensions are captured.
+    """
+    import datetime as dt
+    import time as _time
+
+    from . import api as gd
+    from . import harvest
+    from .store import mongo
+
+    run = mongo.run_id()
+    mongo.job_start("burst", run)
+    deadline = _time.monotonic() + a.window * 60
+    cycles = observations = 0
+    try:
+        while True:
+            cycle_start = _time.monotonic()
+            now = dt.datetime.now(dt.timezone.utc)
+            now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+            cutoff = (now + dt.timedelta(minutes=a.horizon)
+                      ).strftime("%Y-%m-%dT%H:%M:%SZ")
+            targets = mongo.open_lots_closing_before(cutoff, now_iso)
+            if not targets:
+                print("no open lots closing inside the horizon; done")
+                break
+            accounts = sorted({t["account_id"] for t in targets
+                               if t.get("account_id")})[:a.max_accounts]
+            recs: dict[str, dict] = {}
+            for acct in accounts:
+                page, fetched = 1, 0
+                while True:
+                    try:
+                        batch, total = gd.search(account_ids=[acct], text="*",
+                                                 rows=100, page=page)
+                    except Exception as e:
+                        print(f"  account {acct} page {page}: {e}")
+                        break
+                    for r in batch:
+                        recs[f"{r['accountId']}-{r['assetId']}"] = r
+                    fetched += len(batch)
+                    _time.sleep(harvest.POLITE_DELAY)
+                    if not batch or fetched >= total or page >= 3:
+                        break
+                    page += 1
+            observed = mongo.utcnow()
+            # keep only lots actually closing inside the horizon: per-seller
+            # search returns the seller's whole inventory, and a burst should
+            # not accumulate their far-future non-computer listings
+            rec_list = [r for r in recs.values()
+                        if "" < (r.get("assetAuctionEndDateUtc") or "") <= cutoff]
+            mongo.upsert_lots(rec_list, observed, sold=False)
+            n = mongo.record_bids(rec_list, observed, run, source="burst")
+            observations += n
+            cycles += 1
+            print(f"cycle {cycles}: {len(targets)} closing lots across "
+                  f"{len(accounts)} sellers, {len(recs)} records, "
+                  f"{n} changed observations", flush=True)
+            if _time.monotonic() + a.interval > deadline:
+                break
+            _time.sleep(max(0.0, a.interval - (_time.monotonic() - cycle_start)))
+        mongo.job_finish("burst", run, counts={
+            "cycles": cycles, "observations": observations})
+        print(f"burst done: {cycles} cycles, {observations} observations")
+    except Exception as e:
+        mongo.job_finish("burst", run, status="error", error=str(e),
+                         counts={"cycles": cycles, "observations": observations})
         raise
     return 0
 
@@ -259,12 +338,22 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--buyer-premium", type=float, default=0.0)
     p.add_argument("--states", default="")
 
+    p = sub.add_parser("burst", help="tight-loop bid sampling near auction close")
+    p.add_argument("--window", type=int, default=20,
+                   help="minutes to keep sampling (default 20)")
+    p.add_argument("--horizon", type=int, default=100,
+                   help="target lots closing within this many minutes")
+    p.add_argument("--interval", type=int, default=150,
+                   help="seconds between cycles (default 150)")
+    p.add_argument("--max-accounts", type=int, default=120,
+                   help="cap on sellers polled per cycle")
+
     p = sub.add_parser("archive", help="dump collections to jsonl.gz")
     p.add_argument("--out", default="dump")
 
     a = ap.parse_args(argv)
-    return {"smoke": cmd_smoke, "backfill": cmd_backfill,
-            "scan": cmd_scan, "archive": cmd_archive}[a.cmd](a)
+    return {"smoke": cmd_smoke, "backfill": cmd_backfill, "scan": cmd_scan,
+            "burst": cmd_burst, "archive": cmd_archive}[a.cmd](a)
 
 
 if __name__ == "__main__":
