@@ -18,3 +18,11 @@ attachments/
 # archive dumps and build artifacts
 dump/
 *.egg-info/
+
+# JS toolchain
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+.env
+.env.local
