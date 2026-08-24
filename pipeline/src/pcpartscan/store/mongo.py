@@ -261,13 +261,15 @@ def save_full_models(run: str, single_model, bulk_model) -> None:
 
 
 def component_overrides() -> dict[str, float]:
-    """Hand-pinned component prices from the workbench, keyed by CPU.
+    """Prices a human deliberately pinned, keyed by CPU.
 
-    The special key "_ram_per_8gb" carries the RAM adder. Empty dict means
-    no overrides are stored and the CSV fallback applies.
+    Only source="user" docs qualify. Rows seeded from the legacy CSV are
+    kept for reference but must never override a fit: they were themselves
+    generated from an older fit, so honouring them froze the model at its
+    past self. The special key "_ram_per_8gb" carries the RAM adder.
     """
     return {d["_id"]: float(d["value_usd"])
-            for d in get_db().component_prices.find({})
+            for d in get_db().component_prices.find({"source": "user"})
             if d.get("value_usd") is not None}
 
 

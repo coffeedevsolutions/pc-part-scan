@@ -1,5 +1,6 @@
-import { searchSold } from "@/lib/data";
-import { shortDate, usd } from "@/lib/format";
+import { searchSold, soldStates } from "@/lib/data";
+
+import { SoldTable } from "./SoldTable";
 
 export const dynamic = "force-dynamic";
 
@@ -9,68 +10,56 @@ export default async function SoldPage({
   searchParams: Promise<{ q?: string; state?: string }>;
 }) {
   const { q = "", state = "" } = await searchParams;
-  const results = await searchSold(q, state);
+  const [results, states] = await Promise.all([
+    searchSold(q, state),
+    soldStates(),
+  ]);
 
   return (
     <main>
       <h1>Sold explorer</h1>
       <p className="sub">
-        Realized prices from the harvested sold archive — the comps behind the
-        models.
+        What lots actually closed at. These realized prices are the comps the
+        valuation models are fitted on — search here to sanity-check a grade
+        against real outcomes.
       </p>
-      <form className="filters" method="get">
-        <label>
-          Title contains
-          <input type="text" name="q" defaultValue={q} placeholder="optiplex 7050" />
-        </label>
-        <label>
-          State
-          <input
-            type="text"
-            name="state"
-            defaultValue={state}
-            placeholder="IA"
-            style={{ width: 60 }}
-            maxLength={2}
-          />
-        </label>
-        <button type="submit">Search</button>
-      </form>
-      <div className="card" style={{ padding: 0, overflowX: "auto" }}>
-        <table className="data">
-          <thead>
-            <tr>
-              <th>Closed</th>
-              <th>Lot</th>
-              <th>Seller</th>
-              <th>State</th>
-              <th className="num">Hammer</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((l) => (
-              <tr key={l.key}>
-                <td style={{ whiteSpace: "nowrap" }}>
-                  {shortDate(l.auction_end_utc ?? l.auction_end)}
-                </td>
-                <td>
-                  <a href={l.url}>{l.key}</a>
-                  <div className="muted small">{(l.title ?? "").slice(0, 96)}</div>
-                </td>
-                <td>{l.seller ?? "—"}</td>
-                <td>{l.location?.state ?? "—"}</td>
-                <td className="num">{usd(l.final_price)}</td>
-              </tr>
-            ))}
-            {results.length === 0 && (
-              <tr>
-                <td colSpan={5} className="muted">
-                  No matches.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+
+      <div className="card">
+        <form className="controls" method="get">
+          <label className="field">
+            <span className="fieldlabel">Title contains</span>
+            <input
+              className="select"
+              type="text"
+              name="q"
+              defaultValue={q}
+              placeholder="optiplex 7050"
+              style={{ width: 240 }}
+            />
+          </label>
+          <label className="field">
+            <span className="fieldlabel">State</span>
+            <select className="select" name="state" defaultValue={state}>
+              <option value="">all states</option>
+              {states.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="btn btn-primary">
+            Search
+          </button>
+          <span className="spacer" />
+          <span className="muted small" style={{ height: 30, lineHeight: "30px" }}>
+            {results.length} results
+          </span>
+        </form>
+      </div>
+
+      <div className="card" style={{ padding: 0 }}>
+        <SoldTable rows={results} />
       </div>
     </main>
   );

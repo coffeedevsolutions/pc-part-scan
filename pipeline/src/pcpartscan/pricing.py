@@ -286,18 +286,23 @@ class StaticTable:
                         self.cpu_value[k] = v
 
     @classmethod
-    def from_overrides(cls, overrides: dict[str, float]) -> "StaticTable":
-        """Layer stored overrides (the workbench's pins) over the CSV table.
+    def empty(cls) -> "StaticTable":
+        """A table that knows nothing, so it contributes nothing."""
+        return cls(path=os.devnull)
 
-        Overrides win per key; everything the CSV knows and the overrides
-        don't mention — other CPUs, the RAM adder — stays intact, so one
-        pinned price can never silently discard the rest of the blend.
+    @classmethod
+    def from_overrides(cls, pins: dict[str, float]) -> "StaticTable":
+        """A table of deliberately pinned prices, and nothing else.
+
+        Only values a human chose belong here. The CSV this class used to
+        read was auto-seeded from a fit, so it silently overrode every
+        later and better fit with a snapshot of an older model -- knowledge
+        the system never actually had.
         """
-        t = cls()   # starts from the CSV when present
-        if "_ram_per_8gb" in overrides:
-            t.ram_per_8gb = float(overrides["_ram_per_8gb"])
-        t.cpu_value.update({k: float(v) for k, v in overrides.items()
-                            if k != "_ram_per_8gb"})
+        t = cls.empty()
+        t.ram_per_8gb = float(pins.get("_ram_per_8gb", 0.0))
+        t.cpu_value = {k: float(v) for k, v in pins.items()
+                       if k != "_ram_per_8gb"}
         return t
 
     def value(self, machine: dict) -> float | None:

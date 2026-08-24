@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+
+import { Nav } from "@/components/Nav";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "pc-part-scan",
-  description: "GovDeals bulk-computer auction workbench",
+  title: "LotLoops",
+  description: "Grade GovDeals bulk-computer auctions on what they are worth",
 };
 
 export default function RootLayout({
@@ -16,16 +17,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="shell">
-          <nav className="topnav">
-            <span className="brand">pc-part-scan</span>
-            <Link href="/">Board</Link>
-            <Link href="/sold">Sold</Link>
-            <Link href="/models">Models</Link>
-            <Link href="/ops">Ops</Link>
-          </nav>
-          {children}
-        </div>
+        <Nav />
+        <div className="shell">{children}</div>
       </body>
     </html>
   );

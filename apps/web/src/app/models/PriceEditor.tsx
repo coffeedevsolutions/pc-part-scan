@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { DataTable, type Column } from "@/components/DataTable";
 import { saveComponentPrice } from "@/lib/actions";
 import { usd } from "@/lib/format";
 
@@ -13,8 +14,10 @@ interface Row {
 }
 
 /**
- * Pinned prices override the fitted estimate in the pipeline's valuation
- * blend. Editing a cell saves on blur; clearing it removes the pin.
+ * The model's per-CPU values, with an override column.
+ *
+ * A pin replaces the fitted number in the next scan's valuations — it is
+ * how you tell the system about a price you know better than it does.
  */
 export function PriceEditor({ rows: initial }: { rows: Row[] }) {
   const [rows, setRows] = useState(initial);
@@ -27,12 +30,10 @@ export function PriceEditor({ rows: initial }: { rows: Row[] }) {
     setStatus("saving…");
     try {
       await saveComponentPrice(cpu, value);
-      setRows((rs) =>
-        rs.map((r) => (r.cpu === cpu ? { ...r, pinned: value } : r)),
-      );
-      setStatus(`saved ${cpu}`);
+      setRows((rs) => rs.map((r) => (r.cpu === cpu ? { ...r, pinned: value } : r)));
+      setStatus(value == null ? `unpinned ${cpu}` : `pinned ${cpu}`);
     } catch (e) {
-      setStatus(`failed to save ${cpu}: ${e instanceof Error ? e.message : "error"}`);
+      setStatus(`could not save ${cpu}: ${e instanceof Error ? e.message : "error"}`);
     }
   }
 
@@ -43,63 +44,94 @@ export function PriceEditor({ rows: initial }: { rows: Row[] }) {
     setNewCpu("");
   }
 
+  const columns: Column<Row>[] = [
+    {
+      id: "cpu",
+      header: "CPU",
+      sortValue: (r) => r.cpu,
+      cell: (r) => r.cpu,
+    },
+    {
+      id: "fitted",
+      header: "Model says",
+      numeric: true,
+      sortValue: (r) => r.fitted,
+      cell: (r) => (
+        <span className="muted">{r.fitted != null ? usd(r.fitted) : "—"}</span>
+      ),
+    },
+    {
+      id: "pinned",
+      header: "Your override",
+      numeric: true,
+      sortValue: (r) => r.pinned,
+      cell: (r) => (
+        <input
+          className="priceedit"
+          type="number"
+          min={0}
+          step={1}
+          defaultValue={r.pinned ?? ""}
+          placeholder="—"
+          aria-label={`Override price for ${r.cpu}`}
+          onBlur={(e) => {
+            const raw = e.target.value;
+            const prev = r.pinned == null ? "" : String(r.pinned);
+            if (raw !== prev) save(r.cpu, raw);
+          }}
+        />
+      ),
+    },
+    {
+      id: "effective",
+      header: "Used in valuations",
+      numeric: true,
+      sortValue: (r) => r.pinned ?? r.fitted,
+      cell: (r) => {
+        const eff = r.pinned ?? r.fitted;
+        return (
+          <span style={{ fontWeight: r.pinned != null ? 650 : 400 }}>
+            {eff != null ? usd(eff) : "—"}
+          </span>
+        );
+      },
+    },
+  ];
+
   return (
     <>
-      <div className="filters">
-        <label>
-          Pin a CPU not in the fit
+      <div className="controls" style={{ marginBottom: 12 }}>
+        <label className="field">
+          <span className="fieldlabel">Pin a CPU the fit does not know</span>
           <input
+            className="select"
             type="text"
             placeholder="i5-8500t"
             value={newCpu}
             onChange={(e) => setNewCpu(e.target.value)}
-            style={{ width: 120 }}
+            style={{ width: 140 }}
           />
         </label>
-        <button type="button" onClick={addRow}>
+        <button type="button" className="btn" onClick={addRow}>
           Add
         </button>
-        <span className="muted small">{status}</span>
+        <span className="spacer" />
+        <span className="muted small" style={{ height: 30, lineHeight: "30px" }}>
+          {status}
+        </span>
       </div>
       <div style={{ maxHeight: 460, overflowY: "auto" }}>
-        <table className="data" style={{ maxWidth: 640 }}>
-          <thead>
-            <tr>
-              <th>CPU</th>
-              <th className="num">Fitted</th>
-              <th className="num">Pinned override</th>
-              <th>Note</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.cpu}>
-                <td>{r.cpu}</td>
-                <td className="num muted">{r.fitted != null ? usd(r.fitted) : "—"}</td>
-                <td className="num">
-                  <input
-                    className="priceedit"
-                    type="number"
-                    min={0}
-                    step={1}
-                    defaultValue={r.pinned ?? ""}
-                    placeholder="—"
-                    onBlur={(e) => {
-                      const raw = e.target.value;
-                      const prev = r.pinned == null ? "" : String(r.pinned);
-                      if (raw !== prev) save(r.cpu, raw);
-                    }}
-                  />
-                </td>
-                <td className="muted small">{r.note}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={(r) => r.cpu}
+          initialSort="effective"
+          initialDir="desc"
+        />
       </div>
       <p className="muted small">
-        A pinned value replaces the fitted estimate in the next scan&apos;s
-        valuation blend. Clear a cell to unpin.
+        Leave the override blank to use the model&apos;s own number. Clearing a
+        pinned value unpins it.
       </p>
     </>
   );

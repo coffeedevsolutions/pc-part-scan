@@ -99,6 +99,11 @@ def _confidence(v: Valuation, single: pricing._FitModel, n_cpu_known: int) -> fl
 CONFIDENCE_GATE = 0.50
 GATED_MAX_GRADE = "C"
 
+# A pricing source must cover at least this share of a lot's units before it
+# joins the ceiling blend, so a handful of recognised machines cannot be
+# extrapolated across a pallet of unknown ones.
+MIN_SOURCE_COVERAGE = 0.5
+
 
 def _grade(roi_headroom: float, confidence: float) -> str:
     """Grade on headroom-to-max-bid, discounted and then GATED by confidence."""
@@ -162,25 +167,33 @@ def value_lot(rec: dict, single, basket, table, ebay, cfg: Config,
     per_source = {}
     per_source["govdeals_singles"] = single.value_mix(mix)
 
-    t_total, t_hit = 0.0, 0
-    for m in mix:
-        tv = table.value(m)
-        if tv is not None:
-            t_total += tv * m.get("qty", 1)
-            t_hit += m.get("qty", 1)
-    if t_hit:
-        # scale partial coverage up to the full mix
-        per_source["static_table"] = t_total * (units / t_hit) if t_hit < units else t_total
+    def priced_source(value_of) -> float | None:
+        """Total for a mix under one pricing source, or None if too sparse.
+
+        A source that knows only a couple of the machines in a mixed pallet
+        used to have its total scaled up to the whole lot, which let one
+        known price speak for hundreds of unknown units and then carry
+        equal weight in the blend. It now has to cover most of the lot
+        before it is allowed an opinion at all.
+        """
+        total, hit = 0.0, 0
+        for m in mix:
+            val = value_of(m)
+            if val is not None:
+                total += val * m.get("qty", 1)
+                hit += m.get("qty", 1)
+        if not hit or hit < units * MIN_SOURCE_COVERAGE:
+            return None
+        return total * (units / hit) if hit < units else total
+
+    tv = priced_source(table.value)
+    if tv is not None:
+        per_source["static_table"] = tv
 
     if ebay.enabled:
-        e_total, e_hit = 0.0, 0
-        for m in mix:
-            ev = ebay.value(m)
-            if ev is not None:
-                e_total += ev * m.get("qty", 1)
-                e_hit += m.get("qty", 1)
-        if e_hit:
-            per_source["ebay"] = e_total * (units / e_hit) if e_hit < units else e_total
+        ev = priced_source(ebay.value)
+        if ev is not None:
+            per_source["ebay"] = ev
 
     v.ceiling_sources = {k: round(x, 2) for k, x in per_source.items()}
     v.ceiling = sum(per_source.values()) / len(per_source)
@@ -213,14 +226,16 @@ def load_models():
     except ValueError as e:
         print(f"  note: basket model unavailable ({e}); floor falls back to 0")
         basket = None
-    if not os.path.exists(pricing.StaticTable.PATH):
-        pricing.StaticTable.seed_from(single)
     pricing.save_models(single, basket)
-    # workbench-edited prices win over the CSV when the store carries them
+    # The static table is deliberately pinned prices only. It used to be
+    # auto-seeded from a fit and then permanently overrode every later,
+    # better fit -- a snapshot of an old model masquerading as knowledge.
     from .store import backend as ds
-    overrides = ds.component_overrides() if hasattr(ds, "component_overrides") else {}
-    table = (pricing.StaticTable.from_overrides(overrides)
-             if overrides else pricing.StaticTable())
+    if hasattr(ds, "component_overrides"):
+        table = pricing.StaticTable.from_overrides(ds.component_overrides())
+    else:
+        # file mode keeps reading the hand-editable CSV
+        table = pricing.StaticTable()
     return single, basket, table, pricing.EbayAdapter()
 
 

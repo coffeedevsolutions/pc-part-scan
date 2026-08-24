@@ -166,6 +166,8 @@ def cmd_backfill(a) -> int:
                         {"$setOnInsert": {
                             "value_usd": value,
                             "note": (row.get("note") or "").strip(),
+                            # reference only -- never overrides a live fit
+                            "source": "seed",
                         }},
                         upsert=True)
                     n_prices += 1

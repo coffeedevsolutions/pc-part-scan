@@ -7,31 +7,20 @@ import {
   DEFAULT_CONFIG,
   regrade,
   type Config,
-  type Grade,
+  type Regrade,
 } from "@pcps/valuation";
 
 import { saveAssumptions, setWatch } from "@/lib/actions";
+import { DataTable, type Column } from "@/components/DataTable";
+import { Grade, MoneyField, PercentField } from "@/components/Fields";
+import { HelpIcon } from "@/components/Tooltip";
 import type { SnapshotLot } from "@/lib/data";
 import { closesIn, usd } from "@/lib/format";
 
 type BoardLot = SnapshotLot & { end_utc: string | null };
+type Row = { lot: BoardLot; v: Regrade };
 
 const STORAGE_KEY = "pcps.assumptions.v1";
-
-const FIELDS: {
-  key: keyof Config;
-  label: string;
-  step: number;
-  pct?: boolean;
-}[] = [
-  { key: "target_roi", label: "Target ROI", step: 0.05, pct: true },
-  { key: "recovery", label: "Recovery", step: 0.05, pct: true },
-  { key: "dead_rate", label: "Dead rate", step: 0.05, pct: true },
-  { key: "buyer_premium", label: "Buyer premium", step: 0.005, pct: true },
-  { key: "sales_tax", label: "Sales tax", step: 0.005, pct: true },
-  { key: "per_unit_handling", label: "$/unit handling", step: 0.5 },
-  { key: "pickup_cost", label: "Pickup $", step: 25 },
-];
 
 export function BoardClient({
   lots,
@@ -46,16 +35,16 @@ export function BoardClient({
 }) {
   const base: Config = { ...DEFAULT_CONFIG, ...defaults };
   const [cfg, setCfg] = useState<Config>(base);
-  const [gradeMin, setGradeMin] = useState<string>("all");
-  const [state, setState] = useState<string>("all");
+  const [gradeMin, setGradeMin] = useState("all");
+  const [state, setState] = useState("all");
   const [watchedOnly, setWatchedOnly] = useState(false);
   const [watched, setWatched] = useState<Set<string>>(new Set(watchedInit));
-  const touched = useRef(false);   // only the user's own edits reach the server
+  const touched = useRef(false); // only the user's own edits reach the server
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // the server-saved config is the durable cross-device copy and wins;
-    // localStorage only fills in when the server has nothing yet
+    // the server copy is the durable cross-device one and wins; localStorage
+    // only fills in when the server has nothing yet
     if (hasServerSaved) return;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -67,22 +56,21 @@ export function BoardClient({
   }, []);
 
   useEffect(() => {
-    if (!touched.current) return;   // hydration must never clobber the server
+    if (!touched.current) return; // hydration must never clobber the server
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
     } catch {
-      /* storage unavailable: sliders still work for this visit */
+      /* storage unavailable: the sliders still work for this visit */
     }
-    // debounce the server save so slider-dragging doesn't spam writes
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       saveAssumptions(cfg as unknown as Record<string, number>).catch(() => {});
     }, 800);
   }, [cfg]);
 
-  function updateCfg(next: Config) {
+  function updateCfg(patch: Partial<Config>) {
     touched.current = true;
-    setCfg(next);
+    setCfg((c) => ({ ...c, ...patch }));
   }
 
   async function onToggleWatch(key: string) {
@@ -107,50 +95,198 @@ export function BoardClient({
 
   const states = useMemo(
     () =>
-      Array.from(new Set(lots.map((l) => l.state).filter(Boolean))).sort() as string[],
+      Array.from(
+        new Set(lots.map((l) => l.state).filter(Boolean)),
+      ).sort() as string[],
     [lots],
   );
 
-  const rows = useMemo(() => {
-    const graded = lots.map((l) => ({ lot: l, v: regrade(l, cfg) }));
-    graded.sort(
-      (a, b) =>
-        b.v.headroom * b.lot.confidence - a.v.headroom * a.lot.confidence,
-    );
-    return graded.filter(({ lot, v }) => {
-      if (watchedOnly && !watched.has(lot.lot_key)) return false;
-      if (state !== "all" && lot.state !== state) return false;
-      if (gradeMin !== "all" && v.grade > gradeMin) return false; // 'A' < 'B' < ...
-      return true;
-    });
+  const rows: Row[] = useMemo(() => {
+    return lots
+      .map((lot) => ({ lot, v: regrade(lot, cfg) }))
+      .filter(({ lot, v }) => {
+        if (watchedOnly && !watched.has(lot.lot_key)) return false;
+        if (state !== "all" && lot.state !== state) return false;
+        if (gradeMin !== "all" && v.grade > gradeMin) return false;
+        return true;
+      });
   }, [lots, cfg, gradeMin, state, watchedOnly, watched]);
+
+  const columns: Column<Row>[] = [
+    {
+      id: "watch",
+      header: "",
+      width: "34px",
+      cell: ({ lot }) => (
+        <button
+          type="button"
+          className="watchstar"
+          aria-pressed={watched.has(lot.lot_key)}
+          title={watched.has(lot.lot_key) ? "Unwatch" : "Watch"}
+          onClick={() => onToggleWatch(lot.lot_key)}
+        >
+          {watched.has(lot.lot_key) ? "★" : "☆"}
+        </button>
+      ),
+    },
+    {
+      id: "grade",
+      header: "Grade",
+      help: "grade",
+      helpLabel: "grade",
+      width: "84px",
+      // A is best, so ascending letters are descending quality
+      sortValue: ({ v }) => v.grade,
+      cell: ({ v }) => <Grade grade={v.grade} />,
+    },
+    {
+      id: "lot",
+      header: "Lot",
+      sortValue: ({ lot }) => lot.title.toLowerCase(),
+      cell: ({ lot }) => (
+        <>
+          <Link href={`/lot/${lot.lot_key}`} className="lottitle">
+            {lot.title}
+          </Link>
+          <div className="muted small">
+            {lot.lot_key}
+            {lot.state ? ` · ${lot.state}` : ""}
+          </div>
+        </>
+      ),
+    },
+    {
+      id: "units",
+      header: "Units",
+      help: "units",
+      helpLabel: "units",
+      numeric: true,
+      sortValue: ({ lot }) => lot.units,
+      cell: ({ lot }) => lot.units.toLocaleString(),
+    },
+    {
+      id: "bid",
+      header: "Bid",
+      help: "currentBid",
+      helpLabel: "the current bid",
+      numeric: true,
+      sortValue: ({ lot }) => lot.current_bid,
+      cell: ({ lot }) => usd(lot.current_bid),
+    },
+    {
+      id: "maxbid",
+      header: "Max bid",
+      help: "maxBid",
+      helpLabel: "max bid",
+      numeric: true,
+      sortValue: ({ v }) => v.max_bid,
+      cell: ({ v }) => usd(v.max_bid),
+    },
+    {
+      id: "headroom",
+      header: "Headroom",
+      help: "headroom",
+      helpLabel: "headroom",
+      numeric: true,
+      sortValue: ({ v }) => v.headroom,
+      cell: ({ v }) => (
+        <span className={v.headroom >= 0 ? "pos" : "neg"}>{usd(v.headroom)}</span>
+      ),
+    },
+    {
+      id: "closes",
+      header: "Closes",
+      help: "closes",
+      helpLabel: "the closing time",
+      sortValue: ({ lot }) =>
+        lot.end_utc ? new Date(lot.end_utc).getTime() : null,
+      cell: ({ lot }) => closesIn(lot.end_utc) || lot.end_date,
+    },
+    {
+      id: "confidence",
+      header: "Conf",
+      help: "confidence",
+      helpLabel: "confidence",
+      numeric: true,
+      sortValue: ({ lot }) => lot.confidence,
+      cell: ({ lot }) => lot.confidence.toFixed(2),
+    },
+  ];
 
   return (
     <>
       <div className="card">
-        <div className="filters" role="group" aria-label="Assumptions">
-          {FIELDS.map((f) => (
-            <label key={f.key}>
-              {f.label}
-              <input
-                type="number"
-                step={f.step}
-                min={0}
-                value={f.pct ? round4(cfg[f.key]) : cfg[f.key]}
-                onChange={(e) =>
-                  updateCfg({ ...cfg, [f.key]: Number(e.target.value) || 0 })
-                }
-              />
-            </label>
-          ))}
-          <button type="button" onClick={() => updateCfg(base)}>
+        <div className="controls">
+          <PercentField
+            label="Target ROI"
+            help="targetRoi"
+            value={cfg.target_roi}
+            onChange={(v) => updateCfg({ target_roi: v })}
+            step={5}
+          />
+          <PercentField
+            label="Recovery"
+            help="recovery"
+            value={cfg.recovery}
+            onChange={(v) => updateCfg({ recovery: v })}
+            step={5}
+            max={100}
+          />
+          <PercentField
+            label="Dead rate"
+            help="deadRate"
+            value={cfg.dead_rate}
+            onChange={(v) => updateCfg({ dead_rate: v })}
+            step={5}
+            max={100}
+          />
+          <PercentField
+            label="Buyer premium"
+            help="buyerPremium"
+            value={cfg.buyer_premium}
+            onChange={(v) => updateCfg({ buyer_premium: v })}
+            step={0.5}
+          />
+          <PercentField
+            label="Sales tax"
+            help="salesTax"
+            value={cfg.sales_tax}
+            onChange={(v) => updateCfg({ sales_tax: v })}
+            step={0.5}
+          />
+          <MoneyField
+            label="Handling / unit"
+            help="handling"
+            value={cfg.per_unit_handling}
+            onChange={(v) => updateCfg({ per_unit_handling: v })}
+          />
+          <MoneyField
+            label="Pickup"
+            help="pickup"
+            value={cfg.pickup_cost}
+            onChange={(v) => updateCfg({ pickup_cost: v })}
+            step={25}
+          />
+          <span className="spacer" />
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              touched.current = true;
+              setCfg(base);
+            }}
+          >
             Reset
           </button>
         </div>
-        <div className="filters">
-          <label>
-            Grade at least
+      </div>
+
+      <div className="card">
+        <div className="controls">
+          <label className="field">
+            <span className="fieldlabel">Grade at least</span>
             <select
+              className="select"
               value={gradeMin}
               onChange={(e) => setGradeMin(e.target.value)}
             >
@@ -162,9 +298,13 @@ export function BoardClient({
               ))}
             </select>
           </label>
-          <label>
-            State
-            <select value={state} onChange={(e) => setState(e.target.value)}>
+          <label className="field">
+            <span className="fieldlabel">State</span>
+            <select
+              className="select"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+            >
               <option value="all">all</option>
               {states.map((s) => (
                 <option key={s} value={s}>
@@ -173,79 +313,32 @@ export function BoardClient({
               ))}
             </select>
           </label>
-          <label>
+          <label className="checkfield">
             <input
               type="checkbox"
               checked={watchedOnly}
               onChange={(e) => setWatchedOnly(e.target.checked)}
             />
-            watched only
+            Watched only
           </label>
-          <span className="muted small">
-            {rows.length} lots · regraded live in your browser
+          <span className="spacer" />
+          <span className="muted small" style={{ height: 30, lineHeight: "30px" }}>
+            {rows.length} lots · regraded in your browser
+            <HelpIcon k="maxBid" label="how these numbers are produced" />
           </span>
         </div>
       </div>
 
-      <div className="card" style={{ padding: 0, overflowX: "auto" }}>
-        <table className="data">
-          <thead>
-            <tr>
-              <th aria-label="Watch"></th>
-              <th>Grade</th>
-              <th className="num">Conf</th>
-              <th>Lot</th>
-              <th className="num">Units</th>
-              <th className="num">Bid</th>
-              <th className="num">Max bid</th>
-              <th className="num">Headroom</th>
-              <th>Closes</th>
-              <th>State</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(({ lot, v }) => (
-              <tr key={lot.lot_key} className="rowlink">
-                <td>
-                  <button
-                    type="button"
-                    className="watchstar"
-                    aria-pressed={watched.has(lot.lot_key)}
-                    title={watched.has(lot.lot_key) ? "Unwatch" : "Watch"}
-                    onClick={() => onToggleWatch(lot.lot_key)}
-                  >
-                    {watched.has(lot.lot_key) ? "★" : "☆"}
-                  </button>
-                </td>
-                <td>
-                  <GradeBadge grade={v.grade} />
-                </td>
-                <td className="num">{lot.confidence.toFixed(2)}</td>
-                <td>
-                  <Link href={`/lot/${lot.lot_key}`}>{lot.lot_key}</Link>
-                  <div className="muted small">{lot.title.slice(0, 88)}</div>
-                </td>
-                <td className="num">{lot.units.toLocaleString()}</td>
-                <td className="num">{usd(lot.current_bid)}</td>
-                <td className="num">{usd(v.max_bid)}</td>
-                <td className={`num ${v.headroom >= 0 ? "pos" : "neg"}`}>
-                  {usd(v.headroom)}
-                </td>
-                <td>{closesIn(lot.end_utc) || lot.end_date}</td>
-                <td>{lot.state ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="card" style={{ padding: 0 }}>
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={({ lot }) => lot.lot_key}
+          initialSort="headroom"
+          initialDir="desc"
+          empty="No lots match these filters."
+        />
       </div>
     </>
   );
-}
-
-function GradeBadge({ grade }: { grade: Grade | string }) {
-  return <span className={`grade grade-${grade}`}>{grade}</span>;
-}
-
-function round4(n: number): number {
-  return Math.round(n * 10000) / 10000;
 }
