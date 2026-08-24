@@ -1,0 +1,3 @@
+# Kept for backward compatibility with older scripts that install from the
+# repository root; it intentionally installs nothing. The real pipeline
+# lives in pipeline/ (pip install ./pipeline).
