@@ -47,7 +47,8 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field
 
-from . import classprice, grade, pricing, specs
+from . import classprice, grade, harvest, pricing, specs
+from .stats import quantile as _q
 
 # Enough folds that each model still sees most of the corpus, few enough
 # that refitting stays cheap -- the single-unit fit is the expensive part.
@@ -98,11 +99,6 @@ class Prediction:
 
 def _r(x, n=4):
     return round(x, n) if x is not None else None
-
-
-def _q(v: list[float], f: float) -> float:
-    v = sorted(v)
-    return v[min(len(v) - 1, int(f * len(v)))]
 
 
 def _fold_of(key: str, folds: int) -> int:
@@ -249,31 +245,22 @@ class _Silent:
 
 
 def _observations(sold: dict, manifests: dict) -> dict:
-    """Priced observations from one fold's training lots, without network."""
+    """Priced observations from one fold's training lots, without network.
+
+    The per-lot rules come from harvest.observation_for, the same function
+    the production fit uses. Re-implementing them here is how a backtest
+    quietly stops describing the model it claims to be testing.
+    """
     singles, baskets = [], []
     for key, lot in sold.items():
         title = lot.get("title") or ""
-        price = lot.get("final_price")
         n = specs.parse_unit_count(title)
-        if not price or price <= 0 or n is None:
-            continue
-        if n == 1:
-            m = specs.machine_from_text(title, 1)
-            if m.cpu:
-                singles.append({"key": key, "price": float(price),
-                                "title": title, "machine": m.to_dict()})
-            continue
-        if n < 5:
-            continue
         mix = list((manifests.get(key) or {}).get("machines") or [])
-        units = sum(m.get("qty", 1) for m in mix)
-        baskets.append({
-            "key": key, "price": float(price), "title": title,
-            "stated_units": n, "manifest_units": units,
-            "exact": bool(mix) and abs(units - n) <= max(1, n * 0.05),
-            "mix": mix,
-            "fallback": specs.machine_from_text(title, n).to_dict(),
-        })
+        obs = harvest.observation_for(key, title, lot.get("final_price"),
+                                      n, mix)
+        if obs is None:
+            continue
+        (singles if obs[0] == "single" else baskets).append(obs[1])
     return {"singles": singles, "baskets": baskets,
             "lots": classprice.class_observations(sold)}
 

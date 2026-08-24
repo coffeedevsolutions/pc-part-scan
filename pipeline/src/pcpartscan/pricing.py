@@ -466,7 +466,13 @@ class EbayAdapter:
         if not tok:
             return None
         import urllib.parse, urllib.request
-        q = f"desktop computer {cpu} {machine.get('ram_gb') or ''}GB".strip()
+        # The RAM clause is dropped entirely when there is no RAM, rather
+        # than left as a bare "GB". calibrate() asks by CPU alone, so every
+        # calibration query carried that stray token and measured the
+        # haircut against a different slice of listings than value() later
+        # applied it to.
+        ram = machine.get("ram_gb")
+        q = f"desktop computer {cpu}" + (f" {ram}GB" if ram else "")
         url = self.BROWSE_URL + "?" + urllib.parse.urlencode(
             {"q": q, "limit": "50", "category_ids": "179"})  # PC Desktops
         req = urllib.request.Request(url, headers={

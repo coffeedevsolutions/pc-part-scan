@@ -89,11 +89,16 @@ function Table({
           {sizes.map((k) => (
             <Row key={k} bucket={bt.by_size[k]} which={which} />
           ))}
-          <Row
-            bucket={bt.by_size["1 unit"] ?? bt.overall}
-            which={which}
-            label="Single units (not comparable)"
-          />
+          {/* Only ever the real bucket. Falling back to bt.overall put the
+              pooled corpus under a "single units" label -- precisely the
+              confusion the caption above warns against. */}
+          {bt.by_size["1 unit"] && (
+            <Row
+              bucket={bt.by_size["1 unit"]}
+              which={which}
+              label="Single units (not comparable)"
+            />
+          )}
         </tbody>
       </table>
     </>

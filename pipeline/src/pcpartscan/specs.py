@@ -108,9 +108,14 @@ _COUNT_PATTERNS = [
     # a parenthesised count anywhere: "... and fifty (1750) Lenovo 100e".
     # Not "(LOT 1)", "(ID #47379)" or "(26-2144-5)", which are labels.
     re.compile(r"(?<![\w#])\(\s*(\d{1,4})\s*\)\s*(?=[A-Za-z])", re.I),
-    # a bare count after a lead-in: "Bulk Auction: 40 Dell Latitude 7320"
+    # A bare count after a lead-in: "Bulk Auction: 40 Dell Latitude 7320".
+    # The exclusions matter more here than anywhere else, because a dash is
+    # also how sellers introduce a screen size or a dimension: without them
+    # "Samsung Monitors - 27 Inch" reads as a 27-unit pallet and a single
+    # $40 monitor enters the comps at $1.48 a unit.
     re.compile(r"(?:^|[:\u2013\u2014]\s*|\s-\s)\s*(\d{1,4})\s+"
-               r"(?!GB|TB|MB|GHZ|MHZ|IN\b|\")", re.I),
+               r"(?!GB|TB|MB|GHZ|MHZ|IN\b|INCH|\"|''|W\b|WATT|U\b"
+               r"|X\s*\d|MM\b|CM\b|FT\b|LB|KG|OZ\b)", re.I),
     # leading bare count: "137 Various Brands/Models of Micro Computers"
     re.compile(r"^\s*(\d{1,4})\s+(?!GB|TB|MB|GHZ|MHZ|IN\b|\")", re.I),
 ]

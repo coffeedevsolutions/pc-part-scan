@@ -92,3 +92,36 @@ def test_a_stated_count_is_still_used(monkeypatch):
     v = _value("LAPTOPS APPROX 150", monkeypatch)
     assert v.count_known is True
     assert v.units == 150
+
+
+def test_a_spec_sheet_settles_a_count_the_title_never_gave(monkeypatch):
+    """"PALLET OF DESKTOPS" with a readable 40-machine sheet is 40 machines.
+
+    The count started at a provisional 1 and the manifest was then checked
+    for agreement with it -- so any sheet listing three or more machines
+    failed the tolerance, and a fully identified lot went UNRATED for
+    having "no stated count".
+    """
+    machines = [{"cpu": "i5-8500", "qty": 40, "ram_gb": 8}]
+    monkeypatch.setattr(grade.harvest, "fetch_manifest",
+                        lambda *_a, **_k: (_ for _ in ()).throw(OSError()))
+    v = grade.value_lot(_rec("PALLET OF DESKTOPS"), _model(80.0), None,
+                        _NoEbay(), grade.Config(),
+                        manifests={"1-2": {"machines": machines}})
+    assert v.units == 40
+    assert v.count_known is True
+    assert v.exact_manifest is True
+    assert v.contents_known is True
+    assert v.grade != grade.UNRATED
+
+
+def test_a_stated_count_is_still_reconciled_against_the_sheet(monkeypatch):
+    """A title that DOES give a number keeps the agreement check."""
+    monkeypatch.setattr(grade.harvest, "fetch_manifest",
+                        lambda *_a, **_k: (_ for _ in ()).throw(OSError()))
+    v = grade.value_lot(_rec("Lot of 40 Dell OptiPlex desktops"), _model(80.0),
+                        None, _NoEbay(), grade.Config(),
+                        manifests={"1-2": {"machines":
+                                           [{"cpu": "i5-8500", "qty": 3}]}})
+    assert v.units == 40           # the sheet disagrees, so it is not adopted
+    assert v.exact_manifest is False

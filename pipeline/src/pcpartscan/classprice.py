@@ -40,6 +40,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from . import classify, specs
+from .stats import quantile as _q
 
 # Below this a class has no usable quote and lots of that kind stay UNRATED.
 # Eight is not many, but these are quantiles of a tight population rather
@@ -58,11 +59,6 @@ BULK_MIN_UNITS = 5
 # corpus-wide ratio of pallet price to single-unit price across the classes
 # with enough of both to measure it.
 DEFAULT_K = 0.60
-
-
-def _q(values: list[float], f: float) -> float:
-    v = sorted(values)
-    return v[min(len(v) - 1, int(f * len(v)))]
 
 
 @dataclass

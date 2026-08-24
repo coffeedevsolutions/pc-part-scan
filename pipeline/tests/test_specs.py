@@ -30,3 +30,35 @@ def test_machine_from_text_roundtrip():
     d = m.to_dict()
     assert d["cpu"] == "i5-7500"
     assert d["qty"] == 1
+
+
+# --- a dash introduces a size as often as it introduces a count ----------
+# "Samsung Monitors - 27 Inch" read as a 27-unit pallet, so a single $40
+# monitor entered the per-class comps at $1.48 a unit.
+
+import pytest
+
+from pcpartscan import specs as _specs
+
+
+@pytest.mark.parametrize("title", [
+    "Samsung Monitors - 27 Inch",
+    "Lot of Dell Monitors - 24 inch widescreen",
+    'Monitor - 27" widescreen',
+    "Desk - 60 x 30",
+    "Rack - 42 U server cabinet",
+    "Cart - 15 lb capacity",
+    "Adapter - 90 W barrel",
+])
+def test_a_measurement_after_a_dash_is_not_a_count(title):
+    n = _specs.parse_unit_count(title)
+    assert n in (None, 1), f"{title!r} parsed as {n} units"
+
+
+@pytest.mark.parametrize("title,want", [
+    ("Bulk Auction: 40 Dell Latitude 7320 Touchscreen Laptops", 40),
+    ("Dell Laptops - Lot of 120 Tested Latitude Laptops", 120),
+    ("Tower Desktop Computers - Lot of 31 Dell / Lenovo / HP", 31),
+])
+def test_a_real_count_after_a_lead_in_still_reads(title, want):
+    assert _specs.parse_unit_count(title) == want

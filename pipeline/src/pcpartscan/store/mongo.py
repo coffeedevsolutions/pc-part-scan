@@ -107,19 +107,22 @@ def upsert_lots(records: list[dict], observed_at: str, sold: bool) -> dict:
         return {"new": 0, "updated": 0, "total": db.lots.estimated_document_count()}
 
     keys = [lot_key(r) for r in recs]
-    already_sold = {d["_id"] for d in db.lots.find(
+    finished = {d["_id"]: d["status"] for d in db.lots.find(
         {"_id": {"$in": keys}, "status": {"$in": ["sold", "closed"]}},
-        {"_id": 1})}
+        {"_id": 1, "status": 1})}
 
     ops = []
     for rec in recs:
         k = lot_key(rec)
         norm = normalize_lot(rec, observed_at, sold)
         norm.pop("first_seen", None)
-        if k in already_sold and not sold:
-            # a finished auction never reopens: a later live sweep that
-            # still lists the lot must not put it back on the board
-            norm["status"] = "sold"
+        if k in finished and not sold:
+            # A finished auction never reopens: a later live sweep that
+            # still lists the lot must not put it back on the board. Keep
+            # the status it already had, though -- forcing "sold" onto a
+            # lot marked "closed" invents a sale we never saw, and the lot
+            # page then renders "sold --" with no price.
+            norm["status"] = finished[k]
             norm.pop("final_price", None)
         ops.append(UpdateOne(
             {"_id": k},

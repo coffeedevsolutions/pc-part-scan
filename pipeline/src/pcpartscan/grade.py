@@ -253,7 +253,7 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
     key = f"{rec['accountId']}-{rec['assetId']}"
     unknown_count = units is None
     if unknown_count:
-        units = 1        # provisional; a manifest below will correct it
+        units = 1        # provisional; a spec sheet below overrides it
 
     mix, exact = [], False
     if unknown_count or units >= 5:
@@ -267,9 +267,18 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
                 mix = []
         if mix:
             got = sum(m.get("qty", 1) for m in mix)
-            exact = abs(got - units) <= max(1, units * 0.05)
-            if exact:
-                units = got
+            if unknown_count:
+                # There is nothing to reconcile against: the title never
+                # gave a number, so the spec sheet IS the count. Comparing
+                # it with the provisional 1 instead meant any sheet listing
+                # three or more machines failed the tolerance and the lot
+                # went UNRATED for "no stated count" -- with a readable,
+                # fully identified manifest sitting right there.
+                exact, units = True, got
+            else:
+                exact = abs(got - units) <= max(1, units * 0.05)
+                if exact:
+                    units = got
     if not mix:
         mix = [specs.machine_from_text(title, units).to_dict()]
 

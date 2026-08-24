@@ -233,10 +233,12 @@ export function ValuationWaterfall({
       {fixed > 0 && maxBid <= 0 && breakeven >= 0 && (
         <p className="muted small">
           <strong>Handling is what stops this lot.</strong> At{" "}
-          {usd(cfg.per_unit_handling, 2)} a unit it costs {usd(fixed)}, which
-          is more than the {usd(revenue)} the lot is expected to make. It would
-          need to be under <strong>{usd(breakeven, 2)}</strong> a unit for any
-          bid to clear your target return.
+          {usd(cfg.per_unit_handling, 2)} a unit it costs {usd(fixed)}. Of the{" "}
+          {usd(revenue)} this lot is expected to make, your {pct(cfg.target_roi)}{" "}
+          required return reserves all but {usd(budget)} — so handling has
+          nothing left to come out of. It would need to be under{" "}
+          <strong>{usd(breakeven, 2)}</strong> a unit for any bid to clear that
+          return.
         </p>
       )}
       {byClass && q && (

@@ -363,10 +363,11 @@ def cmd_resolve(a) -> int:
     from . import harvest
     from .store import backend as ds
 
-    is_mongo = hasattr(ds, "job_start")
+    if not hasattr(ds, "open_lots_past_end"):
+        raise SystemExit("resolve needs the mongo store; set MONGODB_URI")
+    is_mongo = True
     run = ds.run_id()
-    if is_mongo:
-        ds.job_start("resolve", run)
+    ds.job_start("resolve", run)
     try:
         res = harvest.resolve_closed(max_sellers=a.max_sellers, run=run)
         if res["outcomes"]:
