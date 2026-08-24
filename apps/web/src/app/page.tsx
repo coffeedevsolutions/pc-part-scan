@@ -1,4 +1,9 @@
-import { freshBids, latestSnapshot } from "@/lib/data";
+import {
+  freshBids,
+  latestSnapshot,
+  savedAssumptions,
+  watchedKeys,
+} from "@/lib/data";
 
 import { BoardClient } from "./BoardClient";
 
@@ -17,7 +22,11 @@ export default async function BoardPage() {
       </main>
     );
   }
-  const bids = await freshBids(snap.lots.map((l) => l.lot_key));
+  const [bids, watched, saved] = await Promise.all([
+    freshBids(snap.lots.map((l) => l.lot_key)),
+    watchedKeys(),
+    savedAssumptions(),
+  ]);
   const lots = snap.lots.map((l) => {
     const fresh = bids[l.lot_key];
     return {
@@ -42,7 +51,11 @@ export default async function BoardPage() {
           </>
         )}
       </p>
-      <BoardClient lots={lots} defaults={snap.config} />
+      <BoardClient
+        lots={lots}
+        defaults={{ ...snap.config, ...saved }}
+        watched={[...watched]}
+      />
     </main>
   );
 }

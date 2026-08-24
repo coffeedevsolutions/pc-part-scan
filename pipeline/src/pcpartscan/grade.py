@@ -212,7 +212,12 @@ def load_models():
     if not os.path.exists(pricing.StaticTable.PATH):
         pricing.StaticTable.seed_from(single)
     pricing.save_models(single, basket)
-    return single, basket, pricing.StaticTable(), pricing.EbayAdapter()
+    # workbench-edited prices win over the CSV when the store carries them
+    from .store import backend as ds
+    overrides = ds.component_overrides() if hasattr(ds, "component_overrides") else {}
+    table = (pricing.StaticTable.from_overrides(overrides)
+             if overrides else pricing.StaticTable())
+    return single, basket, table, pricing.EbayAdapter()
 
 
 def scan(live: dict | None = None, cfg: Config | None = None,

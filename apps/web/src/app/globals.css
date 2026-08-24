@@ -215,6 +215,66 @@ tr.rowlink:hover td {
   margin-top: 2px;
 }
 
+.watchstar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--warning);
+  padding: 2px 4px;
+}
+.watchstar[aria-pressed="false"] {
+  color: var(--text-muted);
+}
+.watchstar:hover {
+  transform: scale(1.15);
+}
+
+.actionbtns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.actionbtns button {
+  background: var(--surface-1);
+  border: 1px solid var(--baseline);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+.actionbtns button[aria-pressed="true"] {
+  background: var(--series-1);
+  border-color: var(--series-1);
+  color: #fff;
+}
+
+textarea.notes {
+  width: 100%;
+  min-height: 90px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1px solid var(--baseline);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  resize: vertical;
+}
+
+input.priceedit {
+  width: 90px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1px solid var(--baseline);
+  border-radius: 6px;
+  padding: 3px 6px;
+  font: inherit;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .chart-tip {
   position: absolute;
   pointer-events: none;

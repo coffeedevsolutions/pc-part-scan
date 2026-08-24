@@ -3,12 +3,16 @@ import { notFound } from "next/navigation";
 import {
   bidSeries,
   getLot,
+  getLotAction,
   getManifest,
+  getNote,
   snapshotEntry,
+  watchedKeys,
 } from "@/lib/data";
 import { closesIn, shortDate, usd } from "@/lib/format";
 
 import { BidCurve } from "./BidCurve";
+import { LotControls } from "./LotControls";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +24,16 @@ export default async function LotPage({
   const { key } = await params;
   if (!/^\d+-\d+$/.test(key)) notFound();
 
-  const [lot, series, manifest, snap] = await Promise.all([
-    getLot(key),
-    bidSeries(key),
-    getManifest(key),
-    snapshotEntry(key),
-  ]);
+  const [lot, series, manifest, snap, note, action, watched] =
+    await Promise.all([
+      getLot(key),
+      bidSeries(key),
+      getManifest(key),
+      snapshotEntry(key),
+      getNote(key),
+      getLotAction(key),
+      watchedKeys(),
+    ]);
   if (!lot) notFound();
   const v = snap?.lot;
 
@@ -73,6 +81,13 @@ export default async function LotPage({
           </div>
         </div>
       )}
+
+      <LotControls
+        lotKey={key}
+        watched={watched.has(key)}
+        note={note}
+        action={action}
+      />
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Bid history</h2>
