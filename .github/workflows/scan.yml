@@ -9,6 +9,10 @@ on:
   schedule:
     - cron: "0 12,14,16,18,20,22 * * *"
     - cron: "0 0,3,8 * * *"
+  push:
+    # pre-merge testing: run when this workflow itself changes on the dev branch
+    branches: [claude/self-sufficient-system-architecture-o15ag8]
+    paths: [".github/workflows/scan.yml"]
   workflow_dispatch:
     inputs:
       full:
@@ -37,4 +41,6 @@ jobs:
       - name: Scan
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
         run: pcps scan ${{ inputs.full && '--full' || '' }}

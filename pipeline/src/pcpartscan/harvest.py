@@ -111,8 +111,19 @@ def sweep_live(queries=QUERIES, rows=100, max_pages=8, run: str | None = None) -
     return found
 
 
-def fetch_manifest(account_id: int, asset_id: int) -> list[specs.Machine]:
-    """Detail-fetch a lot, download any spec PDF, return the parsed machine mix."""
+def fetch_manifest(account_id: int, asset_id: int,
+                   use_cache: bool = True) -> list[specs.Machine]:
+    """Detail-fetch a lot, download any spec PDF, return the parsed machine mix.
+
+    A previous parse attempt -- successful or empty -- is stored by the
+    backend and returned as-is, so scheduled runs do not re-download the
+    same unparseable spec sheets forever.
+    """
+    key = f"{account_id}-{asset_id}"
+    if use_cache:
+        cached = ds.load_manifest(key)
+        if cached is not None:
+            return [specs.Machine(**m) for m in cached.get("machines", [])]
     os.makedirs(ATTACH, exist_ok=True)
     detail = gd.asset(asset_id, account_id)
     out: list[specs.Machine] = []
@@ -139,9 +150,9 @@ def fetch_manifest(account_id: int, asset_id: int) -> list[specs.Machine]:
             continue
         out.extend(parsed)
         used.append(fn)
-    if out:
-        ds.save_manifest(f"{account_id}-{asset_id}",
-                         [m.to_dict() for m in out], used)
+    # an empty result is recorded too: "attempted, unparseable" is exactly
+    # what keeps rescans cheap and gives the manifest-triage routine its queue
+    ds.save_manifest(key, [m.to_dict() for m in out], used)
     return out
 
 
@@ -150,7 +161,12 @@ def build_observations(sold: dict, max_detail: int = 400) -> dict:
 
     Returns {"singles": [...], "baskets": [...]}.
     """
-    manifests = _load("manifests.json", {})
+    manifests = _load("manifests.json", None)
+    if manifests is None:
+        # fresh runner: prime the scratch cache from the durable store so the
+        # detail budget goes to lots never attempted, not re-fetches
+        manifests = {k: m.get("machines", [])
+                     for k, m in ds.all_manifests().items()}
     singles, baskets = [], []
     detail_budget = max_detail
 

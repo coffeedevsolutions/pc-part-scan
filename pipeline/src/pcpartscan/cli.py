@@ -155,6 +155,10 @@ def cmd_scan(a) -> int:
             sold = harvest.sweep_sold(max_pages=12 if a.full else 4, run=run)
             print("building observations...")
             harvest.build_observations(sold, max_detail=600 if a.full else 120)
+            if is_mongo:
+                # the sweep only covers recent pages; refit against the full
+                # accumulated corpus, not just what this run happened to see
+                harvest.build_observations_from_dataset()
             print("refreshing live lots...")
             harvest.sweep_live(max_pages=8 if a.full else 4, run=run)
 
