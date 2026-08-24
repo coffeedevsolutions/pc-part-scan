@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   DEFAULT_CONFIG,
@@ -10,6 +10,7 @@ import {
   type Grade,
 } from "@pcps/valuation";
 
+import { saveAssumptions, toggleWatch } from "@/lib/actions";
 import type { SnapshotLot } from "@/lib/data";
 import { closesIn, usd } from "@/lib/format";
 
@@ -35,22 +36,27 @@ const FIELDS: {
 export function BoardClient({
   lots,
   defaults,
+  watched: watchedInit,
 }: {
   lots: BoardLot[];
   defaults: Record<string, number>;
+  watched: string[];
 }) {
   const base: Config = { ...DEFAULT_CONFIG, ...defaults };
   const [cfg, setCfg] = useState<Config>(base);
   const [gradeMin, setGradeMin] = useState<string>("all");
   const [state, setState] = useState<string>("all");
+  const [watchedOnly, setWatchedOnly] = useState(false);
+  const [watched, setWatched] = useState<Set<string>>(new Set(watchedInit));
   const [loaded, setLoaded] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setCfg({ ...base, ...JSON.parse(raw) });
     } catch {
-      /* first visit / blocked storage: keep defaults */
+      /* first visit / blocked storage: keep server-saved defaults */
     }
     setLoaded(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,7 +69,32 @@ export function BoardClient({
     } catch {
       /* storage unavailable: sliders still work for this visit */
     }
+    // debounce the server save so slider-dragging doesn't spam writes
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      saveAssumptions(cfg as unknown as Record<string, number>).catch(() => {});
+    }, 800);
   }, [cfg, loaded]);
+
+  async function onToggleWatch(key: string) {
+    // optimistic; the server action is the source of truth on next load
+    setWatched((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    try {
+      await toggleWatch(key);
+    } catch {
+      setWatched((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        return next;
+      });
+    }
+  }
 
   const states = useMemo(
     () =>
@@ -78,11 +109,12 @@ export function BoardClient({
         b.v.headroom * b.lot.confidence - a.v.headroom * a.lot.confidence,
     );
     return graded.filter(({ lot, v }) => {
+      if (watchedOnly && !watched.has(lot.lot_key)) return false;
       if (state !== "all" && lot.state !== state) return false;
       if (gradeMin !== "all" && v.grade > gradeMin) return false; // 'A' < 'B' < ...
       return true;
     });
-  }, [lots, cfg, gradeMin, state]);
+  }, [lots, cfg, gradeMin, state, watchedOnly, watched]);
 
   return (
     <>
@@ -132,6 +164,14 @@ export function BoardClient({
               ))}
             </select>
           </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={watchedOnly}
+              onChange={(e) => setWatchedOnly(e.target.checked)}
+            />
+            watched only
+          </label>
           <span className="muted small">
             {rows.length} lots · regraded live in your browser
           </span>
@@ -142,6 +182,7 @@ export function BoardClient({
         <table className="data">
           <thead>
             <tr>
+              <th aria-label="Watch"></th>
               <th>Grade</th>
               <th className="num">Conf</th>
               <th>Lot</th>
@@ -156,6 +197,17 @@ export function BoardClient({
           <tbody>
             {rows.map(({ lot, v }) => (
               <tr key={lot.lot_key} className="rowlink">
+                <td>
+                  <button
+                    type="button"
+                    className="watchstar"
+                    aria-pressed={watched.has(lot.lot_key)}
+                    title={watched.has(lot.lot_key) ? "Unwatch" : "Watch"}
+                    onClick={() => onToggleWatch(lot.lot_key)}
+                  >
+                    {watched.has(lot.lot_key) ? "★" : "☆"}
+                  </button>
+                </td>
                 <td>
                   <GradeBadge grade={v.grade} />
                 </td>

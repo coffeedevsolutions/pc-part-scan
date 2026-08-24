@@ -1,13 +1,27 @@
-import { modelRuns } from "@/lib/data";
+import { componentPrices, modelRuns } from "@/lib/data";
 import { usd } from "@/lib/format";
 
 import { ModelTrends } from "./ModelTrends";
+import { PriceEditor } from "./PriceEditor";
 
 export const dynamic = "force-dynamic";
 
 export default async function ModelsPage() {
-  const runs = await modelRuns();
+  const [runs, pinned] = await Promise.all([modelRuns(), componentPrices()]);
   const latest = runs[runs.length - 1];
+  const pinnedMap = new Map(pinned.map((p) => [p.cpu, p]));
+  const fitted = latest ? Object.entries(latest.cpu_base_value_usd) : [];
+  const editorRows = [
+    ...fitted.map(([cpu, v]) => ({
+      cpu,
+      fitted: v,
+      pinned: pinnedMap.get(cpu)?.value_usd ?? null,
+      note: pinnedMap.get(cpu)?.note ?? "",
+    })),
+    ...pinned
+      .filter((p) => !p.cpu.startsWith("_") && !fitted.some(([c]) => c === p.cpu))
+      .map((p) => ({ cpu: p.cpu, fitted: null, pinned: p.value_usd, note: p.note })),
+  ].sort((a, b) => (b.fitted ?? b.pinned ?? 0) - (a.fitted ?? a.pinned ?? 0));
 
   return (
     <main>
@@ -52,33 +66,13 @@ export default async function ModelsPage() {
       {latest && (
         <div className="card">
           <h2 style={{ marginTop: 0 }}>
-            Fitted CPU base values{" "}
-            <span className="muted small">run {latest.run_id}</span>
+            CPU base values{" "}
+            <span className="muted small">
+              fitted in run {latest.run_id} · + {usd(latest.ram_per_8gb)} per
+              8GB RAM · + {usd(latest.drive_adder)} with drive
+            </span>
           </h2>
-          <div style={{ maxHeight: 420, overflowY: "auto" }}>
-            <table className="data" style={{ maxWidth: 480 }}>
-              <thead>
-                <tr>
-                  <th>CPU</th>
-                  <th className="num">Base value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(latest.cpu_base_value_usd)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([cpu, v]) => (
-                    <tr key={cpu}>
-                      <td>{cpu}</td>
-                      <td className="num">{usd(v)}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="muted small">
-            + {usd(latest.ram_per_8gb)} per 8GB RAM · +{" "}
-            {usd(latest.drive_adder)} with drive
-          </p>
+          <PriceEditor rows={editorRows} />
         </div>
       )}
     </main>

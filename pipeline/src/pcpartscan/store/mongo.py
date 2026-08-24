@@ -260,6 +260,17 @@ def save_full_models(run: str, single_model, bulk_model) -> None:
     """No-op: record_components already stores the full coefficients."""
 
 
+def component_overrides() -> dict[str, float]:
+    """Hand-pinned component prices from the workbench, keyed by CPU.
+
+    The special key "_ram_per_8gb" carries the RAM adder. Empty dict means
+    no overrides are stored and the CSV fallback applies.
+    """
+    return {d["_id"]: float(d["value_usd"])
+            for d in get_db().component_prices.find({})
+            if d.get("value_usd") is not None}
+
+
 def component_price_series(cpu: str) -> list[dict]:
     return [{"run_id": d["run_id"], "fitted_at": d["fitted_at"],
              "value_usd": d["cpu_base_value_usd"][cpu]}

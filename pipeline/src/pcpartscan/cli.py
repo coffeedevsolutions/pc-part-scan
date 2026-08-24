@@ -143,6 +143,24 @@ def cmd_backfill(a) -> int:
             n_runs += 1
         print(f"model_runs: {n_runs} processed (insert-only)")
 
+        # seed the editable component-price table from the CSV (insert-only:
+        # workbench edits are never overwritten by a re-run)
+        csv_path = os.path.join(d, "component_prices.csv")
+        n_prices = 0
+        if os.path.exists(csv_path):
+            import csv as _csv
+            with open(csv_path, newline="") as f:
+                for row in _csv.DictReader(f):
+                    db.component_prices.update_one(
+                        {"_id": row["key"].strip()},
+                        {"$setOnInsert": {
+                            "value_usd": float(row["value_usd"]),
+                            "note": (row.get("note") or "").strip(),
+                        }},
+                        upsert=True)
+                    n_prices += 1
+        print(f"component_prices: {n_prices} processed (insert-only)")
+
         idx = mongo.update_index(index.get("last_run_id", run),
                                  {"last_config": index.get("last_config")})
         print(f"index: {json.dumps(idx['counts'])}")

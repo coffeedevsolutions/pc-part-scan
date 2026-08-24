@@ -233,3 +233,45 @@ export async function datasetCounts(): Promise<Record<string, number>> {
   const doc = await coll("meta").findOne({ _id: "index" });
   return (doc?.counts as Record<string, number>) ?? {};
 }
+
+export async function watchedKeys(): Promise<Set<string>> {
+  const docs = await coll("watchlist").find({}).project({ _id: 1 }).toArray();
+  return new Set(docs.map((d) => String(d._id)));
+}
+
+export async function getNote(key: string): Promise<string> {
+  const doc = await coll("notes").findOne({ _id: key });
+  return (doc?.text as string) ?? "";
+}
+
+export async function getLotAction(
+  key: string,
+): Promise<{ action: string; amount: number | null } | null> {
+  const doc = await coll("lot_actions").findOne({ _id: key });
+  return doc
+    ? {
+        action: doc.action as string,
+        amount: (doc.amount as number | null) ?? null,
+      }
+    : null;
+}
+
+export async function componentPrices(): Promise<
+  { cpu: string; value_usd: number; note: string }[]
+> {
+  const docs = await coll("component_prices").find({}).sort({ _id: 1 }).toArray();
+  return docs.map((d) => ({
+    cpu: d._id,
+    value_usd: d.value_usd as number,
+    note: (d.note as string) ?? "",
+  }));
+}
+
+export async function savedAssumptions(): Promise<Record<string, number>> {
+  const doc = await coll("settings").findOne({ _id: "assumptions" });
+  if (!doc) return {};
+  const { _id, updated_at, ...rest } = doc as Record<string, unknown>;
+  void _id;
+  void updated_at;
+  return rest as Record<string, number>;
+}

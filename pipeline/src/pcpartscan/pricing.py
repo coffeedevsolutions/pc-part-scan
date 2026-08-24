@@ -272,6 +272,15 @@ class StaticTable:
                     else:
                         self.cpu_value[k] = v
 
+    @classmethod
+    def from_overrides(cls, overrides: dict[str, float]) -> "StaticTable":
+        """Build a table from stored overrides (the workbench's edits)."""
+        t = cls(path=os.devnull)
+        t.ram_per_8gb = float(overrides.get("_ram_per_8gb", 0.0))
+        t.cpu_value = {k: float(v) for k, v in overrides.items()
+                       if k != "_ram_per_8gb"}
+        return t
+
     def value(self, machine: dict) -> float | None:
         cpu = machine.get("cpu")
         if cpu not in self.cpu_value:
