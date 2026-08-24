@@ -19,6 +19,16 @@ export interface Config {
   sales_tax: number;
   pickup_cost: number;
   per_unit_handling: number;
+  /**
+   * Handling for a lot of parts rather than machines. Testing, wiping and
+   * photographing a PC is not the same work as dropping a charger in a box,
+   * and one rate for both is a defect rather than caution: at $3 a unit
+   * handling comes to 121% of expected revenue on the median charger
+   * pallet, and every one in the backtest corpus gets a max bid of zero
+   * however cheap it is. Defaults to the machine rate so nothing changes
+   * until somebody says what their own sorting costs.
+   */
+  part_handling: number;
   recovery: number;
   dead_rate: number;
   target_roi: number;
@@ -29,6 +39,7 @@ export const DEFAULT_CONFIG: Config = {
   sales_tax: 0.0,
   pickup_cost: 0.0,
   per_unit_handling: 3.0,
+  part_handling: 3.0,
   recovery: 0.55,
   dead_rate: 0.1,
   target_roi: 0.6,
@@ -36,7 +47,29 @@ export const DEFAULT_CONFIG: Config = {
 
 export const CONFIDENCE_GATE = 0.5;
 
-export type Grade = "A" | "B" | "C" | "D" | "F";
+/**
+ * The grade of a lot we refuse to price (grade.py UNRATED).
+ *
+ * When fewer than half a lot's units have an identified component, the
+ * ceiling is driven by how many things are on the pallet rather than by
+ * what they are, so every number downstream of it is arithmetic we do not
+ * stand behind. "U" sorts after "F", which keeps abstentions out of every
+ * "grade at least" filter and at the bottom of the default ranking.
+ */
+export const UNRATED = "U";
+
+export type Grade = "A" | "B" | "C" | "D" | "F" | "U";
+
+/**
+ * This config with the handling rate that applies to `family`
+ * (grade.py Config.for_family). Answering the family question once, here,
+ * leaves every formula below untouched.
+ */
+export function forFamily(cfg: Config, family?: string | null): Config {
+  const part = cfg.part_handling ?? cfg.per_unit_handling;
+  if (family !== "part" || part === cfg.per_unit_handling) return cfg;
+  return { ...cfg, per_unit_handling: part };
+}
 
 /** All-in cost of winning a lot at `hammer` (grade.py Config.all_in). */
 export function allIn(cfg: Config, hammer: number, units: number): number {
@@ -60,7 +93,12 @@ export function maxHammer(
 }
 
 /** Headroom-based grade, discounted and gated by confidence (grade.py _grade). */
-export function gradeFrom(relHeadroom: number, confidence: number): Grade {
+export function gradeFrom(
+  relHeadroom: number,
+  confidence: number,
+  contentsKnown = true,
+): Grade {
+  if (!contentsKnown) return UNRATED;
   const s = relHeadroom * (0.5 + 0.5 * confidence);
   let g: Grade;
   if (s >= 0.6) g = "A";
@@ -87,6 +125,16 @@ export interface LotFacts {
   floor_trusted?: boolean;
   ceiling: number;
   confidence: number;
+  /**
+   * Whether enough of the lot's units have an identified component to price
+   * it at all. False makes the lot UNRATED: the numbers are still computed
+   * so the lot page can show what a generic estimate would have said, but
+   * the UI must not present them as a bid ceiling. Absent means known
+   * (snapshots written before abstention existed).
+   */
+  contents_known?: boolean;
+  /** "computer" or "part" -- decides which handling rate applies */
+  item_family?: "computer" | "part" | null;
 }
 
 export interface Regrade {
@@ -95,10 +143,15 @@ export interface Regrade {
   headroom: number;
   roi_at_current: number;
   grade: Grade;
+  /** handling rate actually applied, after the family split */
+  handling_applied: number;
+  /** per-unit handling at which max bid would reach zero */
+  handling_breakeven: number;
 }
 
 /** Re-derive every config-dependent number for one lot. */
-export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
+export function regrade(lot: LotFacts, base: Config = DEFAULT_CONFIG): Regrade {
+  const cfg = forFamily(base, lot.item_family);
   const partsOut = lot.ceiling * (1 - cfg.dead_rate) * cfg.recovery;
   const revenue =
     lot.floor_trusted === false ? partsOut : Math.max(partsOut, lot.floor);
@@ -107,12 +160,15 @@ export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
   const costNow = allIn(cfg, lot.current_bid, lot.units);
   const roi_at_current = costNow > 0 ? (revenue - costNow) / costNow : 0.0;
   const rel = max_bid > 0 ? headroom / max_bid : -1.0;
+  const budget = revenue / (1 + cfg.target_roi) - cfg.pickup_cost;
   return {
     expected_revenue: revenue,
     max_bid,
     headroom,
     roi_at_current,
-    grade: gradeFrom(rel, lot.confidence),
+    grade: gradeFrom(rel, lot.confidence, lot.contents_known !== false),
+    handling_applied: cfg.per_unit_handling,
+    handling_breakeven: lot.units > 0 ? Math.max(0, budget / lot.units) : 0,
   };
 }
 
@@ -120,8 +176,10 @@ export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
  * Confidence-weighted headroom, ascending — the board's default order and
  * the pipeline's (grade.py scan). Negated so a plain ascending sort puts
  * the most attractive lot first: a large headroom we do not believe should
- * not outrank a smaller one we do.
+ * not outrank a smaller one we do. Abstentions have no number to rank on,
+ * so they sink to the bottom whatever their arithmetic says.
  */
 export function rankKey(v: Regrade, confidence: number): number {
+  if (v.grade === UNRATED) return Infinity;
   return -(v.headroom * confidence);
 }

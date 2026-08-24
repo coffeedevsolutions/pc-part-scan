@@ -2,6 +2,48 @@ import "server-only";
 
 import { getDb } from "./mongo";
 
+/** A distribution of one ratio across a bucket of backtested lots. */
+export interface Spread {
+  n: number;
+  p10: number;
+  p25: number;
+  median: number;
+  p75: number;
+  p90: number;
+}
+
+export interface BacktestBucket {
+  name: string;
+  n: number;
+  n_priced: number;
+  vs_max_bid: Spread | Record<string, never>;
+  vs_floor: Spread | Record<string, never>;
+  vs_ceiling: Spread | Record<string, never>;
+  win_rate?: number;
+  floor_within_2x?: number;
+}
+
+/** How the grader did against lots that already closed (backtest.py). */
+export interface Backtest {
+  run_id: string;
+  generated_at: string;
+  folds: number;
+  n_lots: number;
+  config: Record<string, number>;
+  overall: BacktestBucket;
+  pallets: BacktestBucket;
+  by_size: Record<string, BacktestBucket>;
+  by_confidence: Record<string, BacktestBucket>;
+  by_path: Record<string, BacktestBucket>;
+  by_class: Record<string, BacktestBucket>;
+  win_curves: {
+    n_pallets: number;
+    by_target_roi: { target_roi: number; n: number; win_rate: number; median_ratio: number }[];
+    by_recovery: { recovery: number; n: number; win_rate: number; median_ratio: number }[];
+    grid: { target_roi: number; recovery: number; win_rate: number }[];
+  };
+}
+
 /** One graded lot from a scan snapshot (grade.py Valuation, serialized). */
 export interface SnapshotLot {
   lot_key: string;
@@ -14,6 +56,28 @@ export interface SnapshotLot {
   state: string | null;
   exact_manifest: boolean;
   mix: MachineLine[];
+  /**
+   * false when too few of the lot's units have an identified component to
+   * price it — the lot is UNRATED and the numbers below are diagnostics,
+   * not a bid ceiling. Absent on snapshots written before abstention.
+   */
+  contents_known?: boolean;
+  /** units whose CPU the mix actually names */
+  identified_units?: number;
+  /** false when the title never said how many things are in the lot */
+  count_known?: boolean;
+  /** what kind of thing we think the lot holds (classify.py) */
+  item_class?: string | null;
+  item_family?: "computer" | "part" | null;
+  /** plain-language account of how we read the title, shown as-is */
+  class_reason?: string;
+  class_confidence?: number;
+  /**
+   * "machines" when the CPU feature model priced it, "class" when it fell
+   * back to sold comps for this kind of thing, absent when neither could.
+   */
+  priced_by?: "machines" | "class" | null;
+  class_quote?: ClassQuote | null;
   floor: number;
   /** false when the bulk fit behind `floor` is too weak to underwrite against */
   floor_trusted?: boolean;
@@ -25,6 +89,25 @@ export interface SnapshotLot {
   roi_at_current: number;
   confidence: number;
   grade: string;
+}
+
+/** What sold comps say one unit of an item class is worth (classprice.py). */
+export interface ClassQuote {
+  item_class: string;
+  family: string;
+  single_n: number;
+  single_p25: number;
+  single_p50: number;
+  single_p75: number;
+  bulk_n: number;
+  bulk_p25: number;
+  bulk_p50: number;
+  bulk_p75: number;
+  usable: boolean;
+  has_floor: boolean;
+  has_ceiling: boolean;
+  ceiling_per_unit: number;
+  floor_per_unit: number;
 }
 
 export interface MachineLine {
@@ -49,6 +132,7 @@ export interface Snapshot {
     bulk_n: number;
   };
   confidence_gate: number;
+  class_prices?: Record<string, ClassQuote>;
   lots: SnapshotLot[];
 }
 
@@ -145,6 +229,63 @@ export async function latestSnapshot(): Promise<Snapshot | null> {
     .limit(1)
     .next();
   return doc ? clean<Snapshot>(doc) : null;
+}
+
+/** A lot we published a number for, now closed, with what it fetched. */
+export interface ClosedOutcome {
+  key: string;
+  title: string | null;
+  url: string | null;
+  auction_end_utc: string | null;
+  final_price: number;
+  grade: string;
+  max_bid: number;
+  confidence: number;
+  run_id: string;
+}
+
+/**
+ * How our published max bids actually turned out.
+ *
+ * This is the backtest made personal: not "lots like this" but the exact
+ * lots the board showed, scored against the price they really fetched. It
+ * only fills in as `pcps resolve` learns outcomes, so it starts empty and
+ * grows with every scan.
+ */
+export async function recentlyClosed(limit = 12): Promise<ClosedOutcome[]> {
+  const docs = await coll("lots")
+    .find({
+      status: "sold",
+      final_price: { $gt: 0 },
+      latest_grade: { $ne: null },
+    })
+    .sort({ auction_end_utc: -1 })
+    .limit(limit)
+    .toArray();
+  return docs.map((d) => {
+    const g = (d.latest_grade ?? {}) as Record<string, number | string>;
+    return {
+      key: String(d._id),
+      title: (d.title as string) ?? null,
+      url: (d.url as string) ?? null,
+      auction_end_utc: (d.auction_end_utc as string) ?? null,
+      final_price: Number(d.final_price),
+      grade: String(g.grade ?? "?"),
+      max_bid: Number(g.max_bid ?? 0),
+      confidence: Number(g.confidence ?? 0),
+      run_id: String(g.run_id ?? ""),
+    };
+  });
+}
+
+/** The most recent backtest, or null before one has ever been run. */
+export async function latestBacktest(): Promise<Backtest | null> {
+  const doc = await coll("backtests")
+    .find({})
+    .sort({ _id: -1 })
+    .limit(1)
+    .next();
+  return doc ? clean<Backtest>(doc) : null;
 }
 
 /** Fresher bids than the snapshot: last_obs per key from the lots collection. */

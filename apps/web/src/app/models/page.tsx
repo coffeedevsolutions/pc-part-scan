@@ -1,15 +1,29 @@
-import { componentPrices, modelRuns } from "@/lib/data";
+import {
+  componentPrices,
+  latestBacktest,
+  latestSnapshot,
+  modelRuns,
+} from "@/lib/data";
 import { usd } from "@/lib/format";
 
 import { HelpIcon } from "@/components/Tooltip";
 
+import { BacktestPanel } from "./Backtest";
 import { ModelTrends } from "./ModelTrends";
 import { PriceEditor } from "./PriceEditor";
 
 export const dynamic = "force-dynamic";
 
 export default async function ModelsPage() {
-  const [runs, pinned] = await Promise.all([modelRuns(), componentPrices()]);
+  const [runs, pinned, snap, bt] = await Promise.all([
+    modelRuns(),
+    componentPrices(),
+    latestSnapshot(),
+    latestBacktest(),
+  ]);
+  const classes = Object.values(snap?.class_prices ?? {})
+    .filter((q) => q.usable)
+    .sort((a, b) => b.ceiling_per_unit - a.ceiling_per_unit);
   const latest = runs[runs.length - 1];
   const pinnedMap = new Map(pinned.map((p) => [p.cpu, p]));
   const fitted = latest ? Object.entries(latest.cpu_base_value_usd) : [];
@@ -29,11 +43,12 @@ export default async function ModelsPage() {
     <main>
       <h1>Models</h1>
       <p className="sub">
-        Every scan refits two price models on sold auctions: what one machine
-        is worth (drives the parts-out ceiling) and what a whole pallet
-        clears (drives the resale floor). This page is where you check
-        whether those fits are healthy enough to trust a grade — and where
-        you correct a CPU price the model has wrong.
+        Every scan refits the price models on sold auctions: what one machine
+        is worth (drives the parts-out ceiling), what a whole pallet clears
+        (drives the resale floor), and what a unit of each kind of thing goes
+        for when we cannot see inside the lot at all. This page is where you
+        check whether those fits are healthy enough to trust a grade — and
+        where you correct a CPU price the model has wrong.
       </p>
 
       {latest && (
@@ -68,6 +83,8 @@ export default async function ModelsPage() {
         </div>
       )}
 
+      {bt && <BacktestPanel bt={bt} />}
+
       <ModelTrends
         runs={runs.map((r) => ({
           fitted_at: r.fitted_at,
@@ -76,6 +93,58 @@ export default async function ModelsPage() {
           bulk_n: r.bulk_n,
         }))}
       />
+
+      {classes.length > 0 && (
+        <div className="card">
+          <h2 style={{ marginTop: 0 }}>
+            Prices by kind of thing
+            <HelpIcon k="classComps" label="per-kind prices" />
+          </h2>
+          <p className="muted small" style={{ marginTop: 0 }}>
+            Used when a lot&apos;s contents cannot be read — a pallet of
+            chargers has no CPU for the machine model to price, and used to
+            land in a generic bucket at $69 a unit. Every number here comes
+            from sold GovDeals lots of that kind and nothing else. A lot
+            priced this way is capped at grade C.
+          </p>
+          <table className="data" style={{ maxWidth: 760 }}>
+            <thead>
+              <tr>
+                <th>Kind</th>
+                <th className="num">Parts-out / unit</th>
+                <th className="num">Pallet / unit</th>
+                <th className="num">Pallets seen</th>
+                <th className="num">Sold alone</th>
+                <th>Pallet range</th>
+              </tr>
+            </thead>
+            <tbody>
+              {classes.map((q) => (
+                <tr key={q.item_class}>
+                  <td>
+                    <span className={`kind kind-${q.family}`}>
+                      {q.item_class}
+                    </span>
+                  </td>
+                  <td className="num">
+                    {q.ceiling_per_unit ? usd(q.ceiling_per_unit, 2) : "—"}
+                  </td>
+                  <td className="num">
+                    {q.floor_per_unit ? usd(q.floor_per_unit, 2) : "—"}
+                  </td>
+                  <td className="num">{q.bulk_n.toLocaleString()}</td>
+                  <td className="num">{q.single_n.toLocaleString()}</td>
+                  <td className="muted small">
+                    {q.bulk_n
+                      ? `${usd(q.bulk_p25, 2)} – ${usd(q.bulk_p75, 2)}`
+                      : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {latest && (
         <div className="card">

@@ -9,6 +9,8 @@ export function SoldTable({ rows }: { rows: LotDoc[] }) {
     {
       id: "closed",
       header: "Closed",
+      help: "soldClosed",
+      helpLabel: "the closing date",
       sortValue: (l) =>
         l.auction_end_utc ? new Date(l.auction_end_utc).getTime() : null,
       cell: (l) => (
@@ -41,6 +43,8 @@ export function SoldTable({ rows }: { rows: LotDoc[] }) {
     {
       id: "hammer",
       header: "Hammer",
+      help: "hammer",
+      helpLabel: "the hammer price",
       numeric: true,
       sortValue: (l) => l.final_price,
       cell: (l) => usd(l.final_price),

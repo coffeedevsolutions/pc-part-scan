@@ -13,7 +13,7 @@ Decisions locked in with the owner (2026-08-23):
 | Web UI depth | Single-user interactive workbench (watchlist, notes, live assumptions) |
 | Scan cadence | Close-time-weighted baseline + one targeted burst window per weekday, sized to fit private-repo Actions minutes (2,000/month) |
 | Repo visibility | Stays private; schedules fit the free-minute cap (§5) |
-| eBay | Yes — official Browse/Insights API via a free developer account |
+| eBay | Browse API only (active asks), via a free developer account. Marketplace Insights — true sold prices — is restricted and confirmed unavailable to us |
 
 ## 1. What exists today (baseline)
 
@@ -67,7 +67,7 @@ Two structural problems drive most of this plan:
    └────────────────────────────────────────────────────────────────────────┘
 
    External: maestro.lqdt1.com (GovDeals JSON API) · api.ebay.com (Browse /
-   Marketplace Insights) · files.lqdt1.com (spec-sheet PDFs)
+   Browse) · files.lqdt1.com (spec-sheet PDFs)
 ```
 
 Division of labour, stated once:
@@ -225,7 +225,7 @@ how long to leave a bid to the last minute.
 `pcps fit`: rebuild observations from Mongo, refit the single-unit model and
 bulk discount, insert a `model_runs` doc. Then `pcps ebay-refresh`: for every
 CPU/config appearing in any open lot's manifest or title, query the eBay
-Browse API (Insights once approved), upsert `ebay_comps`. Comp queries are
+Browse API, upsert `ebay_comps`. Comp queries are
 deduplicated and cached for 24 h, keeping usage far under the 5,000
 calls/day free limit. If R² drops more than 0.05 from the previous run, the
 job opens a GitHub issue rather than silently shipping a worse model.
@@ -246,11 +246,17 @@ system — free, and it lands where the owner already looks.
 ## 6. Valuation upgrades
 
 - **eBay in the blend.** `EbayAdapter` stops calling the network at grade
-  time; it reads `ebay_comps` from Mongo (populated by `fit.yml`). Start with
-  Browse (active asks, haircut applied as the grader already does for asks);
-  apply for Marketplace Insights for true sold prices and flip `EBAY_INSIGHTS`
-  when approved.
-- **eBay auth model.** Browse and Marketplace Insights use the OAuth
+  time; it reads `ebay_comps` from Mongo (populated by `fit.yml`).
+- **eBay gives asks, not sales.** Marketplace Insights, the endpoint that
+  serves true sold prices, is heavily restricted and we are not getting
+  access. Browse returns ACTIVE listings, and an active listing is by
+  definition one that has not sold at that price. So the ceiling never sees
+  a raw ask: `EbayAdapter.calibrate()` pairs Browse asks against our own
+  realized single-unit GovDeals prices for the same CPU and takes the median
+  ratio as the haircut. Fewer than 12 usable pairs and the adapter reports
+  nothing at all — an unmeasured haircut is an invented number, and the
+  system already has one bad experience with those (§12).
+- **eBay auth model.** Browse uses the OAuth
   **client-credentials** flow: the daily job mints an application token from
   `EBAY_CLIENT_ID`/`EBAY_CLIENT_SECRET` (GitHub Actions secrets). No eBay
   user login, no user consent screen, no per-user accounts — nothing
@@ -358,7 +364,7 @@ sole writer of market data.
 | GovDeals changes/protects the maestro API | `raw_extra` preserves unknown fields; weekly routine diffs schema; client is one file (`api.py`); polite pacing (0.35 s) and honest UA keep the footprint low |
 | Atlas M0 fills | Change-only writes, post-close downsampling, weekly archive+prune, usage on `/ops` and in weekly review |
 | Actions cron jitter/skips | Observations timestamped at capture; overlapping scan coverage self-heals gaps; `job_runs` staleness alerting |
-| Marketplace Insights application denied | Browse-with-haircut path works from day one; Insights is an upgrade, not a dependency |
+| eBay only ever shows asking prices (Insights confirmed unavailable) | The haircut converting an ask to an expected sale is measured against our own realized singles, not assumed; below 12 usable pairs the source stays silent rather than guessing |
 | Free Actions minutes exhausted mid-month | Budget in §5 carries ~170 min headroom; `job_runs` tracks spend; if it ever pinches, a self-hosted runner on a spare machine lifts the cap entirely without going public |
 | Seller close-time behaviour drifts away from the burst window | Weekly health routine recomputes the close-hour histogram and proposes a new window |
 | TS/Python grading drift | Golden parity test in CI blocks merge on any divergence |
@@ -383,8 +389,9 @@ month-end Actions spend (from `job_runs`) is under 2,000 min.
 
 **Phase 3 — eBay in the blend**
 Developer account, secrets, `pcps ebay-refresh` in `fit.yml`, `ebay_comps`
-cache, adapter reads cache; Insights application submitted. *Done when:*
-graded lots show an eBay contribution in the valuation breakdown.
+cache, adapter reads cache. *Done when:* graded lots show an eBay
+contribution in the valuation breakdown, and the run reports a measured
+ask-to-realized haircut with the pair count behind it.
 
 **Phase 4 — Workbench MVP (read-only)**
 `apps/web` on Vercel, auth, Board + Lot detail with bid curves + Sold explorer
@@ -401,3 +408,134 @@ C-grade lot gets burst sampling.
 Manifest triage, daily digest, weekly health review. *Done when:* the
 bulk-discount fit's n has grown week-over-week without human PDF-reading, and
 the owner gets a useful digest daily.
+
+## 11a. Closing the loop — `pcps resolve`
+
+A lot only ever stopped being `status: open` if the global keyword sweep
+happened to surface it again in its sold pages. For a lot we actually
+graded that is left to chance: the end time passes, the lot sits on the
+board reading "closed", and the one number that would say whether our max
+bid was any good never arrives. On the first real run, 254 tracked lots
+were in that state.
+
+`resolve.yml` (daily, 02:00 UTC, after the closing band empties) asks
+directly. Lots past their end time are grouped by seller, and each seller's
+completed auctions are one scoped search sorted `auctionclose desc` — so
+the lots we tracked resolve in a page or two per seller rather than one
+request per lot, and paging stops as soon as the feed runs older than the
+oldest lot we are chasing. Anything the feed never mentions is marked
+`closed` regardless: withdrawn or relisted, it is still not an auction.
+
+Three things fall out of it. Finished auctions leave the board. The sold
+corpus grows with exactly the lots the board thought were worth watching,
+which are the most relevant comps there are. And the Board gains a
+"recently closed" panel scoring our own published max bids against the
+price each lot really fetched — the backtest made personal.
+
+## 11b. Backtest — the only section that can say the grader is wrong
+
+`pcps backtest` (weekly, `backtest.yml`) re-grades every closed lot with its
+own outcome held out of the models that price it: 5-fold, refitting the
+single-unit model, the bulk discount and the per-class quotes each time.
+Results land in `backtests` and render on Models.
+
+Two rules make the numbers mean anything.
+
+**Pallets are reported separately from single units.** A sold lot of one
+machine with its CPU in the title is exactly what the single-unit model is
+fitted to predict, and 87% of the machine-priced corpus is single units.
+Pooled, `hammer / ceiling` reads 1.11 and the ceiling looks like a perfect
+predictor; on pallets of 5+ it reads 0.77, and on 50+ it reads 0.64. Only
+the pallet rows describe pallets, which is all this tool ever buys.
+
+**Grade is not backtestable yet.** Grade is headroom against the *current*
+bid, and the sold archive was swept after close: 3 of 7,149 lots carry any
+observation from before their auction ended. Confidence is bucketed instead
+— it does not depend on the bid, and it holds up: floors land within 2× of
+the hammer 70% of the time at confidence 0.8+, against 30% at 0.4+.
+
+What the first run said, over 2,359 closed pallets:
+
+| | median | reading |
+|---|---|---|
+| hammer ÷ ceiling | 0.77 | a pallet clears at about the bulk discount off the summed per-unit value |
+| hammer ÷ floor | 1.76 | the floor is roughly half what pallets actually fetch |
+| would have won | 14% | at the default 55% recovery and 60% target ROI |
+
+The last row is the finding. Sweeping the two levers on the same predictions
+shows target return barely matters (60% → 20% moves the win rate 14% → 21%)
+while recovery dominates (55% → 200% moves it 14% → 64%). That is because
+the ceiling is fitted on GovDeals single-unit *sales* — a wholesale clearing
+price, not a retail parts-out price — so multiplying it by 0.55 assumes you
+resell for roughly half what the wholesale market already pays.
+
+The default is left alone: what you realize per unit is a fact about your
+resale channel, not something the corpus can measure. But `recovery` is now
+documented as a multiple of GovDeals rates rather than a fraction of retail,
+and the win curve is on the page so the setting can be chosen against
+evidence.
+
+## 11c. Handling is two rates, not one
+
+`per_unit_handling` was a flat $3 across everything, which is right for a PC
+you test, wipe, photograph and pack and wrong for a charger you drop in a
+box. Measured over the 2,097 priced pallets in the backtest, the damage is
+entirely confined to one class and total there:
+
+| class | pallets | median handling as share of expected revenue | max bid driven to zero |
+|---|---|---|---|
+| adapter | 21 | **121%** | **21** |
+| desktop | 1,156 | 14% | 1 |
+| laptop | 572 | 8% | 0 |
+| aio | 288 | 9% | 0 |
+
+Every charger pallet in the corpus is unbiddable at any price, purely
+because of an assumption about labour. So `Config.part_handling` applies to
+the part family and `per_unit_handling` to machines, chosen once in
+`Config.for_family()` so every formula downstream is untouched.
+
+It defaults to the same $3, because what sorting costs is a fact about a
+workshop the corpus cannot see. Instead the lot page derives the number
+that decides it: *"at $3.00 a unit handling costs $900, more than the $619
+this lot is expected to make; it would need to be under $1.29 a unit for
+any bid to clear your target return."* Sweeping the rate over the corpus,
+adapters go 0/21 winnable at $3 and at $1, 3/21 at $0.50 and 6/21 at $0.25,
+while desktops stay at 116/1,156 throughout — the split moves exactly what
+it should and nothing else.
+
+## 12. Measured and deliberately not built
+
+Two ideas that look obviously right and did not survive contact with the
+data. Recorded so they are not re-argued from first principles every time
+somebody reads a title with a generation in it.
+
+### A generation multiplier on class-priced computer lots
+
+Titles often name an Intel generation without naming a CPU ("Dell Latitude
+Laptops 5th-11th Gen"), and the relationship to price is real: fitting
+`log($/unit) ~ generation` over the 64 sold bulk lots that state one gives
+**+27.4% per generation, R² 0.396**, monotone from $31/unit at 5th gen to
+$133 at 11th.
+
+It is still not worth building yet:
+
+- **It barely predicts.** Leave-one-out median absolute error is 18%,
+  against 20% for a flat median of the same lots. A bootstrap over 2,000
+  resamples has the regression beating that baseline 94% of the time — real,
+  but a 2-point error reduction.
+- **It barely applies.** Of 706 live computer lots, 24 state a generation
+  far enough from the corpus median for the multiplier to move the number
+  at all. Most say "5th-11th Gen", whose midpoint is the median.
+- **The path is already capped.** Class-priced lots top out at grade C, so
+  a better class price cannot promote a lot into the recommendations.
+
+Revisit after the backtest (Phase 10) can say whether it improves realized
+outcomes rather than in-sample fit, or once the corpus carries a few hundred
+generation-tagged lots instead of 64.
+
+### Sub-class specifics for parts
+
+Wattage for chargers and screen size for monitors were checked as ways to
+split a class quote finer. Neither has the data: 12 of 21 charger pallets
+state a wattage and 45W and 65W both clear about $3 a unit, and 3 of 237
+monitor lots state a size. There is nothing to fit.

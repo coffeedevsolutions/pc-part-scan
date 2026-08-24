@@ -23,7 +23,7 @@ from dataclasses import asdict
 
 def _counts_line(db) -> str:
     names = ["lots", "bid_observations", "sold", "manifests",
-             "model_runs", "snapshots", "job_runs"]
+             "model_runs", "snapshots", "backtests", "job_runs"]
     return "  ".join(f"{n}={db[n].estimated_document_count()}" for n in names)
 
 
@@ -222,9 +222,9 @@ def cmd_scan(a) -> int:
                     if (v.get("locationState") or "").upper() in want}
             print(f"state filter {sorted(want)}: {len(live)} lots")
 
-        single, bulk, ebay = grade.load_models()
+        single, bulk, ebay, classes = grade.load_models()
         vals = grade.scan(live=live, cfg=cfg, min_units=a.min_units,
-                          limit=a.limit, models=(single, bulk, ebay))
+                          limit=a.limit, models=(single, bulk, ebay, classes))
 
         ds.record_components(run, single, bulk, pricing.StaticTable.PATH)
         ds.save_full_models(run, single, bulk)
@@ -236,6 +236,9 @@ def cmd_scan(a) -> int:
                           "bulk_n": bulk.n_obs if bulk else 0},
             "screened": len(vals),
             "confidence_gate": grade.CONFIDENCE_GATE,
+            "class_prices": classes.to_dict(
+                bulk.k if bulk and bulk.trusted else None),
+            "ebay": ebay.to_json(),
             "lots": [asdict(v) for v in vals],
         })
         idx = ds.update_index(run, {"last_config": asdict(cfg)})
@@ -355,6 +358,58 @@ def cmd_save_manifest(a) -> int:
     return 0
 
 
+def cmd_resolve(a) -> int:
+    """Ask sellers what our tracked lots actually sold for."""
+    from . import harvest
+    from .store import backend as ds
+
+    if not hasattr(ds, "open_lots_past_end"):
+        raise SystemExit("resolve needs the mongo store; set MONGODB_URI")
+    is_mongo = True
+    run = ds.run_id()
+    ds.job_start("resolve", run)
+    try:
+        res = harvest.resolve_closed(max_sellers=a.max_sellers, run=run)
+        if res["outcomes"]:
+            print()
+            print(f"{'lot':<14}{'hammer':>10}  title")
+            for o in sorted(res["outcomes"],
+                            key=lambda o: -o["hammer"])[:a.top]:
+                print(f"{o['key']:<14}{o['hammer']:>10,.0f}  {o['title'][:56]}")
+        if is_mongo:
+            ds.job_finish("resolve", run, counts={"resolved": res["resolved"],
+                                                  "checked": res["checked"]})
+    except Exception as e:
+        if is_mongo:
+            ds.job_finish("resolve", run, status="error", error=str(e))
+        raise
+    print(f"\nrun {run}")
+    return 0
+
+
+def cmd_backtest(a) -> int:
+    """Replay the grader over closed lots and report how it did."""
+    from . import backtest, grade
+    from .store import backend as ds
+
+    if not hasattr(ds, "write_backtest"):
+        raise SystemExit("backtest needs the mongo store; set MONGODB_URI")
+    run = ds.run_id()
+    cfg = grade.Config(target_roi=a.target_roi, recovery=a.recovery)
+    sold, mans = ds.sold_lots(), ds.all_manifests()
+    print(f"replaying {len(sold):,} closed lots over {a.folds} folds...")
+
+    def progress(f, n, k):
+        print(f"  fold {f}/{n}: {k:,} predictions", flush=True)
+
+    rep = backtest.run(sold, mans, cfg=cfg, folds=a.folds, progress=progress)
+    print()
+    print(backtest.report_text(rep, top=a.top))
+    ds.write_backtest(run, rep)
+    print(f"\nrun {run}")
+    return 0
+
+
 def cmd_digest(a) -> int:
     from . import routine
     print(json.dumps(routine.digest(), indent=1, default=str))
@@ -372,7 +427,7 @@ def cmd_archive(a) -> int:
     db = mongo.get_db()
     os.makedirs(a.out, exist_ok=True)
     names = ["lots", "bid_observations", "sold", "manifests",
-             "model_runs", "snapshots", "meta", "job_runs"]
+             "model_runs", "snapshots", "backtests", "meta", "job_runs"]
     for name in names:
         path = os.path.join(a.out, f"{name}.jsonl.gz")
         n = 0
@@ -433,11 +488,25 @@ def main(argv: list[str] | None = None) -> int:
                    help='JSON: {"machines": [...], "source_files": [...]}')
     p.add_argument("--allow-mismatch", action="store_true")
 
+    p = sub.add_parser("resolve",
+                       help="find out what tracked lots actually sold for")
+    p.add_argument("--max-sellers", type=int, default=40)
+    p.add_argument("--top", type=int, default=15)
+
+    p = sub.add_parser("backtest",
+                       help="replay the grader over closed lots")
+    p.add_argument("--folds", type=int, default=5)
+    p.add_argument("--top", type=int, default=8,
+                   help="rows per breakdown table")
+    p.add_argument("--target-roi", type=float, default=0.60)
+    p.add_argument("--recovery", type=float, default=0.55)
+
     sub.add_parser("digest", help="daily digest inputs (JSON)")
     sub.add_parser("health", help="weekly health-review inputs (JSON)")
 
     a = ap.parse_args(argv)
     return {"smoke": cmd_smoke, "backfill": cmd_backfill, "scan": cmd_scan,
+            "backtest": cmd_backtest, "resolve": cmd_resolve,
             "burst": cmd_burst, "archive": cmd_archive,
             "triage-queue": cmd_triage_queue, "triage-fetch": cmd_triage_fetch,
             "save-manifest": cmd_save_manifest,

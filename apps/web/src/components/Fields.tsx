@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { UNRATED } from "@pcps/valuation";
+
 import { HelpIcon } from "./Tooltip";
 import type { HelpKey } from "./help-text";
 
@@ -106,10 +108,19 @@ export function MoneyField({
   );
 }
 
+/**
+ * The grade chip. "U" is not a letter grade but an abstention, so it says
+ * so in words — a chip reading "U" next to four blank money columns looks
+ * like a bug rather than a deliberate refusal to guess.
+ */
 export function Grade({ grade }: { grade: string }) {
+  const unrated = grade === UNRATED;
   return (
-    <span className={`grade grade-${grade}`} title={`Grade ${grade}`}>
-      {grade}
+    <span
+      className={`grade grade-${grade}`}
+      title={unrated ? "Unrated — we cannot tell what is in this lot" : `Grade ${grade}`}
+    >
+      {unrated ? "unrated" : grade}
     </span>
   );
 }

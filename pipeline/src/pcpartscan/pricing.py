@@ -368,7 +368,7 @@ class StaticTable:
 # ------------------------------------------------------------------ eBay (API)
 
 class EbayAdapter:
-    """Official eBay API adapter. Disabled unless you supply credentials.
+    """Official eBay Browse API adapter. Disabled unless you supply credentials.
 
     eBay serves a human-verification challenge to non-browser clients AND to
     automated browsers, so there is deliberately no HTML-scraping path here.
@@ -376,9 +376,22 @@ class EbayAdapter:
 
       1. Create an app at https://developer.ebay.com -> get App ID + Cert ID.
       2. export EBAY_CLIENT_ID=...  EBAY_CLIENT_SECRET=...
-      3. Browse API (search) gives ACTIVE listing asks -- available to everyone.
-         Marketplace Insights (true SOLD prices) is gated behind a separate
-         application to eBay; set EBAY_INSIGHTS=1 once you are approved.
+
+    What this can and cannot see matters to how its numbers are used.
+    Marketplace Insights, which serves true SOLD prices, is heavily
+    restricted and we are not getting access to it. So the only eBay figure
+    available is the Browse API's ACTIVE listing price: what sellers are
+    ASKING, not what anything fetched. Asks run above realized prices --
+    that is why the listing is still up -- and feeding one into the ceiling
+    unadjusted would inflate every lot it touched.
+
+    So an ask is converted to an expected realized price by a haircut that
+    is MEASURED rather than assumed. We already hold thousands of realized
+    single-unit GovDeals prices; `calibrate()` pairs them against eBay asks
+    for the same CPU and takes the median ratio. Until enough pairs exist to
+    measure it, the adapter reports nothing and the grader drops the source
+    -- an unmeasured haircut is a number someone made up, and this system
+    already has one bad experience with those.
 
     Without credentials every call returns None and the grader simply drops
     this source from the blend.
@@ -386,20 +399,28 @@ class EbayAdapter:
 
     TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token"
     BROWSE_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search"
-    INSIGHTS_URL = ("https://api.ebay.com/buy/marketplace_insights/v1_beta"
-                    "/item_sales/search")
 
     MAX_CONSECUTIVE_FAILURES = 3   # circuit breaker: stop calling for the run
     CALL_TIMEOUT = 10              # seconds; a degraded API must not stall a scan
 
+    # Pairs of (eBay ask, GovDeals realized) for the same CPU needed before
+    # the haircut is trusted. Below this the source is silent.
+    MIN_CALIBRATION_PAIRS = 12
+    # Sanity bounds on the measured ratio. An ask below the realized price or
+    # more than five times it means the query matched the wrong thing, not
+    # that the market moved.
+    RATIO_BOUNDS = (0.05, 1.0)
+
     def __init__(self):
         self.cid = os.environ.get("EBAY_CLIENT_ID")
         self.secret = os.environ.get("EBAY_CLIENT_SECRET")
-        self.insights = os.environ.get("EBAY_INSIGHTS") == "1"
         self._token = None
         self._memo: dict[tuple, float | None] = {}
         self._consecutive_failures = 0
         self.enabled = bool(self.cid and self.secret)
+        # None until calibrate() succeeds; the adapter stays silent until then
+        self.haircut: float | None = None
+        self.haircut_n = 0
 
     def _auth(self) -> str | None:
         if not self.enabled:
@@ -420,8 +441,8 @@ class EbayAdapter:
             self._token = json.loads(r.read())["access_token"]
         return self._token
 
-    def value(self, machine: dict) -> float | None:
-        """Median comparable price for this machine, or None if unavailable.
+    def ask(self, machine: dict) -> float | None:
+        """Median ACTIVE listing price for this machine. An ask, not a sale.
 
         Memoized per (cpu, ram) for the life of the adapter: the same CPU
         appears across many machines and lots, and re-querying it would turn
@@ -445,10 +466,15 @@ class EbayAdapter:
         if not tok:
             return None
         import urllib.parse, urllib.request
-        q = f"desktop computer {cpu} {machine.get('ram_gb') or ''}GB".strip()
-        url = (self.INSIGHTS_URL if self.insights else self.BROWSE_URL) + "?" + \
-            urllib.parse.urlencode({"q": q, "limit": "50",
-                                    "category_ids": "179"})  # PC Desktops
+        # The RAM clause is dropped entirely when there is no RAM, rather
+        # than left as a bare "GB". calibrate() asks by CPU alone, so every
+        # calibration query carried that stray token and measured the
+        # haircut against a different slice of listings than value() later
+        # applied it to.
+        ram = machine.get("ram_gb")
+        q = f"desktop computer {cpu}" + (f" {ram}GB" if ram else "")
+        url = self.BROWSE_URL + "?" + urllib.parse.urlencode(
+            {"q": q, "limit": "50", "category_ids": "179"})  # PC Desktops
         req = urllib.request.Request(url, headers={
             "Authorization": f"Bearer {tok}",
             "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"})
@@ -460,15 +486,66 @@ class EbayAdapter:
             self._memo[memo_key] = None
             return None
         self._consecutive_failures = 0
-        items = data.get("itemSales") or data.get("itemSummaries") or []
         prices = []
-        for it in items:
-            p = (it.get("lastSoldPrice") or it.get("price") or {}).get("value")
+        for it in data.get("itemSummaries") or []:
+            p = (it.get("price") or {}).get("value")
             if p:
                 prices.append(float(p))
         result = sorted(prices)[len(prices) // 2] if prices else None
         self._memo[memo_key] = result
         return result
+
+    def calibrate(self, singles: list[dict]) -> float | None:
+        """Measure the ask-to-realized haircut against sold GovDeals singles.
+
+        `singles` are the same priced single-unit observations the machine
+        model is fitted on: a known machine and what it actually fetched.
+        Asking the Browse API what the same CPU is listed at gives one pair
+        per CPU, and the median of those ratios is the haircut.
+
+        Returns the ratio, or None when there are too few pairs to measure
+        one -- in which case the adapter stays silent rather than guessing.
+        """
+        if not self.enabled:
+            return None
+        realized: dict[str, list[float]] = {}
+        for s in singles:
+            cpu = (s.get("machine") or {}).get("cpu")
+            price = s.get("price")
+            if cpu and price and 10.0 <= price <= 1500.0:
+                realized.setdefault(cpu, []).append(float(price))
+        ratios = []
+        for cpu, prices in realized.items():
+            if len(prices) < 2:
+                continue          # one sale is an anecdote, not a comp
+            asked = self.ask({"cpu": cpu})
+            if not asked or asked <= 0:
+                continue
+            got = sorted(prices)[len(prices) // 2]
+            r = got / asked
+            if self.RATIO_BOUNDS[0] <= r <= self.RATIO_BOUNDS[1]:
+                ratios.append(r)
+        if len(ratios) < self.MIN_CALIBRATION_PAIRS:
+            self.haircut, self.haircut_n = None, len(ratios)
+            return None
+        self.haircut = sorted(ratios)[len(ratios) // 2]
+        self.haircut_n = len(ratios)
+        return self.haircut
+
+    def value(self, machine: dict) -> float | None:
+        """Expected realized price: the eBay ask with the measured haircut.
+
+        None whenever the haircut has not been measured, which keeps an
+        unadjusted asking price out of the ceiling by construction.
+        """
+        if self.haircut is None:
+            return None
+        asked = self.ask(machine)
+        return asked * self.haircut if asked else None
+
+    def to_json(self) -> dict:
+        return {"enabled": self.enabled, "haircut": self.haircut,
+                "haircut_pairs": self.haircut_n}
 
 
 # ------------------------------------------------------------------- persistence

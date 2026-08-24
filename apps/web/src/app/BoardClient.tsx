@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   DEFAULT_CONFIG,
+  UNRATED,
   rankKey,
   regrade,
   type Config,
@@ -16,7 +17,8 @@ import { DataTable, type Column } from "@/components/DataTable";
 import { Grade, MoneyField, PercentField } from "@/components/Fields";
 import { HelpIcon } from "@/components/Tooltip";
 import type { SnapshotLot } from "@/lib/data";
-import { closesIn, usd } from "@/lib/format";
+import { Countdown } from "@/components/Live";
+import { remainingFrom, usd } from "@/lib/format";
 
 type BoardLot = SnapshotLot & { end_utc: string | null };
 type Row = { lot: BoardLot; v: Regrade };
@@ -39,6 +41,7 @@ export function BoardClient({
   const [gradeMin, setGradeMin] = useState("all");
   const [state, setState] = useState("all");
   const [watchedOnly, setWatchedOnly] = useState(false);
+  const [hideUnrated, setHideUnrated] = useState(false);
   const [watched, setWatched] = useState<Set<string>>(new Set(watchedInit));
   const touched = useRef(false); // only the user's own edits reach the server
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -106,6 +109,7 @@ export function BoardClient({
     return lots
       .map((lot) => ({ lot, v: regrade(lot, cfg) }))
       .filter(({ lot, v }) => {
+        if (hideUnrated && v.grade === UNRATED) return false;
         if (watchedOnly && !watched.has(lot.lot_key)) return false;
         if (state !== "all" && lot.state !== state) return false;
         if (gradeMin !== "all" && v.grade > gradeMin) return false;
@@ -116,7 +120,12 @@ export function BoardClient({
       // smaller one we do. Sorting the table by raw headroom instead put
       // huge low-confidence unknowns on top. Clicking a header overrides.
       .sort((a, b) => rankKey(a.v, a.lot.confidence) - rankKey(b.v, b.lot.confidence));
-  }, [lots, cfg, gradeMin, state, watchedOnly, watched]);
+  }, [lots, cfg, gradeMin, state, watchedOnly, hideUnrated, watched]);
+
+  const unratedCount = useMemo(
+    () => rows.filter(({ v }) => v.grade === UNRATED).length,
+    [rows],
+  );
 
   const columns: Column<Row>[] = useMemo(() => [
     {
@@ -140,7 +149,7 @@ export function BoardClient({
       header: "Grade",
       help: "grade",
       helpLabel: "grade",
-      width: "84px",
+      width: "96px",
       // A is best, so ascending letters are descending quality
       sortValue: ({ v }) => v.grade,
       cell: ({ v }) => <Grade grade={v.grade} />,
@@ -160,6 +169,27 @@ export function BoardClient({
           </div>
         </>
       ),
+    },
+    {
+      id: "kind",
+      header: "Kind",
+      help: "itemClass",
+      helpLabel: "the kind",
+      width: "104px",
+      sortValue: ({ lot }) => lot.item_class ?? null,
+      cell: ({ lot }) =>
+        lot.item_class ? (
+          <span
+            className={`kind kind-${lot.item_family ?? "unknown"}`}
+            title={lot.class_reason}
+          >
+            {lot.item_class}
+          </span>
+        ) : (
+          <span className="muted small" title={lot.class_reason}>
+            unread
+          </span>
+        ),
     },
     {
       id: "units",
@@ -185,8 +215,12 @@ export function BoardClient({
       help: "maxBid",
       helpLabel: "max bid",
       numeric: true,
-      sortValue: ({ v }) => v.max_bid,
-      cell: ({ v }) => usd(v.max_bid),
+      // An abstention has no max bid. Sorting it as null keeps it out of the
+      // top of a "highest max bid" sort instead of letting a number we do
+      // not stand behind win the column.
+      sortValue: ({ v }) => (v.grade === UNRATED ? null : v.max_bid),
+      cell: ({ v }) =>
+        v.grade === UNRATED ? <span className="muted">—</span> : usd(v.max_bid),
     },
     {
       id: "headroom",
@@ -194,10 +228,13 @@ export function BoardClient({
       help: "headroom",
       helpLabel: "headroom",
       numeric: true,
-      sortValue: ({ v }) => v.headroom,
-      cell: ({ v }) => (
-        <span className={v.headroom >= 0 ? "pos" : "neg"}>{usd(v.headroom)}</span>
-      ),
+      sortValue: ({ v }) => (v.grade === UNRATED ? null : v.headroom),
+      cell: ({ v }) =>
+        v.grade === UNRATED ? (
+          <span className="muted">—</span>
+        ) : (
+          <span className={v.headroom >= 0 ? "pos" : "neg"}>{usd(v.headroom)}</span>
+        ),
     },
     {
       id: "closes",
@@ -206,7 +243,14 @@ export function BoardClient({
       helpLabel: "the closing time",
       sortValue: ({ lot }) =>
         lot.end_utc ? new Date(lot.end_utc).getTime() : null,
-      cell: ({ lot }) => closesIn(lot.end_utc) || lot.end_date,
+      // live, because the board's whole job is telling you what is about to
+      // close and a server-rendered string starts aging the moment it lands
+      cell: ({ lot }) =>
+        lot.end_utc ? (
+          <Countdown endUtc={lot.end_utc} initial={remainingFrom(lot.end_utc)} />
+        ) : (
+          lot.end_date
+        ),
     },
     {
       id: "confidence",
@@ -261,10 +305,18 @@ export function BoardClient({
             step={0.5}
           />
           <MoneyField
-            label="Handling / unit"
+            label="Handling / machine"
             help="handling"
             value={cfg.per_unit_handling}
             onChange={(v) => updateCfg({ per_unit_handling: v })}
+            step={0.5}
+          />
+          <MoneyField
+            label="Handling / part"
+            help="partHandling"
+            value={cfg.part_handling ?? cfg.per_unit_handling}
+            onChange={(v) => updateCfg({ part_handling: v })}
+            step={0.5}
           />
           <MoneyField
             label="Pickup"
@@ -327,10 +379,20 @@ export function BoardClient({
             />
             Watched only
           </label>
+          <label className="checkfield">
+            <input
+              type="checkbox"
+              checked={hideUnrated}
+              onChange={(e) => setHideUnrated(e.target.checked)}
+            />
+            Hide unrated
+            <HelpIcon k="unrated" label="unrated lots" />
+          </label>
           <span className="spacer" />
           <span className="muted small" style={{ height: 30, lineHeight: "30px" }}>
             {rows.length} lots · ranked by confidence-weighted headroom
             <HelpIcon k="ranking" label="the default ranking" />
+            {unratedCount > 0 && ` · ${unratedCount} unrated`}
           </span>
         </div>
       </div>

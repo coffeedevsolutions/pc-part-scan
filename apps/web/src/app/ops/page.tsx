@@ -1,3 +1,5 @@
+import { Stat } from "@/components/Stat";
+import { HelpIcon } from "@/components/Tooltip";
 import { datasetCounts, jobRuns } from "@/lib/data";
 import { shortDate } from "@/lib/format";
 
@@ -15,11 +17,18 @@ export default async function OpsPage() {
       </p>
 
       <div className="statrow">
-        {Object.entries(counts).map(([k, v]) => (
-          <div className="stat" key={k}>
-            <div className="label">{k.replace(/_/g, " ")}</div>
-            <div className="value">{v.toLocaleString()}</div>
-          </div>
+        {Object.entries(counts).map(([k, v], i) => (
+          <Stat
+            key={k}
+            label={k.replace(/_/g, " ")}
+            // one explanation for the row, on the first card: repeating it
+            // on all seven would be noise, and omitting it entirely leaves
+            // "bid observations" unexplained
+            help={i === 0 ? "datasetCounts" : undefined}
+            helpLabel="these counts"
+          >
+            {v.toLocaleString()}
+          </Stat>
         ))}
       </div>
 
@@ -27,7 +36,10 @@ export default async function OpsPage() {
         <table className="data">
           <thead>
             <tr>
-              <th>Job</th>
+              <th>
+                Job
+                <HelpIcon k="jobRuns" label="the job log" />
+              </th>
               <th>Started</th>
               <th>Finished</th>
               <th>Status</th>

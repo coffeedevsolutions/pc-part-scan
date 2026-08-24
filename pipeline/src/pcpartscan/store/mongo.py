@@ -12,6 +12,8 @@ Collections (database `pcps` unless PCPS_DB overrides):
   sold              closed lots with realized hammer price.
   manifests         parsed spec-sheet machine mixes, _id = lot key.
   model_runs        one doc per fit run: summary prices + full coefficients.
+  backtests         one doc per backtest: how the grader did against lots
+                    that have already closed, out of sample.
   snapshots         graded output of each scan run, _id = run id.
   meta              _id="index": counts, last run, last config.
   job_runs          one doc per scheduled job execution.
@@ -105,17 +107,22 @@ def upsert_lots(records: list[dict], observed_at: str, sold: bool) -> dict:
         return {"new": 0, "updated": 0, "total": db.lots.estimated_document_count()}
 
     keys = [lot_key(r) for r in recs]
-    already_sold = {d["_id"] for d in db.lots.find(
-        {"_id": {"$in": keys}, "status": "sold"}, {"_id": 1})}
+    finished = {d["_id"]: d["status"] for d in db.lots.find(
+        {"_id": {"$in": keys}, "status": {"$in": ["sold", "closed"]}},
+        {"_id": 1, "status": 1})}
 
     ops = []
     for rec in recs:
         k = lot_key(rec)
         norm = normalize_lot(rec, observed_at, sold)
         norm.pop("first_seen", None)
-        if k in already_sold and not sold:
-            # never downgrade a sold lot back to open, and keep its price
-            norm["status"] = "sold"
+        if k in finished and not sold:
+            # A finished auction never reopens: a later live sweep that
+            # still lists the lot must not put it back on the board. Keep
+            # the status it already had, though -- forcing "sold" onto a
+            # lot marked "closed" invents a sale we never saw, and the lot
+            # page then renders "sold --" with no price.
+            norm["status"] = finished[k]
             norm.pop("final_price", None)
         ops.append(UpdateOne(
             {"_id": k},
@@ -231,10 +238,45 @@ def save_grades(vals: list, run: str) -> int:
     return get_db().lots.bulk_write(ops, ordered=False).matched_count
 
 
+def open_lots_past_end(now_iso: str) -> list[dict]:
+    """Lots still marked open whose auction end time has already passed.
+
+    These are the ones worth asking the seller about: we tracked them, we
+    published a max bid for them, and nothing has told us how they ended.
+    """
+    return list(get_db().lots.find(
+        {"status": "open", "auction_end_utc": {"$ne": None, "$lt": now_iso}},
+        {"key": 1, "account_id": 1, "asset_id": 1, "title": 1,
+         "auction_end_utc": 1}))
+
+
+def mark_closed(keys: list[str], observed_at: str) -> int:
+    """Stop offering a lot as biddable once its auction has ended.
+
+    Separate from `sold`: this only says the auction is over. A lot whose
+    hammer price we never learned is still not something to bid on.
+    """
+    if not keys:
+        return 0
+    res = get_db().lots.update_many(
+        {"_id": {"$in": keys}, "status": "open"},
+        {"$set": {"status": "closed", "closed_seen_at": observed_at}})
+    return res.modified_count
+
+
 def open_lots_raw() -> dict[str, dict]:
-    """Open lots mapped back onto the raw API shape the grader expects."""
+    """Open lots mapped back onto the raw API shape the grader expects.
+
+    An end time in the past excludes a lot even while it is still marked
+    open: `pcps resolve` flips the status, but it runs on its own schedule
+    and until then a finished auction must not be offered as biddable.
+    """
     out = {}
-    for lot in get_db().lots.find({"status": "open"}):
+    now = utcnow()
+    for lot in get_db().lots.find(
+            {"status": "open",
+             "$or": [{"auction_end_utc": None},
+                     {"auction_end_utc": {"$gte": now}}]}):
         last = lot.get("last_obs") or {}
         out[lot["_id"]] = project_lot(lot, last.get("bid"),
                                       last.get("bid_count"))
@@ -310,6 +352,24 @@ def write_snapshot(run: str, payload: dict) -> str:
     return f"snapshots/{run}"
 
 
+def write_backtest(run: str, report: dict) -> str:
+    """Persist one backtest run.
+
+    The per-lot predictions are kept out of the document: 7,000 of them is
+    megabytes, and on an M0 free tier the summary is what earns its space.
+    They stay available by re-running, which takes seconds.
+    """
+    doc = {k: v for k, v in report.items() if k != "predictions"}
+    get_db().backtests.replace_one({"_id": run}, {
+        "_id": run, "run_id": run, "generated_at": utcnow(), **doc,
+    }, upsert=True)
+    return f"backtests/{run}"
+
+
+def latest_backtest() -> dict | None:
+    return get_db().backtests.find_one(sort=[("_id", -1)])
+
+
 def update_index(run: str, extra: dict | None = None) -> dict:
     db = get_db()
     idx = {
@@ -325,6 +385,7 @@ def update_index(run: str, extra: dict | None = None) -> dict:
             "manifests": db.manifests.estimated_document_count(),
             "snapshots": db.snapshots.estimated_document_count(),
             "model_runs": db.model_runs.estimated_document_count(),
+            "backtests": db.backtests.estimated_document_count(),
         },
     }
     if extra:

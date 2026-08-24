@@ -1,0 +1,41 @@
+name: backtest
+
+# Weekly re-grading of every closed lot, out of sample, so the calibration on
+# the Models page never quietly goes stale. It is the one job whose output can
+# say the grader is wrong, which is exactly why it must not be run by hand
+# only when someone remembers to.
+#
+# Runs after the Monday archive so the two never contend for the cluster.
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"   # Mondays 07:00 UTC
+  workflow_dispatch:
+    inputs:
+      folds:
+        description: "Cross-validation folds"
+        default: "5"
+
+concurrency:
+  group: backtest
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install --quiet ./pipeline
+
+      - name: Replay closed lots
+        env:
+          PCPS_STORE: mongo
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pcps backtest --folds "${{ github.event.inputs.folds || 5 }}"

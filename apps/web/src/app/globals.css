@@ -186,9 +186,49 @@ tr.rowlink:hover td {
 .grade-C { background: #9a6600; }
 .grade-D { background: #b5502a; }
 .grade-F { background: #a82c2c; }
+/* not a grade: an abstention. Grey so it reads as "no answer" rather than
+   as a rank between F and A. */
+.grade-U {
+  background: #5c626e;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+
+/* a summary line that carries a whole sentence, not just a word */
+.outcomes-summary {
+  cursor: pointer;
+  list-style: none;
+}
+.outcomes-summary::-webkit-details-marker { display: none; }
+.outcomes-summary::before {
+  content: "\25b8";
+  display: inline-block;
+  width: 14px;
+  color: var(--text-muted);
+  transition: transform .15s ease;
+}
+details[open] > .outcomes-summary::before { transform: rotate(90deg); }
+
+/* what a lot was read as: a quiet label, not a verdict */
+.kind {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 5px;
+  font-size: 12px;
+  border: 1px solid var(--baseline);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.kind-part {
+  border-color: color-mix(in srgb, var(--series-2) 45%, transparent);
+  color: var(--series-2);
+}
 
 .pos { color: var(--good-text); }
 .neg { color: var(--critical); }
+/* a countdown inside the burst window, not an error */
+.warn { color: var(--serious); }
 .muted { color: var(--text-muted); }
 .small { font-size: 12px; }
 
@@ -229,6 +269,30 @@ tr.rowlink:hover td {
   font: inherit;
   cursor: pointer;
 }
+
+/* A card that explains why something is missing, rather than showing data.
+   Warm-toned and left-ruled so it reads as an explanation, not an error. */
+.card.notice {
+  border-left: 3px solid var(--warning);
+  color: var(--text-secondary);
+}
+.card.notice strong { color: var(--text-primary); }
+
+/* the valuation chain: subtotals ruled off, ignored steps struck through */
+table.waterfall { max-width: 640px; }
+table.waterfall td { border-bottom: none; padding: 5px 10px; }
+/* a lone minus sign must never wrap away from the number it negates */
+table.waterfall td.num { white-space: nowrap; }
+table.waterfall .wf-label { font-weight: 500; }
+table.waterfall tr.wf-total td {
+  border-top: 1px solid var(--baseline);
+  font-weight: 650;
+}
+table.waterfall.wf-muted td,
+table.waterfall.wf-muted .wf-label { color: var(--text-muted); font-weight: 400; }
+table.waterfall tr.wf-ignored td,
+table.waterfall tr.wf-ignored .wf-label { color: var(--text-muted); }
+table.waterfall tr.wf-ignored td.num { text-decoration: line-through; }
 
 .statrow {
   display: grid;
