@@ -274,11 +274,17 @@ class StaticTable:
 
     @classmethod
     def from_overrides(cls, overrides: dict[str, float]) -> "StaticTable":
-        """Build a table from stored overrides (the workbench's edits)."""
-        t = cls(path=os.devnull)
-        t.ram_per_8gb = float(overrides.get("_ram_per_8gb", 0.0))
-        t.cpu_value = {k: float(v) for k, v in overrides.items()
-                       if k != "_ram_per_8gb"}
+        """Layer stored overrides (the workbench's pins) over the CSV table.
+
+        Overrides win per key; everything the CSV knows and the overrides
+        don't mention — other CPUs, the RAM adder — stays intact, so one
+        pinned price can never silently discard the rest of the blend.
+        """
+        t = cls()   # starts from the CSV when present
+        if "_ram_per_8gb" in overrides:
+            t.ram_per_8gb = float(overrides["_ram_per_8gb"])
+        t.cpu_value.update({k: float(v) for k, v in overrides.items()
+                            if k != "_ram_per_8gb"})
         return t
 
     def value(self, machine: dict) -> float | None:

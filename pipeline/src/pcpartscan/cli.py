@@ -146,20 +146,31 @@ def cmd_backfill(a) -> int:
         # seed the editable component-price table from the CSV (insert-only:
         # workbench edits are never overwritten by a re-run)
         csv_path = os.path.join(d, "component_prices.csv")
-        n_prices = 0
+        n_prices = n_bad = 0
         if os.path.exists(csv_path):
             import csv as _csv
             with open(csv_path, newline="") as f:
                 for row in _csv.DictReader(f):
+                    # the CSV is hand-edited; one bad row must not abort
+                    try:
+                        key = (row.get("key") or "").strip()
+                        value = float(row["value_usd"])
+                    except (KeyError, TypeError, ValueError):
+                        n_bad += 1
+                        continue
+                    if not key:
+                        n_bad += 1
+                        continue
                     db.component_prices.update_one(
-                        {"_id": row["key"].strip()},
+                        {"_id": key},
                         {"$setOnInsert": {
-                            "value_usd": float(row["value_usd"]),
+                            "value_usd": value,
                             "note": (row.get("note") or "").strip(),
                         }},
                         upsert=True)
                     n_prices += 1
-        print(f"component_prices: {n_prices} processed (insert-only)")
+        print(f"component_prices: {n_prices} processed (insert-only), "
+              f"{n_bad} malformed rows skipped")
 
         idx = mongo.update_index(index.get("last_run_id", run),
                                  {"last_config": index.get("last_config")})

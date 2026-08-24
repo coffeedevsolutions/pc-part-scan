@@ -54,6 +54,7 @@ export default async function BoardPage() {
       <BoardClient
         lots={lots}
         defaults={{ ...snap.config, ...saved }}
+        hasServerSaved={Object.keys(saved).length > 0}
         watched={[...watched]}
       />
     </main>

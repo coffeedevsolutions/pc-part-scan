@@ -6,8 +6,8 @@ import {
   getLotAction,
   getManifest,
   getNote,
+  isWatched,
   snapshotEntry,
-  watchedKeys,
 } from "@/lib/data";
 import { closesIn, shortDate, usd } from "@/lib/format";
 
@@ -32,7 +32,7 @@ export default async function LotPage({
       snapshotEntry(key),
       getNote(key),
       getLotAction(key),
-      watchedKeys(),
+      isWatched(key),
     ]);
   if (!lot) notFound();
   const v = snap?.lot;
@@ -84,7 +84,7 @@ export default async function LotPage({
 
       <LotControls
         lotKey={key}
-        watched={watched.has(key)}
+        watched={watched}
         note={note}
         action={action}
       />

@@ -17,19 +17,23 @@ function now(): string {
 
 const KEY_RE = /^\d+-\d+$/;
 
-export async function toggleWatch(key: string): Promise<boolean> {
+export async function setWatch(key: string, want: boolean): Promise<boolean> {
   await requireUser();
   if (!KEY_RE.test(key)) throw new Error("bad key");
   const c = getDb().collection<{ _id: string }>("watchlist");
-  const existing = await c.findOne({ _id: key });
-  if (existing) {
-    await c.deleteOne({ _id: key });
+  if (want) {
+    // atomic and idempotent: concurrent clicks can't duplicate-key crash
+    await c.updateOne(
+      { _id: key },
+      { $setOnInsert: { added_at: now() } },
+      { upsert: true },
+    );
   } else {
-    await c.insertOne({ _id: key, added_at: now() } as never);
+    await c.deleteOne({ _id: key });
   }
   revalidatePath("/");
   revalidatePath(`/lot/${key}`);
-  return !existing;
+  return want;
 }
 
 export async function saveNote(key: string, text: string): Promise<void> {
@@ -51,6 +55,16 @@ export async function saveNote(key: string, text: string): Promise<void> {
 
 const ACTIONS = new Set(["watching", "bid", "won", "lost", "passed"]);
 
+const MAX_MONEY = 1_000_000;
+
+function cleanMoney(value: number | null): number | null {
+  if (value == null) return null;
+  if (!Number.isFinite(value) || value < 0 || value > MAX_MONEY) {
+    throw new Error("bad amount");
+  }
+  return Math.round(value * 100) / 100;
+}
+
 export async function setLotAction(
   key: string,
   action: string,
@@ -65,7 +79,7 @@ export async function setLotAction(
     if (!ACTIONS.has(action)) throw new Error("bad action");
     await c.replaceOne(
       { _id: key },
-      { _id: key, action, amount, at: now() } as never,
+      { _id: key, action, amount: cleanMoney(amount), at: now() } as never,
       { upsert: true },
     );
   }
@@ -81,9 +95,12 @@ export async function saveComponentPrice(
   const id = cpu.trim().toLowerCase();
   if (!/^[a-z0-9_][a-z0-9._-]{0,39}$/.test(id)) throw new Error("bad cpu key");
   const c = getDb().collection<{ _id: string }>("component_prices");
-  if (value == null || Number.isNaN(value)) {
+  if (value == null) {
     await c.deleteOne({ _id: id });
   } else {
+    if (!Number.isFinite(value) || value < 0 || value > MAX_MONEY) {
+      throw new Error("bad price");
+    }
     await c.replaceOne(
       { _id: id },
       {
