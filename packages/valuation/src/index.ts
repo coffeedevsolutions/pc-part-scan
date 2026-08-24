@@ -116,7 +116,12 @@ export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
   };
 }
 
-/** Confidence-weighted headroom: the board's ranking key (grade.py scan). */
+/**
+ * Confidence-weighted headroom, ascending — the board's default order and
+ * the pipeline's (grade.py scan). Negated so a plain ascending sort puts
+ * the most attractive lot first: a large headroom we do not believe should
+ * not outrank a smaller one we do.
+ */
 export function rankKey(v: Regrade, confidence: number): number {
   return -(v.headroom * confidence);
 }

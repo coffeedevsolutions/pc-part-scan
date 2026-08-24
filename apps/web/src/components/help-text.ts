@@ -28,6 +28,7 @@ export const HELP = {
   bulkK: "The share of parts-out value a whole pallet actually clears at auction. Drives the floor.",
   bulkN: "How many sold lots with a readable spec sheet the bulk fit is based on. Small numbers mean an unreliable floor.",
   cpuBaseValue: "What the model thinks one machine with this CPU is worth, before RAM and drive adjustments. Pin a value to override it.",
+  ranking: "Lots are ordered by headroom multiplied by confidence, so a large number we do not believe does not outrank a smaller one we do. Click any column header to sort by that column instead.",
   jobRuns: "Every scheduled scan, burst and archive, with what it wrote. The pipeline's heartbeat.",
 } as const;
 

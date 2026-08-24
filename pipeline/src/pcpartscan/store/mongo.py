@@ -55,6 +55,26 @@ def get_db():
     return db
 
 
+def _migrate_component_sources(db) -> None:
+    """Give pre-existing component_prices docs a provenance.
+
+    Pins written before provenance existed carry no `source`, and the
+    seeded-from-CSV rows are indistinguishable from real pins except by
+    their note. Filtering on source alone would silently orphan every pin
+    a user had already made, so classify the legacy docs once, by note,
+    and default anything else to a real pin.
+    """
+    coll = db.component_prices
+    if coll.count_documents({"source": {"$exists": False}}, limit=1) == 0:
+        return
+    coll.update_many(
+        {"source": {"$exists": False},
+         "note": {"$regex": "^seeded from", "$options": "i"}},
+        {"$set": {"source": "seed"}})
+    coll.update_many({"source": {"$exists": False}},
+                     {"$set": {"source": "user"}})
+
+
 def ensure_indexes(db) -> None:
     db.lots.create_index([("status", 1), ("auction_end_utc", 1)])
     db.lots.create_index([("location.state", 1)])
@@ -63,6 +83,7 @@ def ensure_indexes(db) -> None:
     db.bid_observations.create_index([("key", 1), ("observed_at", 1)])
     db.sold.create_index([("auction_end_utc", 1)])
     db.job_runs.create_index([("job", 1), ("started_at", -1)])
+    _migrate_component_sources(db)
 
 
 def _parse_ts(s: str | None) -> dt.datetime | None:
@@ -269,7 +290,7 @@ def component_overrides() -> dict[str, float]:
     past self. The special key "_ram_per_8gb" carries the RAM adder.
     """
     return {d["_id"]: float(d["value_usd"])
-            for d in get_db().component_prices.find({"source": "user"})
+            for d in get_db().component_prices.find({"source": {"$ne": "seed"}})
             if d.get("value_usd") is not None}
 
 

@@ -270,12 +270,13 @@ export async function getLotAction(
     : null;
 }
 
-/** Only user-pinned prices; seeded CSV rows are not overrides. */
+/** Pins a human set. Anything not explicitly seeded counts, so pins made
+ *  before provenance existed are not orphaned. */
 export async function componentPrices(): Promise<
   { cpu: string; value_usd: number; note: string }[]
 > {
   const docs = await coll("component_prices")
-    .find({ source: "user" })
+    .find({ source: { $ne: "seed" } })
     .sort({ _id: 1 })
     .toArray();
   return docs.map((d) => ({

@@ -7,8 +7,8 @@ MAX BID: the most you can pay and still clear your target return. Headroom
 the auction runs.
 
   floor    resale-as-lot value, from the sold BULK-lot model
-  ceiling  parts-out value, from the sold SINGLE-unit model, optionally
-           blended with the static table and eBay
+  ceiling  parts-out value, from the sold SINGLE-unit model (with any
+           hand-pinned CPU prices substituted), optionally blended with eBay
   target   the blend you actually underwrite against (see Config.recovery)
 """
 
@@ -99,9 +99,11 @@ def _confidence(v: Valuation, single: pricing._FitModel, n_cpu_known: int) -> fl
 CONFIDENCE_GATE = 0.50
 GATED_MAX_GRADE = "C"
 
-# A pricing source must cover at least this share of a lot's units before it
-# joins the ceiling blend, so a handful of recognised machines cannot be
-# extrapolated across a pallet of unknown ones.
+# An independent source must cover at least this share of a lot's units
+# before it joins the ceiling blend, so a handful of recognised machines
+# cannot be extrapolated across a pallet of unknown ones. This gates rival
+# estimates like eBay; pinned prices are not gated, because a pin overrides
+# the fit per machine rather than competing with it.
 MIN_SOURCE_COVERAGE = 0.5
 
 
@@ -123,7 +125,7 @@ def _grade(roi_headroom: float, confidence: float) -> str:
     return g
 
 
-def value_lot(rec: dict, single, basket, table, ebay, cfg: Config,
+def value_lot(rec: dict, single, basket, ebay, cfg: Config,
               fetch_manifest: bool = True) -> Valuation:
     title = rec.get("assetShortDescription") or ""
     units = specs.parse_unit_count(title)
@@ -168,7 +170,7 @@ def value_lot(rec: dict, single, basket, table, ebay, cfg: Config,
     per_source["govdeals_singles"] = single.value_mix(mix)
 
     def priced_source(value_of) -> float | None:
-        """Total for a mix under one pricing source, or None if too sparse.
+        """Total for a mix under one independent source, or None if sparse.
 
         A source that knows only a couple of the machines in a mixed pallet
         used to have its total scaled up to the whole lot, which let one
@@ -185,10 +187,6 @@ def value_lot(rec: dict, single, basket, table, ebay, cfg: Config,
         if not hit or hit < units * MIN_SOURCE_COVERAGE:
             return None
         return total * (units / hit) if hit < units else total
-
-    tv = priced_source(table.value)
-    if tv is not None:
-        per_source["static_table"] = tv
 
     if ebay.enabled:
         ev = priced_source(ebay.value)
@@ -227,23 +225,24 @@ def load_models():
         print(f"  note: basket model unavailable ({e}); floor falls back to 0")
         basket = None
     pricing.save_models(single, basket)
-    # The static table is deliberately pinned prices only. It used to be
-    # auto-seeded from a fit and then permanently overrode every later,
-    # better fit -- a snapshot of an old model masquerading as knowledge.
+    # Pinned prices override the fit per machine. In store-backed mode they
+    # are the ones a human set; in file mode they come from the editable
+    # CSV. Either way the floor keeps using the raw fit, since the bulk
+    # discount was measured against it.
     from .store import backend as ds
     if hasattr(ds, "component_overrides"):
-        table = pricing.StaticTable.from_overrides(ds.component_overrides())
+        pins = ds.component_overrides()
     else:
-        # file mode keeps reading the hand-editable CSV
-        table = pricing.StaticTable()
-    return single, basket, table, pricing.EbayAdapter()
+        pins = pricing.StaticTable().as_pins()
+    ceiling_model = pricing.PinnedModel(single, pins) if pins else single
+    return ceiling_model, basket, pricing.EbayAdapter()
 
 
 def scan(live: dict | None = None, cfg: Config | None = None,
          min_units: int = 5, limit: int = 60,
          models: tuple | None = None) -> list[Valuation]:
     cfg = cfg or Config()
-    single, basket, table, ebay = models if models else load_models()
+    single, basket, ebay = models if models else load_models()
     live = live or harvest._load("live_raw.json", {})
 
     cands = []
@@ -259,7 +258,7 @@ def scan(live: dict | None = None, cfg: Config | None = None,
     cands.sort(key=lambda r: -(r.get("currentBid") or 0))
     cands = cands[:limit]
 
-    out = [value_lot(r, single, basket, table, ebay, cfg) for r in cands]
+    out = [value_lot(r, single, basket, ebay, cfg) for r in cands]
     # rank on confidence-weighted headroom: a big number we do not believe
     # should not outrank a smaller one we do
     out.sort(key=lambda v: (-(v.headroom * v.confidence), -v.confidence))

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   DEFAULT_CONFIG,
+  rankKey,
   regrade,
   type Config,
   type Regrade,
@@ -109,10 +110,15 @@ export function BoardClient({
         if (state !== "all" && lot.state !== state) return false;
         if (gradeMin !== "all" && v.grade > gradeMin) return false;
         return true;
-      });
+      })
+      // Default order is confidence-weighted headroom, matching the
+      // pipeline: a big number we do not believe should not outrank a
+      // smaller one we do. Sorting the table by raw headroom instead put
+      // huge low-confidence unknowns on top. Clicking a header overrides.
+      .sort((a, b) => rankKey(a.v, a.lot.confidence) - rankKey(b.v, b.lot.confidence));
   }, [lots, cfg, gradeMin, state, watchedOnly, watched]);
 
-  const columns: Column<Row>[] = [
+  const columns: Column<Row>[] = useMemo(() => [
     {
       id: "watch",
       header: "",
@@ -211,7 +217,7 @@ export function BoardClient({
       sortValue: ({ lot }) => lot.confidence,
       cell: ({ lot }) => lot.confidence.toFixed(2),
     },
-  ];
+  ], [watched]);
 
   return (
     <>
@@ -323,8 +329,8 @@ export function BoardClient({
           </label>
           <span className="spacer" />
           <span className="muted small" style={{ height: 30, lineHeight: "30px" }}>
-            {rows.length} lots · regraded in your browser
-            <HelpIcon k="maxBid" label="how these numbers are produced" />
+            {rows.length} lots · ranked by confidence-weighted headroom
+            <HelpIcon k="ranking" label="the default ranking" />
           </span>
         </div>
       </div>
@@ -334,8 +340,6 @@ export function BoardClient({
           rows={rows}
           columns={columns}
           rowKey={({ lot }) => lot.lot_key}
-          initialSort="headroom"
-          initialDir="desc"
           empty="No lots match these filters."
         />
       </div>

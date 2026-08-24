@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { DataTable, type Column } from "@/components/DataTable";
 import { saveComponentPrice } from "@/lib/actions";
@@ -11,6 +11,8 @@ interface Row {
   fitted: number | null;
   pinned: number | null;
   note: string;
+  /** just added by hand, so it has nothing to sort on yet */
+  isNew?: boolean;
 }
 
 /**
@@ -24,7 +26,7 @@ export function PriceEditor({ rows: initial }: { rows: Row[] }) {
   const [newCpu, setNewCpu] = useState("");
   const [status, setStatus] = useState("");
 
-  async function save(cpu: string, raw: string) {
+  const save = useCallback(async function save(cpu: string, raw: string) {
     const value = raw.trim() === "" ? null : Number(raw);
     if (value != null && (!Number.isFinite(value) || value < 0)) return;
     setStatus("saving…");
@@ -35,16 +37,17 @@ export function PriceEditor({ rows: initial }: { rows: Row[] }) {
     } catch (e) {
       setStatus(`could not save ${cpu}: ${e instanceof Error ? e.message : "error"}`);
     }
-  }
+  }, []);
 
   function addRow() {
     const cpu = newCpu.trim().toLowerCase();
     if (!cpu || rows.some((r) => r.cpu === cpu)) return;
-    setRows((rs) => [{ cpu, fitted: null, pinned: null, note: "" }, ...rs]);
+    setRows((rs) => [{ cpu, fitted: null, pinned: null, note: "", isNew: true }, ...rs]);
     setNewCpu("");
+    setStatus(`added ${cpu} — enter a price to pin it`);
   }
 
-  const columns: Column<Row>[] = [
+  const columns: Column<Row>[] = useMemo(() => [
     {
       id: "cpu",
       header: "CPU",
@@ -96,7 +99,7 @@ export function PriceEditor({ rows: initial }: { rows: Row[] }) {
         );
       },
     },
-  ];
+  ], [save]);
 
   return (
     <>
@@ -127,6 +130,7 @@ export function PriceEditor({ rows: initial }: { rows: Row[] }) {
           rowKey={(r) => r.cpu}
           initialSort="effective"
           initialDir="desc"
+          pinFirst={(r) => r.isNew === true}
         />
       </div>
       <p className="muted small">

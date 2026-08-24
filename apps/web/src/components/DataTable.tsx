@@ -36,6 +36,7 @@ export function DataTable<T>({
   rowKey,
   initialSort,
   initialDir = "desc",
+  pinFirst,
   empty = "Nothing to show.",
 }: {
   rows: T[];
@@ -43,17 +44,22 @@ export function DataTable<T>({
   rowKey: (row: T) => string;
   initialSort?: string;
   initialDir?: SortDir;
+  /** rows kept at the top whatever the sort -- e.g. one just added */
+  pinFirst?: (row: T) => boolean;
   empty?: ReactNode;
 }) {
   const [sortId, setSortId] = useState<string | undefined>(initialSort);
   const [dir, setDir] = useState<SortDir>(initialDir);
 
+  // Resolved outside the memo: callers build `columns` inline, so a memo
+  // keyed on the array itself never holds. Keyed on the resolved sort
+  // function instead, which callers can and do memoize.
+  const get = columns.find((c) => c.id === sortId)?.sortValue;
+
   const sorted = useMemo(() => {
-    const col = columns.find((c) => c.id === sortId);
-    if (!col?.sortValue) return rows;
-    const get = col.sortValue;
+    if (!get) return rows;
     const mul = dir === "asc" ? 1 : -1;
-    return [...rows].sort((a, b) => {
+    const ranked = [...rows].sort((a, b) => {
       const x = get(a);
       const y = get(b);
       // missing values sort last in both directions rather than pretending
@@ -64,7 +70,11 @@ export function DataTable<T>({
       if (typeof x === "number" && typeof y === "number") return (x - y) * mul;
       return String(x).localeCompare(String(y)) * mul;
     });
-  }, [rows, columns, sortId, dir]);
+    if (!pinFirst) return ranked;
+    // a just-added row has no values to sort on and would otherwise land at
+    // the bottom of a scroll container, reading as "nothing happened"
+    return [...ranked.filter(pinFirst), ...ranked.filter((r) => !pinFirst(r))];
+  }, [rows, get, dir, pinFirst]);
 
   function toggle(col: Column<T>) {
     if (!col.sortValue) return;
