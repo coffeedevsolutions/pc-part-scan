@@ -108,7 +108,8 @@ def upsert_lots(records: list[dict], observed_at: str, sold: bool) -> dict:
 
     keys = [lot_key(r) for r in recs]
     already_sold = {d["_id"] for d in db.lots.find(
-        {"_id": {"$in": keys}, "status": "sold"}, {"_id": 1})}
+        {"_id": {"$in": keys}, "status": {"$in": ["sold", "closed"]}},
+        {"_id": 1})}
 
     ops = []
     for rec in recs:
@@ -116,7 +117,8 @@ def upsert_lots(records: list[dict], observed_at: str, sold: bool) -> dict:
         norm = normalize_lot(rec, observed_at, sold)
         norm.pop("first_seen", None)
         if k in already_sold and not sold:
-            # never downgrade a sold lot back to open, and keep its price
+            # a finished auction never reopens: a later live sweep that
+            # still lists the lot must not put it back on the board
             norm["status"] = "sold"
             norm.pop("final_price", None)
         ops.append(UpdateOne(
@@ -233,10 +235,45 @@ def save_grades(vals: list, run: str) -> int:
     return get_db().lots.bulk_write(ops, ordered=False).matched_count
 
 
+def open_lots_past_end(now_iso: str) -> list[dict]:
+    """Lots still marked open whose auction end time has already passed.
+
+    These are the ones worth asking the seller about: we tracked them, we
+    published a max bid for them, and nothing has told us how they ended.
+    """
+    return list(get_db().lots.find(
+        {"status": "open", "auction_end_utc": {"$ne": None, "$lt": now_iso}},
+        {"key": 1, "account_id": 1, "asset_id": 1, "title": 1,
+         "auction_end_utc": 1}))
+
+
+def mark_closed(keys: list[str], observed_at: str) -> int:
+    """Stop offering a lot as biddable once its auction has ended.
+
+    Separate from `sold`: this only says the auction is over. A lot whose
+    hammer price we never learned is still not something to bid on.
+    """
+    if not keys:
+        return 0
+    res = get_db().lots.update_many(
+        {"_id": {"$in": keys}, "status": "open"},
+        {"$set": {"status": "closed", "closed_seen_at": observed_at}})
+    return res.modified_count
+
+
 def open_lots_raw() -> dict[str, dict]:
-    """Open lots mapped back onto the raw API shape the grader expects."""
+    """Open lots mapped back onto the raw API shape the grader expects.
+
+    An end time in the past excludes a lot even while it is still marked
+    open: `pcps resolve` flips the status, but it runs on its own schedule
+    and until then a finished auction must not be offered as biddable.
+    """
     out = {}
-    for lot in get_db().lots.find({"status": "open"}):
+    now = utcnow()
+    for lot in get_db().lots.find(
+            {"status": "open",
+             "$or": [{"auction_end_utc": None},
+                     {"auction_end_utc": {"$gte": now}}]}):
         last = lot.get("last_obs") or {}
         out[lot["_id"]] = project_lot(lot, last.get("bid"),
                                       last.get("bid_count"))

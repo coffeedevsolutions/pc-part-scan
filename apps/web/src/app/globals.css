@@ -195,6 +195,21 @@ tr.rowlink:hover td {
   text-transform: lowercase;
 }
 
+/* a summary line that carries a whole sentence, not just a word */
+.outcomes-summary {
+  cursor: pointer;
+  list-style: none;
+}
+.outcomes-summary::-webkit-details-marker { display: none; }
+.outcomes-summary::before {
+  content: "\25b8";
+  display: inline-block;
+  width: 14px;
+  color: var(--text-muted);
+  transition: transform .15s ease;
+}
+details[open] > .outcomes-summary::before { transform: rotate(90deg); }
+
 /* what a lot was read as: a quiet label, not a verdict */
 .kind {
   display: inline-block;

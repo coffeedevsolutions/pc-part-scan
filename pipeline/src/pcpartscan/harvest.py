@@ -113,6 +113,86 @@ def sweep_live(queries=QUERIES, rows=100, max_pages=8, run: str | None = None) -
     return found
 
 
+def resolve_closed(max_sellers: int = 40, rows: int = 100,
+                   max_pages: int = 6, run: str | None = None) -> dict:
+    """Find out what the lots we were tracking actually sold for.
+
+    A lot only ever became "sold" here if the keyword sweep happened to
+    surface it again, which for a lot we graded is left entirely to chance:
+    its end time passes, it stays `status: open` forever, it sits on the
+    board reading "closed", and we never learn the one number that would
+    tell us whether our max bid was any good.
+
+    So ask directly. Every seller's completed auctions are one scoped
+    search, so the lots we tracked resolve in one request per seller rather
+    than one per lot -- the same trick the burst sampler uses on the way in.
+
+    Returns {"checked", "resolved", "sellers", "outcomes"}, where outcomes
+    pairs each resolved lot with the hammer price.
+    """
+    run = run or ds.run_id()
+    observed = ds.utcnow()
+    pending = ds.open_lots_past_end(observed)
+    if not pending:
+        _p("no tracked lots have closed since the last sweep")
+        return {"checked": 0, "resolved": 0, "sellers": 0, "outcomes": []}
+
+    by_seller: dict[int, dict[int, str]] = {}
+    for lot in pending:
+        by_seller.setdefault(lot["account_id"], {})[lot["asset_id"]] = (
+            lot.get("auction_end_utc") or "")
+    _p(f"{len(pending)} closed lots across {len(by_seller)} sellers")
+
+    found: dict[str, dict] = {}
+    sellers = sorted(by_seller, key=lambda a: -len(by_seller[a]))[:max_sellers]
+    for acct in sellers:
+        want = by_seller[acct]
+        # Oldest lot we care about from this seller. A big seller has
+        # thousands of completed auctions; sorted newest-first we can stop
+        # the moment the feed is older than anything we are looking for,
+        # which turns an unbounded crawl into a page or two.
+        oldest = min(want.values() or [""])
+        for page in range(1, max_pages + 1):
+            try:
+                batch, total = gd.search(account_ids=[acct], sold=True,
+                                         page=page, rows=rows,
+                                         sort_field="auctionclose",
+                                         sort_order="desc")
+            except urllib.error.HTTPError as e:
+                _p(f"  seller {acct}: HTTP {e.code}, skipping")
+                break
+            if not batch:
+                break
+            for r in batch:
+                if r.get("assetId") in want:
+                    found[f"{r['accountId']}-{r['assetId']}"] = r
+            time.sleep(POLITE_DELAY)
+            ends = [r.get("assetAuctionEndDate") or "" for r in batch]
+            if oldest and ends and max(ends) and min(ends) < oldest[:19]:
+                break        # the feed has run past everything we wanted
+            if page * rows >= total:
+                break
+
+    recs = list(found.values())
+    if recs:
+        ds.upsert_lots(recs, observed, sold=True)
+        ds.upsert_sold(recs, observed)
+        ds.record_bids(recs, observed, run)
+    # Anything still unresolved was withdrawn, relisted or simply not in the
+    # seller's completed feed. Mark it closed either way so it stops being
+    # offered as biddable; an unknown outcome is still not an open auction.
+    stale = [l["key"] for l in pending if l["key"] not in found]
+    ds.mark_closed(stale, observed)
+
+    outcomes = [{"key": k, "hammer": float(r.get("currentBid") or 0),
+                 "title": r.get("assetShortDescription") or ""}
+                for k, r in found.items() if r.get("currentBid")]
+    _p(f"resolved {len(outcomes)} of {len(pending)} "
+       f"({len(stale)} closed with no result recorded)")
+    return {"checked": len(pending), "resolved": len(outcomes),
+            "sellers": len(sellers), "outcomes": outcomes}
+
+
 RETRY_EMPTY_DAYS = 7    # how long a cached empty parse suppresses re-attempts
 
 

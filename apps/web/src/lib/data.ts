@@ -231,6 +231,53 @@ export async function latestSnapshot(): Promise<Snapshot | null> {
   return doc ? clean<Snapshot>(doc) : null;
 }
 
+/** A lot we published a number for, now closed, with what it fetched. */
+export interface ClosedOutcome {
+  key: string;
+  title: string | null;
+  url: string | null;
+  auction_end_utc: string | null;
+  final_price: number;
+  grade: string;
+  max_bid: number;
+  confidence: number;
+  run_id: string;
+}
+
+/**
+ * How our published max bids actually turned out.
+ *
+ * This is the backtest made personal: not "lots like this" but the exact
+ * lots the board showed, scored against the price they really fetched. It
+ * only fills in as `pcps resolve` learns outcomes, so it starts empty and
+ * grows with every scan.
+ */
+export async function recentlyClosed(limit = 12): Promise<ClosedOutcome[]> {
+  const docs = await coll("lots")
+    .find({
+      status: "sold",
+      final_price: { $gt: 0 },
+      latest_grade: { $ne: null },
+    })
+    .sort({ auction_end_utc: -1 })
+    .limit(limit)
+    .toArray();
+  return docs.map((d) => {
+    const g = (d.latest_grade ?? {}) as Record<string, number | string>;
+    return {
+      key: String(d._id),
+      title: (d.title as string) ?? null,
+      url: (d.url as string) ?? null,
+      auction_end_utc: (d.auction_end_utc as string) ?? null,
+      final_price: Number(d.final_price),
+      grade: String(g.grade ?? "?"),
+      max_bid: Number(g.max_bid ?? 0),
+      confidence: Number(g.confidence ?? 0),
+      run_id: String(g.run_id ?? ""),
+    };
+  });
+}
+
 /** The most recent backtest, or null before one has ever been run. */
 export async function latestBacktest(): Promise<Backtest | null> {
   const doc = await coll("backtests")

@@ -32,6 +32,7 @@ export const HELP = {
   bulkN: "How many sold lots with a readable spec sheet the bulk fit is based on. Small numbers mean an unreliable floor.",
   cpuBaseValue: "What the model thinks one machine with this CPU is worth, before RAM and drive adjustments. Pin a value to override it.",
   ranking: "Lots are ordered by headroom multiplied by confidence, so a large number we do not believe does not outrank a smaller one we do. Click any column header to sort by that column instead.",
+  outcomes: "The lots the board actually showed you, scored against what they really fetched. Unlike the backtest these are not comparable lots but the exact ones \u2014 it fills in as `pcps resolve` asks each seller how their finished auctions ended.",
   backtest: "Every closed lot re-graded as if it were live, with its own outcome held out of the models that priced it. It is the only number here that can tell you a max bid was wrong \u2014 everything else describes the data it was fitted on.",
   jobRuns: "Every scheduled scan, burst and archive, with what it wrote. The pipeline's heartbeat.",
   floorCeiling: "The range this lot's value sits in: flipping the whole pallet at auction on the left, selling every unit individually on the right. What you actually underwrite against is somewhere between them.",

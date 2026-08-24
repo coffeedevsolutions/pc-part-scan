@@ -1,0 +1,45 @@
+name: resolve
+
+# Ask each seller what our tracked lots actually sold for. Daily at 02:00
+# UTC, after the 12:00-00:00 closing band has emptied, so a day's closures
+# are all resolved in one pass.
+#
+# Without this a lot we graded never leaves the board: it only stops being
+# "open" if the keyword sweep happens to surface it again, which for any
+# particular lot is chance. It is also the only way the system learns
+# whether its own max bids were any good.
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      max_sellers:
+        description: "Sellers to ask in one run"
+        default: "40"
+
+concurrency:
+  group: resolve
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install --quiet ./pipeline
+
+      - name: Resolve closed lots
+        env:
+          PCPS_STORE: mongo
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: >
+          pcps resolve
+          --max-sellers "${{ github.event.inputs.max_sellers || 40 }}"

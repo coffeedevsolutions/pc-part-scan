@@ -409,6 +409,29 @@ Manifest triage, daily digest, weekly health review. *Done when:* the
 bulk-discount fit's n has grown week-over-week without human PDF-reading, and
 the owner gets a useful digest daily.
 
+## 11a. Closing the loop — `pcps resolve`
+
+A lot only ever stopped being `status: open` if the global keyword sweep
+happened to surface it again in its sold pages. For a lot we actually
+graded that is left to chance: the end time passes, the lot sits on the
+board reading "closed", and the one number that would say whether our max
+bid was any good never arrives. On the first real run, 254 tracked lots
+were in that state.
+
+`resolve.yml` (daily, 02:00 UTC, after the closing band empties) asks
+directly. Lots past their end time are grouped by seller, and each seller's
+completed auctions are one scoped search sorted `auctionclose desc` — so
+the lots we tracked resolve in a page or two per seller rather than one
+request per lot, and paging stops as soon as the feed runs older than the
+oldest lot we are chasing. Anything the feed never mentions is marked
+`closed` regardless: withdrawn or relisted, it is still not an auction.
+
+Three things fall out of it. Finished auctions leave the board. The sold
+corpus grows with exactly the lots the board thought were worth watching,
+which are the most relevant comps there are. And the Board gains a
+"recently closed" panel scoring our own published max bids against the
+price each lot really fetched — the backtest made personal.
+
 ## 11b. Backtest — the only section that can say the grader is wrong
 
 `pcps backtest` (weekly, `backtest.yml`) re-grades every closed lot with its

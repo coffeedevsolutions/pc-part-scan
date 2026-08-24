@@ -358,6 +358,34 @@ def cmd_save_manifest(a) -> int:
     return 0
 
 
+def cmd_resolve(a) -> int:
+    """Ask sellers what our tracked lots actually sold for."""
+    from . import harvest
+    from .store import backend as ds
+
+    is_mongo = hasattr(ds, "job_start")
+    run = ds.run_id()
+    if is_mongo:
+        ds.job_start("resolve", run)
+    try:
+        res = harvest.resolve_closed(max_sellers=a.max_sellers, run=run)
+        if res["outcomes"]:
+            print()
+            print(f"{'lot':<14}{'hammer':>10}  title")
+            for o in sorted(res["outcomes"],
+                            key=lambda o: -o["hammer"])[:a.top]:
+                print(f"{o['key']:<14}{o['hammer']:>10,.0f}  {o['title'][:56]}")
+        if is_mongo:
+            ds.job_finish("resolve", run, counts={"resolved": res["resolved"],
+                                                  "checked": res["checked"]})
+    except Exception as e:
+        if is_mongo:
+            ds.job_finish("resolve", run, status="error", error=str(e))
+        raise
+    print(f"\nrun {run}")
+    return 0
+
+
 def cmd_backtest(a) -> int:
     """Replay the grader over closed lots and report how it did."""
     from . import backtest, grade
@@ -459,6 +487,11 @@ def main(argv: list[str] | None = None) -> int:
                    help='JSON: {"machines": [...], "source_files": [...]}')
     p.add_argument("--allow-mismatch", action="store_true")
 
+    p = sub.add_parser("resolve",
+                       help="find out what tracked lots actually sold for")
+    p.add_argument("--max-sellers", type=int, default=40)
+    p.add_argument("--top", type=int, default=15)
+
     p = sub.add_parser("backtest",
                        help="replay the grader over closed lots")
     p.add_argument("--folds", type=int, default=5)
@@ -472,7 +505,7 @@ def main(argv: list[str] | None = None) -> int:
 
     a = ap.parse_args(argv)
     return {"smoke": cmd_smoke, "backfill": cmd_backfill, "scan": cmd_scan,
-            "backtest": cmd_backtest,
+            "backtest": cmd_backtest, "resolve": cmd_resolve,
             "burst": cmd_burst, "archive": cmd_archive,
             "triage-queue": cmd_triage_queue, "triage-fetch": cmd_triage_fetch,
             "save-manifest": cmd_save_manifest,
