@@ -143,14 +143,24 @@ export default async function LotPage({
               )}
             </Stat>
             <Stat
-              label={unrated ? "Units identified" : "Floor → ceiling"}
+              label={
+                v.count_known === false
+                  ? "Units"
+                  : unrated
+                    ? "Units identified"
+                    : "Floor → ceiling"
+              }
               help={unrated ? "identifiedUnits" : "floorCeiling"}
               helpLabel={unrated ? "units identified" : "floor and ceiling"}
               small
             >
-              {unrated
-                ? `${(v.identified_units ?? 0).toLocaleString()} of ${v.units.toLocaleString()}`
-                : `${usd(v.floor)} → ${usd(v.ceiling)}`}
+              {v.count_known === false ? (
+                <span className="muted">not stated</span>
+              ) : unrated ? (
+                `${(v.identified_units ?? 0).toLocaleString()} of ${v.units.toLocaleString()}`
+              ) : (
+                `${usd(v.floor)} → ${usd(v.ceiling)}`
+              )}
             </Stat>
           </>
         )}
@@ -234,7 +244,7 @@ export default async function LotPage({
         </div>
       )}
 
-      {v && unrated && (
+      {v && unrated && v.count_known !== false && (
         <details className="card">
           {/* folded away on purpose: a green headroom figure is exactly the
               thing this lot is not entitled to show */}
