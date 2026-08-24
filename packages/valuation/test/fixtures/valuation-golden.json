@@ -18,7 +18,21 @@
      "max_bid": 18.23,
      "roi_at_current": -0.98656
     },
+    "11227-17564#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2506.77,
+     "max_bid": 18.23,
+     "roi_at_current": -0.98656
+    },
     "11227-17565": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -3783.28,
+     "max_bid": 18.23,
+     "roi_at_current": -0.99107
+    },
+    "11227-17565#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -3783.28,
@@ -32,7 +46,21 @@
      "max_bid": 18.23,
      "roi_at_current": -0.986829
     },
+    "11227-17566#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2558.28,
+     "max_bid": 18.23,
+     "roi_at_current": -0.986829
+    },
     "11227-17567": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -1506.77,
+     "max_bid": 18.23,
+     "roi_at_current": -0.977765
+    },
+    "11227-17567#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -1506.77,
@@ -46,7 +74,21 @@
      "max_bid": 18.23,
      "roi_at_current": -0.972333
     },
+    "11227-17568#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -1206.77,
+     "max_bid": 18.23,
+     "roi_at_current": -0.972333
+    },
     "11227-17569": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -3031.77,
+     "max_bid": 18.23,
+     "roi_at_current": -0.988871
+    },
+    "11227-17569#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -3031.77,
@@ -60,7 +102,21 @@
      "max_bid": 18.42,
      "roi_at_current": -0.986496
     },
+    "116-1767#untrusted": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -2516.58,
+     "max_bid": 18.42,
+     "roi_at_current": -0.986496
+    },
     "11805-65": {
+     "expected_revenue": 41.21,
+     "grade": "F",
+     "headroom": -4977.24,
+     "max_bid": 22.76,
+     "roi_at_current": -0.991763
+    },
+    "11805-65#untrusted": {
      "expected_revenue": 41.21,
      "grade": "F",
      "headroom": -4977.24,
@@ -74,7 +130,21 @@
      "max_bid": 18.23,
      "roi_at_current": -0.998718
     },
+    "11961-61#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -26490.77,
+     "max_bid": 18.23,
+     "roi_at_current": -0.998718
+    },
     "1328-16095": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2006.77,
+     "max_bid": 18.23,
+     "roi_at_current": -0.983247
+    },
+    "1328-16095#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -2006.77,
@@ -88,7 +158,21 @@
      "max_bid": 2042.29,
      "roi_at_current": -0.399423
     },
+    "19490-82#untrusted": {
+     "expected_revenue": 3805.26,
+     "grade": "F",
+     "headroom": -3957.71,
+     "max_bid": 2042.29,
+     "roi_at_current": -0.399423
+    },
     "20211-12504": {
+     "expected_revenue": 8489.69,
+     "grade": "F",
+     "headroom": -539.93,
+     "max_bid": 4688.06,
+     "roi_at_current": 0.452224
+    },
+    "20211-12504#untrusted": {
      "expected_revenue": 8489.69,
      "grade": "F",
      "headroom": -539.93,
@@ -102,7 +186,21 @@
      "max_bid": 2151.69,
      "roi_at_current": -0.369041
     },
+    "20746-1326#untrusted": {
+     "expected_revenue": 4009.11,
+     "grade": "F",
+     "headroom": -3848.31,
+     "max_bid": 2151.69,
+     "roi_at_current": -0.369041
+    },
     "20746-2223": {
+     "expected_revenue": 12218.88,
+     "grade": "F",
+     "headroom": -422.2,
+     "max_bid": 6577.8,
+     "roi_at_current": 0.516178
+    },
+    "20746-2223#untrusted": {
      "expected_revenue": 12218.88,
      "grade": "F",
      "headroom": -422.2,
@@ -116,7 +214,21 @@
      "max_bid": 4613.38,
      "roi_at_current": 2.326551
     },
+    "227-1839#untrusted": {
+     "expected_revenue": 8595.81,
+     "grade": "C",
+     "headroom": 2788.38,
+     "max_bid": 4613.38,
+     "roi_at_current": 2.326551
+    },
     "26019-3165": {
+     "expected_revenue": 679.51,
+     "grade": "F",
+     "headroom": -1326.31,
+     "max_bid": 364.69,
+     "roi_at_current": -0.61193
+    },
+    "26019-3165#untrusted": {
      "expected_revenue": 679.51,
      "grade": "F",
      "headroom": -1326.31,
@@ -130,7 +242,21 @@
      "max_bid": 0.0,
      "roi_at_current": -1.0
     },
+    "26712-237#untrusted": {
+     "expected_revenue": 0.0,
+     "grade": "F",
+     "headroom": -1525.0,
+     "max_bid": 0.0,
+     "roi_at_current": -1.0
+    },
     "28050-1804": {
+     "expected_revenue": 2950.73,
+     "grade": "C",
+     "headroom": 495.21,
+     "max_bid": 1595.21,
+     "roi_at_current": 1.187349
+    },
+    "28050-1804#untrusted": {
      "expected_revenue": 2950.73,
      "grade": "C",
      "headroom": 495.21,
@@ -144,7 +270,21 @@
      "max_bid": 1269.24,
      "roi_at_current": -0.267549
     },
+    "28085-82#untrusted": {
+     "expected_revenue": 2337.98,
+     "grade": "F",
+     "headroom": -1730.76,
+     "max_bid": 1269.24,
+     "roi_at_current": -0.267549
+    },
     "28868-114": {
+     "expected_revenue": 445.55,
+     "grade": "F",
+     "headroom": -760.53,
+     "max_bid": 239.47,
+     "roi_at_current": -0.571172
+    },
+    "28868-114#untrusted": {
      "expected_revenue": 445.55,
      "grade": "F",
      "headroom": -760.53,
@@ -158,7 +298,21 @@
      "max_bid": 22.76,
      "roi_at_current": -0.991844
     },
+    "2938-2381#untrusted": {
+     "expected_revenue": 41.21,
+     "grade": "F",
+     "headroom": -5027.24,
+     "max_bid": 22.76,
+     "roi_at_current": -0.991844
+    },
     "29404-273": {
+     "expected_revenue": 4077.06,
+     "grade": "F",
+     "headroom": -836.84,
+     "max_bid": 2188.16,
+     "roi_at_current": 0.20445
+    },
+    "29404-273#untrusted": {
      "expected_revenue": 4077.06,
      "grade": "F",
      "headroom": -836.84,
@@ -172,7 +326,21 @@
      "max_bid": 1823.47,
      "roi_at_current": -0.365062
     },
+    "29404-285#untrusted": {
+     "expected_revenue": 3397.55,
+     "grade": "F",
+     "headroom": -3227.53,
+     "max_bid": 1823.47,
+     "roi_at_current": -0.365062
+    },
     "29404-286": {
+     "expected_revenue": 4077.06,
+     "grade": "F",
+     "headroom": -3812.84,
+     "max_bid": 2188.16,
+     "roi_at_current": -0.359053
+    },
+    "29404-286#untrusted": {
      "expected_revenue": 4077.06,
      "grade": "F",
      "headroom": -3812.84,
@@ -186,7 +354,21 @@
      "max_bid": 2188.16,
      "roi_at_current": 0.178342
     },
+    "29404-287#untrusted": {
+     "expected_revenue": 4077.06,
+     "grade": "F",
+     "headroom": -911.84,
+     "max_bid": 2188.16,
+     "roi_at_current": 0.178342
+    },
     "29404-288": {
+     "expected_revenue": 4077.06,
+     "grade": "F",
+     "headroom": -4411.84,
+     "max_bid": 2188.16,
+     "roi_at_current": -0.414215
+    },
+    "29404-288#untrusted": {
      "expected_revenue": 4077.06,
      "grade": "F",
      "headroom": -4411.84,
@@ -200,7 +382,21 @@
      "max_bid": 0.0,
      "roi_at_current": -1.0
     },
+    "29404-289#untrusted": {
+     "expected_revenue": 0.0,
+     "grade": "F",
+     "headroom": -6100.0,
+     "max_bid": 0.0,
+     "roi_at_current": -1.0
+    },
     "29404-290": {
+     "expected_revenue": 2006.69,
+     "grade": "F",
+     "headroom": -1314.82,
+     "max_bid": 1110.18,
+     "roi_at_current": -0.218881
+    },
+    "29404-290#untrusted": {
      "expected_revenue": 2006.69,
      "grade": "F",
      "headroom": -1314.82,
@@ -214,7 +410,21 @@
      "max_bid": 487.09,
      "roi_at_current": -0.088176
     },
+    "29404-291#untrusted": {
+     "expected_revenue": 875.35,
+     "grade": "F",
+     "headroom": -412.91,
+     "max_bid": 487.09,
+     "roi_at_current": -0.088176
+    },
     "29404-293": {
+     "expected_revenue": 1277.57,
+     "grade": "F",
+     "headroom": -224.52,
+     "max_bid": 705.48,
+     "roi_at_current": 0.248851
+    },
+    "29404-293#untrusted": {
      "expected_revenue": 1277.57,
      "grade": "F",
      "headroom": -224.52,
@@ -228,7 +438,21 @@
      "max_bid": 291.76,
      "roi_at_current": -0.564416
     },
+    "29731-89#untrusted": {
+     "expected_revenue": 543.61,
+     "grade": "F",
+     "headroom": -908.24,
+     "max_bid": 291.76,
+     "roi_at_current": -0.564416
+    },
     "30231-256": {
+     "expected_revenue": 3010.18,
+     "grade": "F",
+     "headroom": -3418.64,
+     "max_bid": 1581.36,
+     "roi_at_current": -0.432042
+    },
+    "30231-256#untrusted": {
      "expected_revenue": 3010.18,
      "grade": "F",
      "headroom": -3418.64,
@@ -242,7 +466,21 @@
      "max_bid": 368.42,
      "roi_at_current": -0.768424
     },
+    "30279-96#untrusted": {
+     "expected_revenue": 685.47,
+     "grade": "F",
+     "headroom": -2531.58,
+     "max_bid": 368.42,
+     "roi_at_current": -0.768424
+    },
     "30467-26": {
+     "expected_revenue": 10192.66,
+     "grade": "C",
+     "headroom": 2670.41,
+     "max_bid": 5470.41,
+     "roi_at_current": 1.754772
+    },
+    "30467-26#untrusted": {
      "expected_revenue": 10192.66,
      "grade": "C",
      "headroom": 2670.41,
@@ -256,7 +494,21 @@
      "max_bid": 20777.64,
      "roi_at_current": -0.444535
     },
+    "31551-54#untrusted": {
+     "expected_revenue": 37626.63,
+     "grade": "F",
+     "headroom": -44222.36,
+     "max_bid": 20777.64,
+     "roi_at_current": -0.444535
+    },
     "32255-14": {
+     "expected_revenue": 14154.86,
+     "grade": "F",
+     "headroom": -10392.21,
+     "max_bid": 7607.79,
+     "roi_at_current": -0.264262
+    },
+    "32255-14#untrusted": {
      "expected_revenue": 14154.86,
      "grade": "F",
      "headroom": -10392.21,
@@ -270,7 +522,21 @@
      "max_bid": 1391.6,
      "roi_at_current": -0.142455
     },
+    "3473-4984#untrusted": {
+     "expected_revenue": 2648.96,
+     "grade": "F",
+     "headroom": -1433.4,
+     "max_bid": 1391.6,
+     "roi_at_current": -0.142455
+    },
     "430-37454": {
+     "expected_revenue": 2570.5,
+     "grade": "F",
+     "headroom": -2123.44,
+     "max_bid": 1381.56,
+     "roi_at_current": -0.310859
+    },
+    "430-37454#untrusted": {
      "expected_revenue": 2570.5,
      "grade": "F",
      "headroom": -2123.44,
@@ -284,7 +550,21 @@
      "max_bid": 1344.72,
      "roi_at_current": -0.115919
     },
+    "430-37455#untrusted": {
+     "expected_revenue": 2501.95,
+     "grade": "F",
+     "headroom": -1266.28,
+     "max_bid": 1344.72,
+     "roi_at_current": -0.115919
+    },
     "432-42355": {
+     "expected_revenue": 849.39,
+     "grade": "F",
+     "headroom": -569.13,
+     "max_bid": 455.87,
+     "roi_at_current": -0.227829
+    },
+    "432-42355#untrusted": {
      "expected_revenue": 849.39,
      "grade": "F",
      "headroom": -569.13,
@@ -298,7 +578,21 @@
      "max_bid": 18.23,
      "roi_at_current": -0.987017
     },
+    "432-42371#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2595.77,
+     "max_bid": 18.23,
+     "roi_at_current": -0.987017
+    },
     "432-42376": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2015.77,
+     "max_bid": 18.23,
+     "roi_at_current": -0.983321
+    },
+    "432-42376#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -2015.77,
@@ -312,7 +606,21 @@
      "max_bid": 237.05,
      "roi_at_current": -0.585275
     },
+    "4474-133#untrusted": {
+     "expected_revenue": 441.68,
+     "grade": "F",
+     "headroom": -788.95,
+     "max_bid": 237.05,
+     "roi_at_current": -0.585275
+    },
     "4753-19877": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -2461.58,
+     "max_bid": 18.42,
+     "roi_at_current": -0.986197
+    },
+    "4753-19877#untrusted": {
      "expected_revenue": 34.27,
      "grade": "F",
      "headroom": -2461.58,
@@ -326,7 +634,21 @@
      "max_bid": 18.42,
      "roi_at_current": -0.96441
     },
+    "4753-19878#untrusted": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -941.58,
+     "max_bid": 18.42,
+     "roi_at_current": -0.96441
+    },
     "4753-19966": {
+     "expected_revenue": 30.1,
+     "grade": "F",
+     "headroom": -984.19,
+     "max_bid": 15.81,
+     "roi_at_current": -0.969988
+    },
+    "4753-19966#untrusted": {
      "expected_revenue": 30.1,
      "grade": "F",
      "headroom": -984.19,
@@ -340,7 +662,21 @@
      "max_bid": 18.42,
      "roi_at_current": -0.988662
     },
+    "4753-19992#untrusted": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -3001.58,
+     "max_bid": 18.42,
+     "roi_at_current": -0.988662
+    },
     "4788-15172": {
+     "expected_revenue": 1800.7,
+     "grade": "F",
+     "headroom": -2635.56,
+     "max_bid": 966.44,
+     "roi_at_current": -0.521217
+    },
+    "4788-15172#untrusted": {
      "expected_revenue": 1800.7,
      "grade": "F",
      "headroom": -2635.56,
@@ -354,7 +690,21 @@
      "max_bid": 911.74,
      "roi_at_current": 0.598096
     },
+    "4788-15199#untrusted": {
+     "expected_revenue": 1698.78,
+     "grade": "F",
+     "headroom": -1.26,
+     "max_bid": 911.74,
+     "roi_at_current": 0.598096
+    },
     "5815-590": {
+     "expected_revenue": 1223.12,
+     "grade": "F",
+     "headroom": -2993.55,
+     "max_bid": 656.45,
+     "roi_at_current": -0.674529
+    },
+    "5815-590#untrusted": {
      "expected_revenue": 1223.12,
      "grade": "F",
      "headroom": -2993.55,
@@ -368,7 +718,21 @@
      "max_bid": 5561.58,
      "roi_at_current": -0.465504
     },
+    "6246-682#untrusted": {
+     "expected_revenue": 10362.53,
+     "grade": "F",
+     "headroom": -12910.92,
+     "max_bid": 5561.58,
+     "roi_at_current": -0.465504
+    },
     "6246-723": {
+     "expected_revenue": 4994.4,
+     "grade": "F",
+     "headroom": -5209.0,
+     "max_bid": 2680.5,
+     "roi_at_current": -0.400468
+    },
+    "6246-723#untrusted": {
      "expected_revenue": 4994.4,
      "grade": "F",
      "headroom": -5209.0,
@@ -382,7 +746,21 @@
      "max_bid": 847.1,
      "roi_at_current": 0.11038
     },
+    "7484-44135#untrusted": {
+     "expected_revenue": 1643.36,
+     "grade": "F",
+     "headroom": -452.9,
+     "max_bid": 847.1,
+     "roi_at_current": 0.11038
+    },
     "7484-44158": {
+     "expected_revenue": 1824.57,
+     "grade": "F",
+     "headroom": -182.65,
+     "max_bid": 1017.35,
+     "roi_at_current": 0.379113
+    },
+    "7484-44158#untrusted": {
      "expected_revenue": 1824.57,
      "grade": "F",
      "headroom": -182.65,
@@ -396,7 +774,21 @@
      "max_bid": 885.56,
      "roi_at_current": -0.018802
     },
+    "7547-5775#untrusted": {
+     "expected_revenue": 1685.7,
+     "grade": "F",
+     "headroom": -664.44,
+     "max_bid": 885.56,
+     "roi_at_current": -0.018802
+    },
     "8439-1417": {
+     "expected_revenue": 7712.44,
+     "grade": "C",
+     "headroom": 1139.28,
+     "max_bid": 4139.28,
+     "roi_at_current": 1.095203
+    },
+    "8439-1417#untrusted": {
      "expected_revenue": 7712.44,
      "grade": "C",
      "headroom": 1139.28,
@@ -410,7 +802,21 @@
      "max_bid": 3665.17,
      "roi_at_current": 2.741962
     },
+    "8439-1418#untrusted": {
+     "expected_revenue": 6829.08,
+     "grade": "C",
+     "headroom": 2443.17,
+     "max_bid": 3665.17,
+     "roi_at_current": 2.741962
+    },
     "8439-1419": {
+     "expected_revenue": 6863.06,
+     "grade": "C",
+     "headroom": 2350.41,
+     "max_bid": 3683.41,
+     "roi_at_current": 2.539482
+    },
+    "8439-1419#untrusted": {
      "expected_revenue": 6863.06,
      "grade": "C",
      "headroom": 2350.41,
@@ -424,7 +830,21 @@
      "max_bid": 18.42,
      "roi_at_current": -0.97209
     },
+    "8445-47379#untrusted": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -1206.58,
+     "max_bid": 18.42,
+     "roi_at_current": -0.97209
+    },
     "9163-60": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2981.77,
+     "max_bid": 18.23,
+     "roi_at_current": -0.988686
+    },
+    "9163-60#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -2981.77,
@@ -451,7 +871,21 @@
      "max_bid": 27.89,
      "roi_at_current": -0.982895
     },
+    "11227-17564#untrusted": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -2497.11,
+     "max_bid": 27.89,
+     "roi_at_current": -0.982895
+    },
     "11227-17565": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -3773.62,
+     "max_bid": 27.89,
+     "roi_at_current": -0.988634
+    },
+    "11227-17565#untrusted": {
      "expected_revenue": 43.24,
      "grade": "F",
      "headroom": -3773.62,
@@ -465,7 +899,21 @@
      "max_bid": 27.89,
      "roi_at_current": -0.983237
     },
+    "11227-17566#untrusted": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -2548.62,
+     "max_bid": 27.89,
+     "roi_at_current": -0.983237
+    },
     "11227-17567": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -1497.11,
+     "max_bid": 27.89,
+     "roi_at_current": -0.971701
+    },
+    "11227-17567#untrusted": {
      "expected_revenue": 43.24,
      "grade": "F",
      "headroom": -1497.11,
@@ -479,7 +927,21 @@
      "max_bid": 27.89,
      "roi_at_current": -0.964787
     },
+    "11227-17568#untrusted": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -1197.11,
+     "max_bid": 27.89,
+     "roi_at_current": -0.964787
+    },
     "11227-17569": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -3022.11,
+     "max_bid": 27.89,
+     "roi_at_current": -0.985836
+    },
+    "11227-17569#untrusted": {
      "expected_revenue": 43.24,
      "grade": "F",
      "headroom": -3022.11,
@@ -493,7 +955,21 @@
      "max_bid": 28.16,
      "roi_at_current": -0.982813
     },
+    "116-1767#untrusted": {
+     "expected_revenue": 43.62,
+     "grade": "F",
+     "headroom": -2506.84,
+     "max_bid": 28.16,
+     "roi_at_current": -0.982813
+    },
     "11805-65": {
+     "expected_revenue": 52.45,
+     "grade": "F",
+     "headroom": -4965.53,
+     "max_bid": 34.47,
+     "roi_at_current": -0.989516
+    },
+    "11805-65#untrusted": {
      "expected_revenue": 52.45,
      "grade": "F",
      "headroom": -4965.53,
@@ -507,7 +983,21 @@
      "max_bid": 27.89,
      "roi_at_current": -0.998369
     },
+    "11961-61#untrusted": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -26481.11,
+     "max_bid": 27.89,
+     "roi_at_current": -0.998369
+    },
     "1328-16095": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -1997.11,
+     "max_bid": 27.89,
+     "roi_at_current": -0.978678
+    },
+    "1328-16095#untrusted": {
      "expected_revenue": 43.24,
      "grade": "F",
      "headroom": -1997.11,
@@ -521,7 +1011,21 @@
      "max_bid": 3123.33,
      "roi_at_current": -0.235629
     },
+    "19490-82#untrusted": {
+     "expected_revenue": 4843.06,
+     "grade": "F",
+     "headroom": -2876.67,
+     "max_bid": 3123.33,
+     "roi_at_current": -0.235629
+    },
     "20211-12504": {
+     "expected_revenue": 10805.06,
+     "grade": "C",
+     "headroom": 1871.91,
+     "max_bid": 7099.9,
+     "roi_at_current": 0.848285
+    },
+    "20211-12504#untrusted": {
      "expected_revenue": 10805.06,
      "grade": "C",
      "headroom": 1871.91,
@@ -535,7 +1039,21 @@
      "max_bid": 3290.65,
      "roi_at_current": -0.196962
     },
+    "20746-1326#untrusted": {
+     "expected_revenue": 5102.51,
+     "grade": "F",
+     "headroom": -2709.35,
+     "max_bid": 3290.65,
+     "roi_at_current": -0.196962
+    },
     "20746-2223": {
+     "expected_revenue": 15551.3,
+     "grade": "C",
+     "headroom": 3049.07,
+     "max_bid": 10049.07,
+     "roi_at_current": 0.929681
+    },
+    "20746-2223#untrusted": {
      "expected_revenue": 15551.3,
      "grade": "C",
      "headroom": 3049.07,
@@ -549,7 +1067,21 @@
      "max_bid": 7055.37,
      "roi_at_current": 3.233792
     },
+    "227-1839#untrusted": {
+     "expected_revenue": 10940.12,
+     "grade": "C",
+     "headroom": 5230.37,
+     "max_bid": 7055.37,
+     "roi_at_current": 3.233792
+    },
     "26019-3165": {
+     "expected_revenue": 864.83,
+     "grade": "F",
+     "headroom": -1133.26,
+     "max_bid": 557.74,
+     "roi_at_current": -0.506093
+    },
+    "26019-3165#untrusted": {
      "expected_revenue": 864.83,
      "grade": "F",
      "headroom": -1133.26,
@@ -563,7 +1095,21 @@
      "max_bid": 0.0,
      "roi_at_current": -1.0
     },
+    "26712-237#untrusted": {
+     "expected_revenue": 0.0,
+     "grade": "F",
+     "headroom": -1525.0,
+     "max_bid": 0.0,
+     "roi_at_current": -1.0
+    },
     "28050-1804": {
+     "expected_revenue": 3755.48,
+     "grade": "B",
+     "headroom": 1333.48,
+     "max_bid": 2433.48,
+     "roi_at_current": 1.783898
+    },
+    "28050-1804#untrusted": {
      "expected_revenue": 3755.48,
      "grade": "B",
      "headroom": 1333.48,
@@ -577,7 +1123,21 @@
      "max_bid": 1933.44,
      "roi_at_current": -0.06779
     },
+    "28085-82#untrusted": {
+     "expected_revenue": 2975.61,
+     "grade": "F",
+     "headroom": -1066.56,
+     "max_bid": 1933.44,
+     "roi_at_current": -0.06779
+    },
     "28868-114": {
+     "expected_revenue": 567.07,
+     "grade": "F",
+     "headroom": -633.95,
+     "max_bid": 366.05,
+     "roi_at_current": -0.454219
+    },
+    "28868-114#untrusted": {
      "expected_revenue": 567.07,
      "grade": "F",
      "headroom": -633.95,
@@ -591,7 +1151,21 @@
      "max_bid": 34.47,
      "roi_at_current": -0.98962
     },
+    "2938-2381#untrusted": {
+     "expected_revenue": 52.45,
+     "grade": "F",
+     "headroom": -5015.53,
+     "max_bid": 34.47,
+     "roi_at_current": -0.98962
+    },
     "29404-273": {
+     "expected_revenue": 5188.99,
+     "grade": "D",
+     "headroom": 321.42,
+     "max_bid": 3346.42,
+     "roi_at_current": 0.532936
+    },
+    "29404-273#untrusted": {
      "expected_revenue": 5188.99,
      "grade": "D",
      "headroom": 321.42,
@@ -605,7 +1179,21 @@
      "max_bid": 2788.68,
      "roi_at_current": -0.191897
     },
+    "29404-285#untrusted": {
+     "expected_revenue": 4324.16,
+     "grade": "F",
+     "headroom": -2262.32,
+     "max_bid": 2788.68,
+     "roi_at_current": -0.191897
+    },
     "29404-286": {
+     "expected_revenue": 5188.99,
+     "grade": "F",
+     "headroom": -2654.58,
+     "max_bid": 3346.42,
+     "roi_at_current": -0.18425
+    },
+    "29404-286#untrusted": {
      "expected_revenue": 5188.99,
      "grade": "F",
      "headroom": -2654.58,
@@ -619,7 +1207,21 @@
      "max_bid": 3346.42,
      "roi_at_current": 0.499708
     },
+    "29404-287#untrusted": {
+     "expected_revenue": 5188.99,
+     "grade": "D",
+     "headroom": 246.42,
+     "max_bid": 3346.42,
+     "roi_at_current": 0.499708
+    },
     "29404-288": {
+     "expected_revenue": 5188.99,
+     "grade": "F",
+     "headroom": -3253.58,
+     "max_bid": 3346.42,
+     "roi_at_current": -0.254456
+    },
+    "29404-288#untrusted": {
      "expected_revenue": 5188.99,
      "grade": "F",
      "headroom": -3253.58,
@@ -633,7 +1235,21 @@
      "max_bid": 0.0,
      "roi_at_current": -1.0
     },
+    "29404-289#untrusted": {
+     "expected_revenue": 0.0,
+     "grade": "F",
+     "headroom": -6100.0,
+     "max_bid": 0.0,
+     "roi_at_current": -1.0
+    },
     "29404-290": {
+     "expected_revenue": 2553.97,
+     "grade": "F",
+     "headroom": -744.73,
+     "max_bid": 1680.27,
+     "roi_at_current": -0.005849
+    },
+    "29404-290#untrusted": {
      "expected_revenue": 2553.97,
      "grade": "F",
      "headroom": -744.73,
@@ -647,7 +1263,21 @@
      "max_bid": 735.77,
      "roi_at_current": 0.160503
     },
+    "29404-291#untrusted": {
+     "expected_revenue": 1114.08,
+     "grade": "F",
+     "headroom": -164.23,
+     "max_bid": 735.77,
+     "roi_at_current": 0.160503
+    },
     "29404-293": {
+     "expected_revenue": 1626.0,
+     "grade": "D",
+     "headroom": 138.43,
+     "max_bid": 1068.43,
+     "roi_at_current": 0.589447
+    },
+    "29404-293#untrusted": {
      "expected_revenue": 1626.0,
      "grade": "D",
      "headroom": 138.43,
@@ -661,7 +1291,21 @@
      "max_bid": 446.19,
      "roi_at_current": -0.445621
     },
+    "29731-89#untrusted": {
+     "expected_revenue": 691.87,
+     "grade": "F",
+     "headroom": -753.81,
+     "max_bid": 446.19,
+     "roi_at_current": -0.445621
+    },
     "30231-256": {
+     "expected_revenue": 3831.13,
+     "grade": "F",
+     "headroom": -2563.48,
+     "max_bid": 2436.52,
+     "roi_at_current": -0.277145
+    },
+    "30231-256#untrusted": {
      "expected_revenue": 3831.13,
      "grade": "F",
      "headroom": -2563.48,
@@ -675,7 +1319,21 @@
      "max_bid": 563.15,
      "roi_at_current": -0.705267
     },
+    "30279-96#untrusted": {
+     "expected_revenue": 872.41,
+     "grade": "F",
+     "headroom": -2336.85,
+     "max_bid": 563.15,
+     "roi_at_current": -0.705267
+    },
     "30467-26": {
+     "expected_revenue": 12972.47,
+     "grade": "C",
+     "headroom": 5566.05,
+     "max_bid": 8366.05,
+     "roi_at_current": 2.506074
+    },
+    "30467-26#untrusted": {
      "expected_revenue": 12972.47,
      "grade": "C",
      "headroom": 5566.05,
@@ -689,7 +1347,21 @@
      "max_bid": 31467.03,
      "roi_at_current": -0.293045
     },
+    "31551-54#untrusted": {
+     "expected_revenue": 47888.44,
+     "grade": "F",
+     "headroom": -33532.97,
+     "max_bid": 31467.03,
+     "roi_at_current": -0.293045
+    },
     "32255-14": {
+     "expected_revenue": 18015.28,
+     "grade": "F",
+     "headroom": -6370.94,
+     "max_bid": 11629.06,
+     "roi_at_current": -0.063606
+    },
+    "32255-14#untrusted": {
      "expected_revenue": 18015.28,
      "grade": "F",
      "headroom": -6370.94,
@@ -703,7 +1375,21 @@
      "max_bid": 2144.14,
      "roi_at_current": 0.091421
     },
+    "3473-4984#untrusted": {
+     "expected_revenue": 3371.4,
+     "grade": "F",
+     "headroom": -680.86,
+     "max_bid": 2144.14,
+     "roi_at_current": 0.091421
+    },
     "430-37454": {
+     "expected_revenue": 3271.54,
+     "grade": "F",
+     "headroom": -1393.19,
+     "max_bid": 2111.81,
+     "roi_at_current": -0.122911
+    },
+    "430-37454#untrusted": {
      "expected_revenue": 3271.54,
      "grade": "F",
      "headroom": -1393.19,
@@ -717,7 +1403,21 @@
      "max_bid": 2055.5,
      "roi_at_current": 0.125194
     },
+    "430-37455#untrusted": {
+     "expected_revenue": 3184.3,
+     "grade": "F",
+     "headroom": -555.5,
+     "max_bid": 2055.5,
+     "roi_at_current": 0.125194
+    },
     "432-42355": {
+     "expected_revenue": 1081.04,
+     "grade": "F",
+     "headroom": -327.83,
+     "max_bid": 697.17,
+     "roi_at_current": -0.017237
+    },
+    "432-42355#untrusted": {
      "expected_revenue": 1081.04,
      "grade": "F",
      "headroom": -327.83,
@@ -731,7 +1431,21 @@
      "max_bid": 27.89,
      "roi_at_current": -0.983477
     },
+    "432-42371#untrusted": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -2586.11,
+     "max_bid": 27.89,
+     "roi_at_current": -0.983477
+    },
     "432-42376": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -2006.11,
+     "max_bid": 27.89,
+     "roi_at_current": -0.978772
+    },
+    "432-42376#untrusted": {
      "expected_revenue": 43.24,
      "grade": "F",
      "headroom": -2006.11,
@@ -745,7 +1459,21 @@
      "max_bid": 362.53,
      "roi_at_current": -0.472169
     },
+    "4474-133#untrusted": {
+     "expected_revenue": 562.14,
+     "grade": "F",
+     "headroom": -663.47,
+     "max_bid": 362.53,
+     "roi_at_current": -0.472169
+    },
     "4753-19877": {
+     "expected_revenue": 43.62,
+     "grade": "F",
+     "headroom": -2451.84,
+     "max_bid": 28.16,
+     "roi_at_current": -0.982432
+    },
+    "4753-19877#untrusted": {
      "expected_revenue": 43.62,
      "grade": "F",
      "headroom": -2451.84,
@@ -759,7 +1487,21 @@
      "max_bid": 28.16,
      "roi_at_current": -0.954703
     },
+    "4753-19878#untrusted": {
+     "expected_revenue": 43.62,
+     "grade": "F",
+     "headroom": -931.84,
+     "max_bid": 28.16,
+     "roi_at_current": -0.954703
+    },
     "4753-19966": {
+     "expected_revenue": 38.31,
+     "grade": "F",
+     "headroom": -975.63,
+     "max_bid": 24.37,
+     "roi_at_current": -0.961803
+    },
+    "4753-19966#untrusted": {
      "expected_revenue": 38.31,
      "grade": "F",
      "headroom": -975.63,
@@ -773,7 +1515,21 @@
      "max_bid": 28.16,
      "roi_at_current": -0.98557
     },
+    "4753-19992#untrusted": {
+     "expected_revenue": 43.62,
+     "grade": "F",
+     "headroom": -2991.84,
+     "max_bid": 28.16,
+     "roi_at_current": -0.98557
+    },
     "4788-15172": {
+     "expected_revenue": 2291.8,
+     "grade": "F",
+     "headroom": -2124.0,
+     "max_bid": 1478.0,
+     "roi_at_current": -0.39064
+    },
+    "4788-15172#untrusted": {
      "expected_revenue": 2291.8,
      "grade": "F",
      "headroom": -2124.0,
@@ -787,7 +1543,21 @@
      "max_bid": 1394.34,
      "roi_at_current": 1.03394
     },
+    "4788-15199#untrusted": {
+     "expected_revenue": 2162.08,
+     "grade": "C",
+     "headroom": 481.34,
+     "max_bid": 1394.34,
+     "roi_at_current": 1.03394
+    },
     "5815-590": {
+     "expected_revenue": 1556.7,
+     "grade": "F",
+     "headroom": -2646.07,
+     "max_bid": 1003.93,
+     "roi_at_current": -0.585765
+    },
+    "5815-590#untrusted": {
      "expected_revenue": 1556.7,
      "grade": "F",
      "headroom": -2646.07,
@@ -801,7 +1571,21 @@
      "max_bid": 8505.49,
      "roi_at_current": -0.319733
     },
+    "6246-682#untrusted": {
+     "expected_revenue": 13188.68,
+     "grade": "F",
+     "headroom": -9967.01,
+     "max_bid": 8505.49,
+     "roi_at_current": -0.319733
+    },
     "6246-723": {
+     "expected_revenue": 6356.51,
+     "grade": "F",
+     "headroom": -3790.13,
+     "max_bid": 4099.37,
+     "roi_at_current": -0.236959
+    },
+    "6246-723#untrusted": {
      "expected_revenue": 6356.51,
      "grade": "F",
      "headroom": -3790.13,
@@ -815,7 +1599,21 @@
      "max_bid": 1313.97,
      "roi_at_current": 0.413212
     },
+    "7484-44135#untrusted": {
+     "expected_revenue": 2091.55,
+     "grade": "D",
+     "headroom": 13.97,
+     "max_bid": 1313.97,
+     "roi_at_current": 0.413212
+    },
     "7484-44158": {
+     "expected_revenue": 2322.18,
+     "grade": "C",
+     "headroom": 335.7,
+     "max_bid": 1535.7,
+     "roi_at_current": 0.755235
+    },
+    "7484-44158#untrusted": {
      "expected_revenue": 2322.18,
      "grade": "C",
      "headroom": 335.7,
@@ -829,7 +1627,21 @@
      "max_bid": 1364.45,
      "roi_at_current": 0.248798
     },
+    "7547-5775#untrusted": {
+     "expected_revenue": 2145.44,
+     "grade": "F",
+     "headroom": -185.55,
+     "max_bid": 1364.45,
+     "roi_at_current": 0.248798
+    },
     "8439-1417": {
+     "expected_revenue": 9815.84,
+     "grade": "C",
+     "headroom": 3330.31,
+     "max_bid": 6330.31,
+     "roi_at_current": 1.666622
+    },
+    "8439-1417#untrusted": {
      "expected_revenue": 9815.84,
      "grade": "C",
      "headroom": 3330.31,
@@ -843,7 +1655,21 @@
      "max_bid": 5605.25,
      "roi_at_current": 3.762497
     },
+    "8439-1418#untrusted": {
+     "expected_revenue": 8691.56,
+     "grade": "C",
+     "headroom": 4383.25,
+     "max_bid": 5605.25,
+     "roi_at_current": 3.762497
+    },
     "8439-1419": {
+     "expected_revenue": 8734.8,
+     "grade": "C",
+     "headroom": 4300.14,
+     "max_bid": 5633.14,
+     "roi_at_current": 3.504795
+    },
+    "8439-1419#untrusted": {
      "expected_revenue": 8734.8,
      "grade": "C",
      "headroom": 4300.14,
@@ -857,7 +1683,21 @@
      "max_bid": 28.16,
      "roi_at_current": -0.964478
     },
+    "8445-47379#untrusted": {
+     "expected_revenue": 43.62,
+     "grade": "F",
+     "headroom": -1196.84,
+     "max_bid": 28.16,
+     "roi_at_current": -0.964478
+    },
     "9163-60": {
+     "expected_revenue": 43.24,
+     "grade": "F",
+     "headroom": -2972.11,
+     "max_bid": 27.89,
+     "roi_at_current": -0.985601
+    },
+    "9163-60#untrusted": {
      "expected_revenue": 43.24,
      "grade": "F",
      "headroom": -2972.11,
@@ -884,12 +1724,26 @@
      "max_bid": 10.43,
      "roi_at_current": -0.989378
     },
+    "11227-17564#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -2517.7,
+     "max_bid": 7.3,
+     "roi_at_current": -0.991855
+    },
     "11227-17565": {
      "expected_revenue": 26.85,
      "grade": "F",
      "headroom": -3791.08,
      "max_bid": 10.43,
      "roi_at_current": -0.992942
+    },
+    "11227-17565#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -3794.21,
+     "max_bid": 7.3,
+     "roi_at_current": -0.994588
     },
     "11227-17566": {
      "expected_revenue": 26.85,
@@ -898,12 +1752,26 @@
      "max_bid": 10.43,
      "roi_at_current": -0.98959
     },
+    "11227-17566#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -2569.21,
+     "max_bid": 7.3,
+     "roi_at_current": -0.992017
+    },
     "11227-17567": {
      "expected_revenue": 26.85,
      "grade": "F",
      "headroom": -1514.57,
      "max_bid": 10.43,
      "roi_at_current": -0.982427
+    },
+    "11227-17567#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -1517.7,
+     "max_bid": 7.3,
+     "roi_at_current": -0.986524
     },
     "11227-17568": {
      "expected_revenue": 26.85,
@@ -912,12 +1780,26 @@
      "max_bid": 10.43,
      "roi_at_current": -0.978134
     },
+    "11227-17568#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -1217.7,
+     "max_bid": 7.3,
+     "roi_at_current": -0.983232
+    },
     "11227-17569": {
      "expected_revenue": 26.85,
      "grade": "F",
      "headroom": -3039.57,
      "max_bid": 10.43,
      "roi_at_current": -0.991205
+    },
+    "11227-17569#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -3042.7,
+     "max_bid": 7.3,
+     "roi_at_current": -0.993255
     },
     "116-1767": {
      "expected_revenue": 27.09,
@@ -926,12 +1808,26 @@
      "max_bid": 10.54,
      "roi_at_current": -0.989327
     },
+    "116-1767#untrusted": {
+     "expected_revenue": 20.77,
+     "grade": "F",
+     "headroom": -2527.61,
+     "max_bid": 7.39,
+     "roi_at_current": -0.991816
+    },
     "11805-65": {
      "expected_revenue": 32.57,
      "grade": "F",
      "headroom": -4986.71,
      "max_bid": 13.29,
      "roi_at_current": -0.99349
+    },
+    "11805-65#untrusted": {
+     "expected_revenue": 24.98,
+     "grade": "F",
+     "headroom": -4990.51,
+     "max_bid": 9.49,
+     "roi_at_current": -0.995008
     },
     "11961-61": {
      "expected_revenue": 26.85,
@@ -940,12 +1836,26 @@
      "max_bid": 10.43,
      "roi_at_current": -0.998987
     },
+    "11961-61#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -26501.7,
+     "max_bid": 7.3,
+     "roi_at_current": -0.999223
+    },
     "1328-16095": {
      "expected_revenue": 26.85,
      "grade": "F",
      "headroom": -2014.57,
      "max_bid": 10.43,
      "roi_at_current": -0.98676
+    },
+    "1328-16095#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -2017.7,
+     "max_bid": 7.3,
+     "roi_at_current": -0.989847
     },
     "19490-82": {
      "expected_revenue": 3007.38,
@@ -954,12 +1864,26 @@
      "max_bid": 1167.69,
      "roi_at_current": -0.525351
     },
+    "19490-82#untrusted": {
+     "expected_revenue": 2306.22,
+     "grade": "F",
+     "headroom": -5182.89,
+     "max_bid": 817.11,
+     "roi_at_current": -0.636014
+    },
     "20211-12504": {
      "expected_revenue": 6709.58,
      "grade": "F",
      "headroom": -2491.2,
      "max_bid": 2736.79,
      "roi_at_current": 0.147724
+    },
+    "20211-12504#untrusted": {
+     "expected_revenue": 5145.27,
+     "grade": "F",
+     "headroom": -3273.36,
+     "max_bid": 1954.63,
+     "roi_at_current": -0.119864
     },
     "20746-1326": {
      "expected_revenue": 3168.49,
@@ -968,12 +1892,26 @@
      "max_bid": 1230.24,
      "roi_at_current": -0.50134
     },
+    "20746-1326#untrusted": {
+     "expected_revenue": 2429.76,
+     "grade": "F",
+     "headroom": -5139.12,
+     "max_bid": 860.88,
+     "roi_at_current": -0.617601
+    },
     "20746-2223": {
      "expected_revenue": 9656.84,
      "grade": "F",
      "headroom": -3230.58,
      "max_bid": 3769.42,
      "roi_at_current": 0.198268
+    },
+    "20746-2223#untrusted": {
+     "expected_revenue": 7405.38,
+     "grade": "F",
+     "headroom": -4356.31,
+     "max_bid": 2643.69,
+     "roi_at_current": -0.081104
     },
     "227-1839": {
      "expected_revenue": 6793.45,
@@ -982,6 +1920,13 @@
      "max_bid": 2637.73,
      "roi_at_current": 1.629044
     },
+    "227-1839#untrusted": {
+     "expected_revenue": 5209.58,
+     "grade": "D",
+     "headroom": 20.79,
+     "max_bid": 1845.79,
+     "roi_at_current": 1.016091
+    },
     "26019-3165": {
      "expected_revenue": 537.03,
      "grade": "F",
@@ -989,7 +1934,21 @@
      "max_bid": 208.52,
      "roi_at_current": -0.6933
     },
+    "26019-3165#untrusted": {
+     "expected_revenue": 411.82,
+     "grade": "F",
+     "headroom": -1545.09,
+     "max_bid": 145.91,
+     "roi_at_current": -0.764806
+    },
     "26712-237": {
+     "expected_revenue": 0.0,
+     "grade": "F",
+     "headroom": -1525.0,
+     "max_bid": 0.0,
+     "roi_at_current": -1.0
+    },
+    "26712-237#untrusted": {
      "expected_revenue": 0.0,
      "grade": "F",
      "headroom": -1525.0,
@@ -1003,12 +1962,26 @@
      "max_bid": 917.01,
      "roi_at_current": 0.728709
     },
+    "28050-1804#untrusted": {
+     "expected_revenue": 1788.32,
+     "grade": "F",
+     "headroom": -454.84,
+     "max_bid": 645.16,
+     "roi_at_current": 0.325666
+    },
     "28085-82": {
      "expected_revenue": 1847.76,
      "grade": "F",
      "headroom": -2268.12,
      "max_bid": 731.88,
      "roi_at_current": -0.421129
+    },
+    "28085-82#untrusted": {
+     "expected_revenue": 1416.96,
+     "grade": "F",
+     "headroom": -2483.52,
+     "max_bid": 516.48,
+     "roi_at_current": -0.556091
     },
     "28868-114": {
      "expected_revenue": 352.13,
@@ -1017,12 +1990,26 @@
      "max_bid": 137.06,
      "roi_at_current": -0.661088
     },
+    "28868-114#untrusted": {
+     "expected_revenue": 270.03,
+     "grade": "F",
+     "headroom": -903.98,
+     "max_bid": 96.02,
+     "roi_at_current": -0.740104
+    },
     "2938-2381": {
      "expected_revenue": 32.57,
      "grade": "F",
      "headroom": -5036.71,
      "max_bid": 13.29,
      "roi_at_current": -0.993554
+    },
+    "2938-2381#untrusted": {
+     "expected_revenue": 24.98,
+     "grade": "F",
+     "headroom": -5040.51,
+     "max_bid": 9.49,
+     "roi_at_current": -0.995057
     },
     "29404-273": {
      "expected_revenue": 3222.19,
@@ -1031,12 +2018,26 @@
      "max_bid": 1251.09,
      "roi_at_current": -0.048098
     },
+    "29404-273#untrusted": {
+     "expected_revenue": 2470.95,
+     "grade": "F",
+     "headroom": -2149.53,
+     "max_bid": 875.47,
+     "roi_at_current": -0.27003
+    },
     "29404-285": {
      "expected_revenue": 2685.16,
      "grade": "F",
      "headroom": -4008.42,
      "max_bid": 1042.58,
      "roi_at_current": -0.498195
+    },
+    "29404-285#untrusted": {
+     "expected_revenue": 2059.12,
+     "grade": "F",
+     "headroom": -4321.44,
+     "max_bid": 729.56,
+     "roi_at_current": -0.615189
     },
     "29404-286": {
      "expected_revenue": 3222.19,
@@ -1045,12 +2046,26 @@
      "max_bid": 1251.09,
      "roi_at_current": -0.493446
     },
+    "29404-286#untrusted": {
+     "expected_revenue": 2470.95,
+     "grade": "F",
+     "headroom": -5125.53,
+     "max_bid": 875.47,
+     "roi_at_current": -0.611547
+    },
     "29404-287": {
      "expected_revenue": 3222.19,
      "grade": "F",
      "headroom": -1848.91,
      "max_bid": 1251.09,
      "roi_at_current": -0.068731
+    },
+    "29404-287#untrusted": {
+     "expected_revenue": 2470.95,
+     "grade": "F",
+     "headroom": -2224.53,
+     "max_bid": 875.47,
+     "roi_at_current": -0.285853
     },
     "29404-288": {
      "expected_revenue": 3222.19,
@@ -1059,7 +2074,21 @@
      "max_bid": 1251.09,
      "roi_at_current": -0.537042
     },
+    "29404-288#untrusted": {
+     "expected_revenue": 2470.95,
+     "grade": "F",
+     "headroom": -5724.53,
+     "max_bid": 875.47,
+     "roi_at_current": -0.644979
+    },
     "29404-289": {
+     "expected_revenue": 0.0,
+     "grade": "F",
+     "headroom": -6100.0,
+     "max_bid": 0.0,
+     "roi_at_current": -1.0
+    },
+    "29404-289#untrusted": {
      "expected_revenue": 0.0,
      "grade": "F",
      "headroom": -6100.0,
@@ -1073,12 +2102,26 @@
      "max_bid": 648.97,
      "roi_at_current": -0.382665
     },
+    "29404-290#untrusted": {
+     "expected_revenue": 1216.18,
+     "grade": "F",
+     "headroom": -1960.91,
+     "max_bid": 464.09,
+     "roi_at_current": -0.526595
+    },
     "29404-291": {
      "expected_revenue": 691.81,
      "grade": "F",
      "headroom": -614.1,
      "max_bid": 285.9,
      "roi_at_current": -0.279366
+    },
+    "29404-291#untrusted": {
+     "expected_revenue": 530.52,
+     "grade": "F",
+     "headroom": -694.74,
+     "max_bid": 205.26,
+     "roi_at_current": -0.44738
     },
     "29404-293": {
      "expected_revenue": 1009.69,
@@ -1087,12 +2130,26 @@
      "max_bid": 411.85,
      "roi_at_current": -0.013006
     },
+    "29404-293#untrusted": {
+     "expected_revenue": 774.29,
+     "grade": "F",
+     "headroom": -635.86,
+     "max_bid": 294.14,
+     "roi_at_current": -0.243121
+    },
     "29731-89": {
      "expected_revenue": 429.63,
      "grade": "F",
      "headroom": -1033.19,
      "max_bid": 166.81,
      "roi_at_current": -0.655749
+    },
+    "29731-89#untrusted": {
+     "expected_revenue": 329.46,
+     "grade": "F",
+     "headroom": -1083.27,
+     "max_bid": 116.73,
+     "roi_at_current": -0.73601
     },
     "30231-256": {
      "expected_revenue": 2379.01,
@@ -1101,12 +2158,26 @@
      "max_bid": 889.5,
      "roi_at_current": -0.551131
     },
+    "30231-256#untrusted": {
+     "expected_revenue": 1824.35,
+     "grade": "F",
+     "headroom": -4387.83,
+     "max_bid": 612.17,
+     "roi_at_current": -0.655783
+    },
     "30279-96": {
      "expected_revenue": 541.74,
      "grade": "F",
      "headroom": -2689.13,
      "max_bid": 210.87,
      "roi_at_current": -0.81698
+    },
+    "30279-96#untrusted": {
+     "expected_revenue": 415.43,
+     "grade": "F",
+     "headroom": -2752.28,
+     "max_bid": 147.72,
+     "roi_at_current": -0.859651
     },
     "30467-26": {
      "expected_revenue": 8055.47,
@@ -1115,12 +2186,26 @@
      "max_bid": 3127.74,
      "roi_at_current": 1.177155
     },
+    "30467-26#untrusted": {
+     "expected_revenue": 6177.37,
+     "grade": "F",
+     "headroom": -611.32,
+     "max_bid": 2188.68,
+     "roi_at_current": 0.669559
+    },
     "31551-54": {
      "expected_revenue": 29737.13,
      "grade": "F",
      "headroom": -52870.43,
      "max_bid": 12129.57,
      "roi_at_current": -0.561004
+    },
+    "31551-54#untrusted": {
+     "expected_revenue": 22804.02,
+     "grade": "F",
+     "headroom": -56336.99,
+     "max_bid": 8663.01,
+     "roi_at_current": -0.663355
     },
     "32255-14": {
      "expected_revenue": 11186.89,
@@ -1129,12 +2214,26 @@
      "max_bid": 4354.45,
      "roi_at_current": -0.41853
     },
+    "32255-14#untrusted": {
+     "expected_revenue": 8578.71,
+     "grade": "F",
+     "headroom": -14949.65,
+     "max_bid": 3050.35,
+     "roi_at_current": -0.554098
+    },
     "3473-4984": {
      "expected_revenue": 2093.53,
      "grade": "F",
      "headroom": -2042.24,
      "max_bid": 782.76,
      "roi_at_current": -0.322264
+    },
+    "3473-4984#untrusted": {
+     "expected_revenue": 1605.43,
+     "grade": "F",
+     "headroom": -2286.29,
+     "max_bid": 538.71,
+     "roi_at_current": -0.480276
     },
     "430-37454": {
      "expected_revenue": 2031.52,
@@ -1143,12 +2242,26 @@
      "max_bid": 790.76,
      "roi_at_current": -0.455357
     },
+    "430-37454#untrusted": {
+     "expected_revenue": 1557.88,
+     "grade": "F",
+     "headroom": -2951.06,
+     "max_bid": 553.94,
+     "roi_at_current": -0.582339
+    },
     "430-37455": {
      "expected_revenue": 1977.34,
      "grade": "F",
      "headroom": -1841.33,
      "max_bid": 769.67,
      "roi_at_current": -0.301292
+    },
+    "430-37455#untrusted": {
+     "expected_revenue": 1516.33,
+     "grade": "F",
+     "headroom": -2071.83,
+     "max_bid": 539.17,
+     "roi_at_current": -0.464193
     },
     "432-42355": {
      "expected_revenue": 671.29,
@@ -1157,12 +2270,26 @@
      "max_bid": 260.64,
      "roi_at_current": -0.389737
     },
+    "432-42355#untrusted": {
+     "expected_revenue": 514.78,
+     "grade": "F",
+     "headroom": -842.61,
+     "max_bid": 182.39,
+     "roi_at_current": -0.532018
+    },
     "432-42371": {
      "expected_revenue": 26.85,
      "grade": "F",
      "headroom": -2603.57,
      "max_bid": 10.43,
      "roi_at_current": -0.98974
+    },
+    "432-42371#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -2606.7,
+     "max_bid": 7.3,
+     "roi_at_current": -0.992132
     },
     "432-42376": {
      "expected_revenue": 26.85,
@@ -1171,12 +2298,26 @@
      "max_bid": 10.43,
      "roi_at_current": -0.986818
     },
+    "432-42376#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -2026.7,
+     "max_bid": 7.3,
+     "roi_at_current": -0.989891
+    },
     "4474-133": {
      "expected_revenue": 349.07,
      "grade": "F",
      "headroom": -890.46,
      "max_bid": 135.54,
      "roi_at_current": -0.672234
+    },
+    "4474-133#untrusted": {
+     "expected_revenue": 267.69,
+     "grade": "F",
+     "headroom": -931.16,
+     "max_bid": 94.84,
+     "roi_at_current": -0.748652
     },
     "4753-19877": {
      "expected_revenue": 27.09,
@@ -1185,12 +2326,26 @@
      "max_bid": 10.54,
      "roi_at_current": -0.989091
     },
+    "4753-19877#untrusted": {
+     "expected_revenue": 20.77,
+     "grade": "F",
+     "headroom": -2472.61,
+     "max_bid": 7.39,
+     "roi_at_current": -0.991634
+    },
     "4753-19878": {
      "expected_revenue": 27.09,
      "grade": "F",
      "headroom": -949.46,
      "max_bid": 10.54,
      "roi_at_current": -0.971872
+    },
+    "4753-19878#untrusted": {
+     "expected_revenue": 20.77,
+     "grade": "F",
+     "headroom": -952.61,
+     "max_bid": 7.39,
+     "roi_at_current": -0.97843
     },
     "4753-19966": {
      "expected_revenue": 23.79,
@@ -1199,12 +2354,26 @@
      "max_bid": 8.9,
      "roi_at_current": -0.976281
     },
+    "4753-19966#untrusted": {
+     "expected_revenue": 18.24,
+     "grade": "F",
+     "headroom": -993.88,
+     "max_bid": 6.12,
+     "roi_at_current": -0.981811
+    },
     "4753-19992": {
      "expected_revenue": 27.09,
      "grade": "F",
      "headroom": -3009.46,
      "max_bid": 10.54,
      "roi_at_current": -0.99104
+    },
+    "4753-19992#untrusted": {
+     "expected_revenue": 20.77,
+     "grade": "F",
+     "headroom": -3012.61,
+     "max_bid": 7.39,
+     "roi_at_current": -0.993129
     },
     "4788-15172": {
      "expected_revenue": 1423.13,
@@ -1213,12 +2382,26 @@
      "max_bid": 552.57,
      "roi_at_current": -0.621608
     },
+    "4788-15172#untrusted": {
+     "expected_revenue": 1091.33,
+     "grade": "F",
+     "headroom": -3215.33,
+     "max_bid": 386.67,
+     "roi_at_current": -0.709829
+    },
     "4788-15199": {
      "expected_revenue": 1342.58,
      "grade": "F",
      "headroom": -391.71,
      "max_bid": 521.29,
      "roi_at_current": 0.26301
+    },
+    "4788-15199#untrusted": {
+     "expected_revenue": 1029.56,
+     "grade": "F",
+     "headroom": -548.22,
+     "max_bid": 364.78,
+     "roi_at_current": -0.031457
     },
     "5815-590": {
      "expected_revenue": 966.66,
@@ -1227,12 +2410,26 @@
      "max_bid": 375.33,
      "roi_at_current": -0.742774
     },
+    "5815-590#untrusted": {
+     "expected_revenue": 741.28,
+     "grade": "F",
+     "headroom": -3387.36,
+     "max_bid": 262.64,
+     "roi_at_current": -0.802745
+    },
     "6246-682": {
      "expected_revenue": 8189.73,
      "grade": "F",
      "headroom": -15292.63,
      "max_bid": 3179.87,
      "roi_at_current": -0.577577
+    },
+    "6246-682#untrusted": {
+     "expected_revenue": 6280.32,
+     "grade": "F",
+     "headroom": -16247.34,
+     "max_bid": 2225.16,
+     "roi_at_current": -0.676063
     },
     "6246-723": {
      "expected_revenue": 3947.18,
@@ -1241,12 +2438,26 @@
      "max_bid": 1532.59,
      "roi_at_current": -0.526177
     },
+    "6246-723#untrusted": {
+     "expected_revenue": 3026.91,
+     "grade": "F",
+     "headroom": -6817.04,
+     "max_bid": 1072.46,
+     "roi_at_current": -0.636647
+    },
     "7484-44135": {
      "expected_revenue": 1548.58,
      "grade": "F",
      "headroom": -705.71,
      "max_bid": 594.29,
      "roi_at_current": 0.046339
+    },
+    "7484-44135#untrusted": {
+     "expected_revenue": 995.98,
+     "grade": "F",
+     "headroom": -982.01,
+     "max_bid": 317.99,
+     "roi_at_current": -0.327042
     },
     "7484-44158": {
      "expected_revenue": 1441.99,
@@ -1255,12 +2466,26 @@
      "max_bid": 598.0,
      "roi_at_current": 0.089942
     },
+    "7484-44158#untrusted": {
+     "expected_revenue": 1105.8,
+     "grade": "F",
+     "headroom": -770.1,
+     "max_bid": 429.9,
+     "roi_at_current": -0.164174
+    },
     "7547-5775": {
      "expected_revenue": 1332.24,
      "grade": "F",
      "headroom": -1051.88,
      "max_bid": 498.12,
      "roi_at_current": -0.224538
+    },
+    "7547-5775#untrusted": {
+     "expected_revenue": 1021.64,
+     "grade": "F",
+     "headroom": -1207.18,
+     "max_bid": 342.82,
+     "roi_at_current": -0.405334
     },
     "8439-1417": {
      "expected_revenue": 6095.31,
@@ -1269,12 +2494,26 @@
      "max_bid": 2366.65,
      "roi_at_current": 0.655884
     },
+    "8439-1417#untrusted": {
+     "expected_revenue": 4674.21,
+     "grade": "F",
+     "headroom": -1343.9,
+     "max_bid": 1656.1,
+     "roi_at_current": 0.26982
+    },
     "8439-1418": {
      "expected_revenue": 5397.17,
      "grade": "C",
      "headroom": 873.58,
      "max_bid": 2095.58,
      "roi_at_current": 1.957352
+    },
+    "8439-1418#untrusted": {
+     "expected_revenue": 4138.84,
+     "grade": "D",
+     "headroom": 244.42,
+     "max_bid": 1466.42,
+     "roi_at_current": 1.267856
     },
     "8439-1419": {
      "expected_revenue": 5424.02,
@@ -1283,6 +2522,13 @@
      "max_bid": 2106.01,
      "roi_at_current": 1.797328
     },
+    "8439-1419#untrusted": {
+     "expected_revenue": 4159.43,
+     "grade": "D",
+     "headroom": 140.71,
+     "max_bid": 1473.71,
+     "roi_at_current": 1.145141
+    },
     "8445-47379": {
      "expected_revenue": 27.09,
      "grade": "F",
@@ -1290,12 +2536,26 @@
      "max_bid": 10.54,
      "roi_at_current": -0.977942
     },
+    "8445-47379#untrusted": {
+     "expected_revenue": 20.77,
+     "grade": "F",
+     "headroom": -1217.61,
+     "max_bid": 7.39,
+     "roi_at_current": -0.983085
+    },
     "9163-60": {
      "expected_revenue": 26.85,
      "grade": "F",
      "headroom": -2989.57,
      "max_bid": 10.43,
      "roi_at_current": -0.991058
+    },
+    "9163-60#untrusted": {
+     "expected_revenue": 20.59,
+     "grade": "F",
+     "headroom": -2992.7,
+     "max_bid": 7.3,
+     "roi_at_current": -0.993143
     }
    }
   },
@@ -1317,7 +2577,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.989364
     },
+    "11227-17564#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2525.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.989364
+    },
     "11227-17565": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -3801.51,
+     "max_bid": 0.0,
+     "roi_at_current": -0.992819
+    },
+    "11227-17565#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -3801.51,
@@ -1331,7 +2605,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.989567
     },
+    "11227-17566#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2576.51,
+     "max_bid": 0.0,
+     "roi_at_current": -0.989567
+    },
     "11227-17567": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -1525.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.982933
+    },
+    "11227-17567#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -1525.0,
@@ -1345,7 +2633,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.979151
     },
+    "11227-17568#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -1225.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.979151
+    },
     "11227-17569": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -3050.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.991121
+    },
+    "11227-17569#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -3050.0,
@@ -1359,7 +2661,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.989311
     },
+    "116-1767#untrusted": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -2535.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.989311
+    },
     "11805-65": {
+     "expected_revenue": 41.21,
+     "grade": "F",
+     "headroom": -5000.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.993325
+    },
+    "11805-65#untrusted": {
      "expected_revenue": 41.21,
      "grade": "F",
      "headroom": -5000.0,
@@ -1373,7 +2689,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.99894
     },
+    "11961-61#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -26509.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.99894
+    },
     "1328-16095": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2025.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.986895
+    },
+    "1328-16095#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -2025.0,
@@ -1387,7 +2717,21 @@
      "max_bid": 1385.91,
      "roi_at_current": -0.520295
     },
+    "19490-82#untrusted": {
+     "expected_revenue": 3805.26,
+     "grade": "F",
+     "headroom": -4614.09,
+     "max_bid": 1385.91,
+     "roi_at_current": -0.520295
+    },
     "20211-12504": {
+     "expected_revenue": 8489.69,
+     "grade": "F",
+     "headroom": -1800.32,
+     "max_bid": 3427.67,
+     "roi_at_current": 0.136019
+    },
+    "20211-12504#untrusted": {
      "expected_revenue": 8489.69,
      "grade": "F",
      "headroom": -1800.32,
@@ -1401,7 +2745,21 @@
      "max_bid": 1466.83,
      "roi_at_current": -0.496501
     },
+    "20746-1326#untrusted": {
+     "expected_revenue": 4009.11,
+     "grade": "F",
+     "headroom": -4533.17,
+     "max_bid": 1466.83,
+     "roi_at_current": -0.496501
+    },
     "20746-2223": {
+     "expected_revenue": 12218.88,
+     "grade": "F",
+     "headroom": -2246.69,
+     "max_bid": 4753.31,
+     "roi_at_current": 0.181567
+    },
+    "20746-2223#untrusted": {
      "expected_revenue": 12218.88,
      "grade": "F",
      "headroom": -2246.69,
@@ -1415,7 +2773,21 @@
      "max_bid": 3287.54,
      "roi_at_current": 1.379895
     },
+    "227-1839#untrusted": {
+     "expected_revenue": 8595.81,
+     "grade": "C",
+     "headroom": 1462.54,
+     "max_bid": 3287.54,
+     "roi_at_current": 1.379895
+    },
     "26019-3165": {
+     "expected_revenue": 679.51,
+     "grade": "F",
+     "headroom": -1545.88,
+     "max_bid": 145.12,
+     "roi_at_current": -0.702692
+    },
+    "26019-3165#untrusted": {
      "expected_revenue": 679.51,
      "grade": "F",
      "headroom": -1545.88,
@@ -1429,7 +2801,21 @@
      "max_bid": 0.0,
      "roi_at_current": -1.0
     },
+    "26712-237#untrusted": {
+     "expected_revenue": 0.0,
+     "grade": "F",
+     "headroom": -1525.0,
+     "max_bid": 0.0,
+     "roi_at_current": -1.0
+    },
     "28050-1804": {
+     "expected_revenue": 2950.73,
+     "grade": "F",
+     "headroom": -37.31,
+     "max_bid": 1062.69,
+     "roi_at_current": 0.561958
+    },
+    "28050-1804#untrusted": {
      "expected_revenue": 2950.73,
      "grade": "F",
      "headroom": -37.31,
@@ -1443,7 +2829,21 @@
      "max_bid": 823.46,
      "roi_at_current": -0.427141
     },
+    "28085-82#untrusted": {
+     "expected_revenue": 2337.98,
+     "grade": "F",
+     "headroom": -2176.54,
+     "max_bid": 823.46,
+     "roi_at_current": -0.427141
+    },
     "28868-114": {
+     "expected_revenue": 445.55,
+     "grade": "F",
+     "headroom": -947.27,
+     "max_bid": 52.73,
+     "roi_at_current": -0.685954
+    },
+    "28868-114#untrusted": {
      "expected_revenue": 445.55,
      "grade": "F",
      "headroom": -947.27,
@@ -1457,7 +2857,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.993389
     },
+    "2938-2381#untrusted": {
+     "expected_revenue": 41.21,
+     "grade": "F",
+     "headroom": -5050.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.993389
+    },
     "29404-273": {
+     "expected_revenue": 4077.06,
+     "grade": "F",
+     "headroom": -1531.2,
+     "max_bid": 1493.8,
+     "roi_at_current": -0.071568
+    },
+    "29404-273#untrusted": {
      "expected_revenue": 4077.06,
      "grade": "F",
      "headroom": -1531.2,
@@ -1471,7 +2885,21 @@
      "max_bid": 1224.07,
      "roi_at_current": -0.495174
     },
+    "29404-285#untrusted": {
+     "expected_revenue": 3397.55,
+     "grade": "F",
+     "headroom": -3826.93,
+     "max_bid": 1224.07,
+     "roi_at_current": -0.495174
+    },
     "29404-286": {
+     "expected_revenue": 4077.06,
+     "grade": "F",
+     "headroom": -4507.2,
+     "max_bid": 1493.8,
+     "roi_at_current": -0.488686
+    },
+    "29404-286#untrusted": {
      "expected_revenue": 4077.06,
      "grade": "F",
      "headroom": -4507.2,
@@ -1485,7 +2913,21 @@
      "max_bid": 1493.8,
      "roi_at_current": -0.090271
     },
+    "29404-287#untrusted": {
+     "expected_revenue": 4077.06,
+     "grade": "F",
+     "headroom": -1606.2,
+     "max_bid": 1493.8,
+     "roi_at_current": -0.090271
+    },
     "29404-288": {
+     "expected_revenue": 4077.06,
+     "grade": "F",
+     "headroom": -5106.2,
+     "max_bid": 1493.8,
+     "roi_at_current": -0.531089
+    },
+    "29404-288#untrusted": {
      "expected_revenue": 4077.06,
      "grade": "F",
      "headroom": -5106.2,
@@ -1499,7 +2941,21 @@
      "max_bid": 0.0,
      "roi_at_current": -1.0
     },
+    "29404-289#untrusted": {
+     "expected_revenue": 0.0,
+     "grade": "F",
+     "headroom": -6100.0,
+     "max_bid": 0.0,
+     "roi_at_current": -1.0
+    },
     "29404-290": {
+     "expected_revenue": 2006.69,
+     "grade": "F",
+     "headroom": -1707.09,
+     "max_bid": 717.91,
+     "roi_at_current": -0.393582
+    },
+    "29404-290#untrusted": {
      "expected_revenue": 2006.69,
      "grade": "F",
      "headroom": -1707.09,
@@ -1513,7 +2969,21 @@
      "max_bid": 246.81,
      "roi_at_current": -0.343507
     },
+    "29404-291#untrusted": {
+     "expected_revenue": 875.35,
+     "grade": "F",
+     "headroom": -653.19,
+     "max_bid": 246.81,
+     "roi_at_current": -0.343507
+    },
     "29404-293": {
+     "expected_revenue": 1277.57,
+     "grade": "F",
+     "headroom": -520.04,
+     "max_bid": 409.96,
+     "roi_at_current": -0.103134
+    },
+    "29404-293#untrusted": {
      "expected_revenue": 1277.57,
      "grade": "F",
      "headroom": -520.04,
@@ -1527,7 +2997,21 @@
      "max_bid": 91.18,
      "roi_at_current": -0.675361
     },
+    "29731-89#untrusted": {
+     "expected_revenue": 543.61,
+     "grade": "F",
+     "headroom": -1108.82,
+     "max_bid": 91.18,
+     "roi_at_current": -0.675361
+    },
     "30231-256": {
+     "expected_revenue": 3010.18,
+     "grade": "F",
+     "headroom": -3977.06,
+     "max_bid": 1022.94,
+     "roi_at_current": -0.548615
+    },
+    "30231-256#untrusted": {
      "expected_revenue": 3010.18,
      "grade": "F",
      "headroom": -3977.06,
@@ -1541,7 +3025,21 @@
      "max_bid": 148.22,
      "roi_at_current": -0.816763
     },
+    "30279-96#untrusted": {
+     "expected_revenue": 685.47,
+     "grade": "F",
+     "headroom": -2751.78,
+     "max_bid": 148.22,
+     "roi_at_current": -0.816763
+    },
     "30467-26": {
+     "expected_revenue": 10192.66,
+     "grade": "C",
+     "headroom": 1121.42,
+     "max_bid": 3921.42,
+     "roi_at_current": 1.030207
+    },
+    "30467-26#untrusted": {
      "expected_revenue": 10192.66,
      "grade": "C",
      "headroom": 1121.42,
@@ -1555,7 +3053,21 @@
      "max_bid": 15619.23,
      "roi_at_current": -0.546442
     },
+    "31551-54#untrusted": {
+     "expected_revenue": 37626.63,
+     "grade": "F",
+     "headroom": -49380.77,
+     "max_bid": 15619.23,
+     "roi_at_current": -0.546442
+    },
     "32255-14": {
+     "expected_revenue": 14154.86,
+     "grade": "F",
+     "headroom": -12490.72,
+     "max_bid": 5509.28,
+     "roi_at_current": -0.407312
+    },
+    "32255-14#untrusted": {
      "expected_revenue": 14154.86,
      "grade": "F",
      "headroom": -12490.72,
@@ -1569,7 +3081,21 @@
      "max_bid": 885.23,
      "roi_at_current": -0.3362
     },
+    "3473-4984#untrusted": {
+     "expected_revenue": 2648.96,
+     "grade": "F",
+     "headroom": -1939.77,
+     "max_bid": 885.23,
+     "roi_at_current": -0.3362
+    },
     "430-37454": {
+     "expected_revenue": 2570.5,
+     "grade": "F",
+     "headroom": -2606.51,
+     "max_bid": 898.49,
+     "roi_at_current": -0.458175
+    },
+    "430-37454#untrusted": {
      "expected_revenue": 2570.5,
      "grade": "F",
      "headroom": -2606.51,
@@ -1583,7 +3109,21 @@
      "max_bid": 871.21,
      "roi_at_current": -0.316032
     },
+    "430-37455#untrusted": {
+     "expected_revenue": 2501.95,
+     "grade": "F",
+     "headroom": -1739.79,
+     "max_bid": 871.21,
+     "roi_at_current": -0.316032
+    },
     "432-42355": {
+     "expected_revenue": 849.39,
+     "grade": "F",
+     "headroom": -812.44,
+     "max_bid": 212.56,
+     "roi_at_current": -0.43706
+    },
+    "432-42355#untrusted": {
      "expected_revenue": 849.39,
      "grade": "F",
      "headroom": -812.44,
@@ -1597,7 +3137,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.989709
     },
+    "432-42371#untrusted": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2614.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.989709
+    },
     "432-42376": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -2034.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.98695
+    },
+    "432-42376#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -2034.0,
@@ -1611,7 +3165,21 @@
      "max_bid": 50.72,
      "roi_at_current": -0.695402
     },
+    "4474-133#untrusted": {
+     "expected_revenue": 441.68,
+     "grade": "F",
+     "headroom": -975.28,
+     "max_bid": 50.72,
+     "roi_at_current": -0.695402
+    },
     "4753-19877": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -2480.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.989086
+    },
+    "4753-19877#untrusted": {
      "expected_revenue": 34.27,
      "grade": "F",
      "headroom": -2480.0,
@@ -1625,7 +3193,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.973849
     },
+    "4753-19878#untrusted": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -960.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.973849
+    },
     "4753-19966": {
+     "expected_revenue": 30.1,
+     "grade": "F",
+     "headroom": -1000.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.977846
+    },
+    "4753-19966#untrusted": {
      "expected_revenue": 30.1,
      "grade": "F",
      "headroom": -1000.0,
@@ -1639,7 +3221,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.990958
     },
+    "4753-19992#untrusted": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -3020.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.990958
+    },
     "4788-15172": {
+     "expected_revenue": 1800.7,
+     "grade": "F",
+     "headroom": -3011.81,
+     "max_bid": 590.19,
+     "roi_at_current": -0.620977
+    },
+    "4788-15172#untrusted": {
      "expected_revenue": 1800.7,
      "grade": "F",
      "headroom": -3011.81,
@@ -1653,7 +3249,21 @@
      "max_bid": 549.73,
      "roi_at_current": 0.133255
     },
+    "4788-15199#untrusted": {
+     "expected_revenue": 1698.78,
+     "grade": "F",
+     "headroom": -363.27,
+     "max_bid": 549.73,
+     "roi_at_current": 0.133255
+    },
     "5815-590": {
+     "expected_revenue": 1223.12,
+     "grade": "F",
+     "headroom": -3289.09,
+     "max_bid": 360.91,
+     "roi_at_current": -0.741067
+    },
+    "5815-590#untrusted": {
      "expected_revenue": 1223.12,
      "grade": "F",
      "headroom": -3289.09,
@@ -1667,7 +3277,21 @@
      "max_bid": 3988.85,
      "roi_at_current": -0.566626
     },
+    "6246-682#untrusted": {
+     "expected_revenue": 10362.53,
+     "grade": "F",
+     "headroom": -14483.65,
+     "max_bid": 3988.85,
+     "roi_at_current": -0.566626
+    },
     "6246-723": {
+     "expected_revenue": 4994.4,
+     "grade": "F",
+     "headroom": -6031.56,
+     "max_bid": 1857.94,
+     "roi_at_current": -0.518936
+    },
+    "6246-723#untrusted": {
      "expected_revenue": 4994.4,
      "grade": "F",
      "headroom": -6031.56,
@@ -1681,7 +3305,21 @@
      "max_bid": 479.42,
      "roi_at_current": -0.184385
     },
+    "7484-44135#untrusted": {
+     "expected_revenue": 1643.36,
+     "grade": "F",
+     "headroom": -820.58,
+     "max_bid": 479.42,
+     "roi_at_current": -0.184385
+    },
     "7484-44158": {
+     "expected_revenue": 1824.57,
+     "grade": "F",
+     "headroom": -547.58,
+     "max_bid": 652.42,
+     "roi_at_current": 0.01393
+    },
+    "7484-44158#untrusted": {
      "expected_revenue": 1824.57,
      "grade": "F",
      "headroom": -547.58,
@@ -1695,7 +3333,21 @@
      "max_bid": 518.02,
      "roi_at_current": -0.265751
     },
+    "7547-5775#untrusted": {
+     "expected_revenue": 1685.7,
+     "grade": "F",
+     "headroom": -1031.98,
+     "max_bid": 518.02,
+     "roi_at_current": -0.265751
+    },
     "8439-1417": {
+     "expected_revenue": 7712.44,
+     "grade": "F",
+     "headroom": -63.11,
+     "max_bid": 2936.89,
+     "roi_at_current": 0.575174
+    },
+    "8439-1417#untrusted": {
      "expected_revenue": 7712.44,
      "grade": "F",
      "headroom": -63.11,
@@ -1709,7 +3361,21 @@
      "max_bid": 2586.23,
      "roi_at_current": 1.600581
     },
+    "8439-1418#untrusted": {
+     "expected_revenue": 6829.08,
+     "grade": "C",
+     "headroom": 1364.23,
+     "max_bid": 2586.23,
+     "roi_at_current": 1.600581
+    },
     "8439-1419": {
+     "expected_revenue": 6863.06,
+     "grade": "C",
+     "headroom": 1266.72,
+     "max_bid": 2599.72,
+     "roi_at_current": 1.482478
+    },
+    "8439-1419#untrusted": {
      "expected_revenue": 6863.06,
      "grade": "C",
      "headroom": 1266.72,
@@ -1723,7 +3389,21 @@
      "max_bid": 0.0,
      "roi_at_current": -0.978968
     },
+    "8445-47379#untrusted": {
+     "expected_revenue": 34.27,
+     "grade": "F",
+     "headroom": -1225.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.978968
+    },
     "9163-60": {
+     "expected_revenue": 33.98,
+     "grade": "F",
+     "headroom": -3000.0,
+     "max_bid": 0.0,
+     "roi_at_current": -0.990979
+    },
+    "9163-60#untrusted": {
      "expected_revenue": 33.98,
      "grade": "F",
      "headroom": -3000.0,
@@ -1740,6 +3420,7 @@
    "confidence": 0.39,
    "current_bid": 1825.0,
    "floor": 6793.450449919597,
+   "floor_trusted": true,
    "lot_key": "227-1839",
    "units": 253
   },
@@ -1748,6 +3429,7 @@
    "confidence": 0.39,
    "current_bid": 2800.0,
    "floor": 8055.474841801893,
+   "floor_trusted": true,
    "lot_key": "30467-26",
    "units": 300
   },
@@ -1756,6 +3438,7 @@
    "confidence": 0.39,
    "current_bid": 1222.0,
    "floor": 5397.168144007269,
+   "floor_trusted": true,
    "lot_key": "8439-1418",
    "units": 201
   },
@@ -1764,6 +3447,7 @@
    "confidence": 0.39,
    "current_bid": 1333.0,
    "floor": 5424.019726813274,
+   "floor_trusted": true,
    "lot_key": "8439-1419",
    "units": 202
   },
@@ -1772,6 +3456,7 @@
    "confidence": 0.39,
    "current_bid": 3000.0,
    "floor": 6095.309296963433,
+   "floor_trusted": true,
    "lot_key": "8439-1417",
    "units": 227
   },
@@ -1780,6 +3465,7 @@
    "confidence": 0.74,
    "current_bid": 1100.0,
    "floor": 2332.027838306478,
+   "floor_trusted": true,
    "lot_key": "28050-1804",
    "units": 83
   },
@@ -1788,6 +3474,7 @@
    "confidence": 0.39,
    "current_bid": 913.0,
    "floor": 1342.5791403003157,
+   "floor_trusted": true,
    "lot_key": "4788-15199",
    "units": 50
   },
@@ -1796,6 +3483,7 @@
    "confidence": 0.39,
    "current_bid": 930.0,
    "floor": 1009.694497623101,
+   "floor_trusted": true,
    "lot_key": "29404-293",
    "units": 31
   },
@@ -1804,6 +3492,7 @@
    "confidence": 0.39,
    "current_bid": 900.0,
    "floor": 691.8083962399759,
+   "floor_trusted": true,
    "lot_key": "29404-291",
    "units": 20
   },
@@ -1812,6 +3501,7 @@
    "confidence": 0.39,
    "current_bid": 7000.0,
    "floor": 9656.841039727875,
+   "floor_trusted": true,
    "lot_key": "20746-2223",
    "units": 353
   },
@@ -1820,6 +3510,7 @@
    "confidence": 0.99,
    "current_bid": 1200.0,
    "floor": 1441.9939070739767,
+   "floor_trusted": true,
    "lot_key": "7484-44158",
    "units": 41
   },
@@ -1828,6 +3519,7 @@
    "confidence": 0.39,
    "current_bid": 5227.99,
    "floor": 6709.5827906567365,
+   "floor_trusted": true,
    "lot_key": "20211-12504",
    "units": 206
   },
@@ -1836,6 +3528,7 @@
    "confidence": 0.39,
    "current_bid": 1025.0,
    "floor": 671.2895701501578,
+   "floor_trusted": true,
    "lot_key": "432-42355",
    "units": 25
   },
@@ -1844,6 +3537,7 @@
    "confidence": 0.39,
    "current_bid": 1550.0,
    "floor": 1332.2439979595588,
+   "floor_trusted": true,
    "lot_key": "7547-5775",
    "units": 56
   },
@@ -1852,6 +3546,7 @@
    "confidence": 0.39,
    "current_bid": 1026.0,
    "floor": 349.07057647808205,
+   "floor_trusted": true,
    "lot_key": "4474-133",
    "units": 13
   },
@@ -1860,6 +3555,7 @@
    "confidence": 0.39,
    "current_bid": 3025.0,
    "floor": 3222.1899367207575,
+   "floor_trusted": true,
    "lot_key": "29404-273",
    "units": 120
   },
@@ -1868,6 +3564,7 @@
    "confidence": 0.39,
    "current_bid": 1200.0,
    "floor": 429.625324896101,
+   "floor_trusted": true,
    "lot_key": "29731-89",
    "units": 16
   },
@@ -1876,6 +3573,7 @@
    "confidence": 0.39,
    "current_bid": 3100.0,
    "floor": 3222.1899367207575,
+   "floor_trusted": true,
    "lot_key": "29404-287",
    "units": 120
   },
@@ -1884,6 +3582,7 @@
    "confidence": 0.39,
    "current_bid": 960.0,
    "floor": 27.08690616040538,
+   "floor_trusted": true,
    "lot_key": "4753-19878",
    "units": 1
   },
@@ -1892,6 +3591,7 @@
    "confidence": 0.39,
    "current_bid": 1000.0,
    "floor": 23.79007139213498,
+   "floor_trusted": true,
    "lot_key": "4753-19966",
    "units": 1
   },
@@ -1900,6 +3600,7 @@
    "confidence": 0.99,
    "current_bid": 1300.0,
    "floor": 1548.5820574936374,
+   "floor_trusted": true,
    "lot_key": "7484-44135",
    "units": 60
   },
@@ -1908,6 +3609,7 @@
    "confidence": 0.39,
    "current_bid": 1225.0,
    "floor": 27.08690616040538,
+   "floor_trusted": true,
    "lot_key": "8445-47379",
    "units": 1
   },
@@ -1916,6 +3618,7 @@
    "confidence": 0.39,
    "current_bid": 1225.0,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "11227-17568",
    "units": 1
   },
@@ -1924,6 +3627,7 @@
    "confidence": 0.39,
    "current_bid": 2611.0,
    "floor": 1977.3441497095928,
+   "floor_trusted": true,
    "lot_key": "430-37455",
    "units": 73
   },
@@ -1932,6 +3636,7 @@
    "confidence": 0.39,
    "current_bid": 2425.0,
    "floor": 1585.9334732467614,
+   "floor_trusted": true,
    "lot_key": "29404-290",
    "units": 48
   },
@@ -1940,6 +3645,7 @@
    "confidence": 0.39,
    "current_bid": 1691.0,
    "floor": 537.0316561201262,
+   "floor_trusted": true,
    "lot_key": "26019-3165",
    "units": 20
   },
@@ -1948,6 +3654,7 @@
    "confidence": 0.39,
    "current_bid": 2825.0,
    "floor": 2093.5262825078785,
+   "floor_trusted": true,
    "lot_key": "3473-4984",
    "units": 88
   },
@@ -1956,6 +3663,7 @@
    "confidence": 0.74,
    "current_bid": 1000.0,
    "floor": 352.12978008526994,
+   "floor_trusted": true,
    "lot_key": "28868-114",
    "units": 13
   },
@@ -1964,6 +3672,7 @@
    "confidence": 0.39,
    "current_bid": 1525.0,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "11227-17567",
    "units": 1
   },
@@ -1972,6 +3681,7 @@
    "confidence": 0.39,
    "current_bid": 1525.0,
    "floor": 0.0,
+   "floor_trusted": true,
    "lot_key": "26712-237",
    "units": 12
   },
@@ -1980,6 +3690,7 @@
    "confidence": 0.39,
    "current_bid": 3000.0,
    "floor": 1847.7575918143118,
+   "floor_trusted": true,
    "lot_key": "28085-82",
    "units": 64
   },
@@ -1988,6 +3699,7 @@
    "confidence": 0.39,
    "current_bid": 2025.0,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "1328-16095",
    "units": 1
   },
@@ -1996,6 +3708,7 @@
    "confidence": 0.39,
    "current_bid": 2034.0,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "432-42376",
    "units": 1
   },
@@ -2004,6 +3717,7 @@
    "confidence": 0.39,
    "current_bid": 3505.0,
    "floor": 2031.5179620304036,
+   "floor_trusted": true,
    "lot_key": "430-37454",
    "units": 75
   },
@@ -2012,6 +3726,7 @@
    "confidence": 0.39,
    "current_bid": 2480.0,
    "floor": 27.08690616040538,
+   "floor_trusted": true,
    "lot_key": "4753-19877",
    "units": 1
   },
@@ -2020,6 +3735,7 @@
    "confidence": 0.39,
    "current_bid": 2525.0,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "11227-17564",
    "units": 1
   },
@@ -2028,6 +3744,7 @@
    "confidence": 0.39,
    "current_bid": 2535.0,
    "floor": 27.08690616040538,
+   "floor_trusted": true,
    "lot_key": "116-1767",
    "units": 1
   },
@@ -2036,6 +3753,7 @@
    "confidence": 0.39,
    "current_bid": 2900.0,
    "floor": 541.7381232081076,
+   "floor_trusted": true,
    "lot_key": "30279-96",
    "units": 20
   },
@@ -2044,6 +3762,7 @@
    "confidence": 0.39,
    "current_bid": 2576.51,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "11227-17566",
    "units": 1
   },
@@ -2052,6 +3771,7 @@
    "confidence": 0.39,
    "current_bid": 2614.0,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "432-42371",
    "units": 1
   },
@@ -2060,6 +3780,7 @@
    "confidence": 0.39,
    "current_bid": 3602.0,
    "floor": 1423.1338887183344,
+   "floor_trusted": true,
    "lot_key": "4788-15172",
    "units": 53
   },
@@ -2068,6 +3789,7 @@
    "confidence": 0.39,
    "current_bid": 3000.0,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "9163-60",
    "units": 1
   },
@@ -2076,6 +3798,7 @@
    "confidence": 0.39,
    "current_bid": 3650.0,
    "floor": 966.6569810162272,
+   "floor_trusted": true,
    "lot_key": "5815-590",
    "units": 36
   },
@@ -2084,6 +3807,7 @@
    "confidence": 0.39,
    "current_bid": 3020.0,
    "floor": 27.08690616040538,
+   "floor_trusted": true,
    "lot_key": "4753-19992",
    "units": 1
   },
@@ -2092,6 +3816,7 @@
    "confidence": 0.39,
    "current_bid": 3050.0,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "11227-17569",
    "units": 1
   },
@@ -2100,6 +3825,7 @@
    "confidence": 0.39,
    "current_bid": 5051.0,
    "floor": 2685.1582806006313,
+   "floor_trusted": true,
    "lot_key": "29404-285",
    "units": 100
   },
@@ -2108,6 +3834,7 @@
    "confidence": 0.39,
    "current_bid": 5000.0,
    "floor": 2379.007139213498,
+   "floor_trusted": true,
    "lot_key": "30231-256",
    "units": 100
   },
@@ -2116,6 +3843,7 @@
    "confidence": 0.39,
    "current_bid": 3801.51,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "11227-17565",
    "units": 1
   },
@@ -2124,6 +3852,7 @@
    "confidence": 0.39,
    "current_bid": 6001.0,
    "floor": 3222.1899367207575,
+   "floor_trusted": true,
    "lot_key": "29404-286",
    "units": 120
   },
@@ -2132,6 +3861,7 @@
    "confidence": 0.39,
    "current_bid": 6000.0,
    "floor": 3168.4867711087445,
+   "floor_trusted": true,
    "lot_key": "20746-1326",
    "units": 118
   },
@@ -2140,6 +3870,7 @@
    "confidence": 0.39,
    "current_bid": 6000.0,
    "floor": 3007.377274272707,
+   "floor_trusted": true,
    "lot_key": "19490-82",
    "units": 112
   },
@@ -2148,6 +3879,7 @@
    "confidence": 0.39,
    "current_bid": 6600.0,
    "floor": 3222.1899367207575,
+   "floor_trusted": true,
    "lot_key": "29404-288",
    "units": 120
   },
@@ -2156,6 +3888,7 @@
    "confidence": 0.39,
    "current_bid": 5000.0,
    "floor": 32.57079024590649,
+   "floor_trusted": true,
    "lot_key": "11805-65",
    "units": 1
   },
@@ -2164,6 +3897,7 @@
    "confidence": 0.39,
    "current_bid": 5050.0,
    "floor": 32.57079024590649,
+   "floor_trusted": true,
    "lot_key": "2938-2381",
    "units": 1
   },
@@ -2172,6 +3906,7 @@
    "confidence": 0.39,
    "current_bid": 7889.5,
    "floor": 3947.1826724829275,
+   "floor_trusted": true,
    "lot_key": "6246-723",
    "units": 147
   },
@@ -2180,6 +3915,7 @@
    "confidence": 0.39,
    "current_bid": 6100.0,
    "floor": 0.0,
+   "floor_trusted": true,
    "lot_key": "29404-289",
    "units": 149
   },
@@ -2188,6 +3924,7 @@
    "confidence": 0.39,
    "current_bid": 18000.0,
    "floor": 11186.892244247423,
+   "floor_trusted": true,
    "lot_key": "32255-14",
    "units": 413
   },
@@ -2196,6 +3933,7 @@
    "confidence": 0.39,
    "current_bid": 18472.5,
    "floor": 8189.732755831925,
+   "floor_trusted": true,
    "lot_key": "6246-682",
    "units": 305
   },
@@ -2204,6 +3942,7 @@
    "confidence": 0.39,
    "current_bid": 26509.0,
    "floor": 26.851582806006313,
+   "floor_trusted": true,
    "lot_key": "11961-61",
    "units": 1
   },
@@ -2212,7 +3951,548 @@
    "confidence": 0.39,
    "current_bid": 65000.0,
    "floor": 29737.131494512618,
+   "floor_trusted": true,
    "lot_key": "31551-54",
+   "units": 913
+  },
+  {
+   "ceiling": 17365.266968570504,
+   "confidence": 0.39,
+   "current_bid": 1825.0,
+   "floor": 6793.450449919597,
+   "floor_trusted": false,
+   "lot_key": "227-1839#untrusted",
+   "units": 253
+  },
+  {
+   "ceiling": 20591.225654431426,
+   "confidence": 0.39,
+   "current_bid": 2800.0,
+   "floor": 8055.474841801893,
+   "floor_trusted": false,
+   "lot_key": "30467-26#untrusted",
+   "units": 300
+  },
+  {
+   "ceiling": 13796.121188469057,
+   "confidence": 0.39,
+   "current_bid": 1222.0,
+   "floor": 5397.168144007269,
+   "floor_trusted": false,
+   "lot_key": "8439-1418#untrusted",
+   "units": 201
+  },
+  {
+   "ceiling": 13864.75860731716,
+   "confidence": 0.39,
+   "current_bid": 1333.0,
+   "floor": 5424.019726813274,
+   "floor_trusted": false,
+   "lot_key": "8439-1419#untrusted",
+   "units": 202
+  },
+  {
+   "ceiling": 15580.69407851978,
+   "confidence": 0.39,
+   "current_bid": 3000.0,
+   "floor": 6095.309296963433,
+   "floor_trusted": false,
+   "lot_key": "8439-1417#untrusted",
+   "units": 227
+  },
+  {
+   "ceiling": 5961.077701068629,
+   "confidence": 0.74,
+   "current_bid": 1100.0,
+   "floor": 2332.027838306478,
+   "floor_trusted": false,
+   "lot_key": "28050-1804#untrusted",
+   "units": 83
+  },
+  {
+   "ceiling": 3431.870942405238,
+   "confidence": 0.39,
+   "current_bid": 913.0,
+   "floor": 1342.5791403003157,
+   "floor_trusted": false,
+   "lot_key": "4788-15199#untrusted",
+   "units": 50
+  },
+  {
+   "ceiling": 2580.958621421805,
+   "confidence": 0.39,
+   "current_bid": 930.0,
+   "floor": 1009.694497623101,
+   "floor_trusted": false,
+   "lot_key": "29404-293#untrusted",
+   "units": 31
+  },
+  {
+   "ceiling": 1768.385238159494,
+   "confidence": 0.39,
+   "current_bid": 900.0,
+   "floor": 691.8083962399759,
+   "floor_trusted": false,
+   "lot_key": "29404-291#untrusted",
+   "units": 20
+  },
+  {
+   "ceiling": 24684.602318679932,
+   "confidence": 0.39,
+   "current_bid": 7000.0,
+   "floor": 9656.841039727875,
+   "floor_trusted": false,
+   "lot_key": "20746-2223#untrusted",
+   "units": 353
+  },
+  {
+   "ceiling": 3685.992758464591,
+   "confidence": 0.99,
+   "current_bid": 1200.0,
+   "floor": 1441.9939070739767,
+   "floor_trusted": false,
+   "lot_key": "7484-44158#untrusted",
+   "units": 41
+  },
+  {
+   "ceiling": 17150.886322996514,
+   "confidence": 0.39,
+   "current_bid": 5227.99,
+   "floor": 6709.5827906567365,
+   "floor_trusted": false,
+   "lot_key": "20211-12504#untrusted",
+   "units": 206
+  },
+  {
+   "ceiling": 1715.935471202619,
+   "confidence": 0.39,
+   "current_bid": 1025.0,
+   "floor": 671.2895701501578,
+   "floor_trusted": false,
+   "lot_key": "432-42355#untrusted",
+   "units": 25
+  },
+  {
+   "ceiling": 3405.452481384809,
+   "confidence": 0.39,
+   "current_bid": 1550.0,
+   "floor": 1332.2439979595588,
+   "floor_trusted": false,
+   "lot_key": "7547-5775#untrusted",
+   "units": 56
+  },
+  {
+   "ceiling": 892.2864450253619,
+   "confidence": 0.39,
+   "current_bid": 1026.0,
+   "floor": 349.07057647808205,
+   "floor_trusted": false,
+   "lot_key": "4474-133#untrusted",
+   "units": 13
+  },
+  {
+   "ceiling": 8236.490261772571,
+   "confidence": 0.39,
+   "current_bid": 3025.0,
+   "floor": 3222.1899367207575,
+   "floor_trusted": false,
+   "lot_key": "29404-273#untrusted",
+   "units": 120
+  },
+  {
+   "ceiling": 1098.1987015696761,
+   "confidence": 0.39,
+   "current_bid": 1200.0,
+   "floor": 429.625324896101,
+   "floor_trusted": false,
+   "lot_key": "29731-89#untrusted",
+   "units": 16
+  },
+  {
+   "ceiling": 8236.490261772571,
+   "confidence": 0.39,
+   "current_bid": 3100.0,
+   "floor": 3222.1899367207575,
+   "floor_trusted": false,
+   "lot_key": "29404-287#untrusted",
+   "units": 120
+  },
+  {
+   "ceiling": 69.23894717354176,
+   "confidence": 0.39,
+   "current_bid": 960.0,
+   "floor": 27.08690616040538,
+   "floor_trusted": false,
+   "lot_key": "4753-19878#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 60.81165145330016,
+   "confidence": 0.39,
+   "current_bid": 1000.0,
+   "floor": 23.79007139213498,
+   "floor_trusted": false,
+   "lot_key": "4753-19966#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 3319.9255091397245,
+   "confidence": 0.99,
+   "current_bid": 1300.0,
+   "floor": 1548.5820574936374,
+   "floor_trusted": false,
+   "lot_key": "7484-44135#untrusted",
+   "units": 60
+  },
+  {
+   "ceiling": 69.23894717354176,
+   "confidence": 0.39,
+   "current_bid": 1225.0,
+   "floor": 27.08690616040538,
+   "floor_trusted": false,
+   "lot_key": "8445-47379#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 1225.0,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "11227-17568#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 5054.443143668548,
+   "confidence": 0.39,
+   "current_bid": 2611.0,
+   "floor": 1977.3441497095928,
+   "floor_trusted": false,
+   "lot_key": "430-37455#untrusted",
+   "units": 73
+  },
+  {
+   "ceiling": 4053.927876613603,
+   "confidence": 0.39,
+   "current_bid": 2425.0,
+   "floor": 1585.9334732467614,
+   "floor_trusted": false,
+   "lot_key": "29404-290#untrusted",
+   "units": 48
+  },
+  {
+   "ceiling": 1372.748376962095,
+   "confidence": 0.39,
+   "current_bid": 1691.0,
+   "floor": 537.0316561201262,
+   "floor_trusted": false,
+   "lot_key": "26019-3165#untrusted",
+   "units": 20
+  },
+  {
+   "ceiling": 5351.425327890414,
+   "confidence": 0.39,
+   "current_bid": 2825.0,
+   "floor": 2093.5262825078785,
+   "floor_trusted": false,
+   "lot_key": "3473-4984#untrusted",
+   "units": 88
+  },
+  {
+   "ceiling": 900.1063132560429,
+   "confidence": 0.74,
+   "current_bid": 1000.0,
+   "floor": 352.12978008526994,
+   "floor_trusted": false,
+   "lot_key": "28868-114#untrusted",
+   "units": 13
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 1525.0,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "11227-17567#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 0.0,
+   "confidence": 0.39,
+   "current_bid": 1525.0,
+   "floor": 0.0,
+   "floor_trusted": false,
+   "lot_key": "26712-237#untrusted",
+   "units": 12
+  },
+  {
+   "ceiling": 4723.196866098907,
+   "confidence": 0.39,
+   "current_bid": 3000.0,
+   "floor": 1847.7575918143118,
+   "floor_trusted": false,
+   "lot_key": "28085-82#untrusted",
+   "units": 64
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 2025.0,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "1328-16095#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 2034.0,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "432-42376#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 5192.921038015632,
+   "confidence": 0.39,
+   "current_bid": 3505.0,
+   "floor": 2031.5179620304036,
+   "floor_trusted": false,
+   "lot_key": "430-37454#untrusted",
+   "units": 75
+  },
+  {
+   "ceiling": 69.23894717354176,
+   "confidence": 0.39,
+   "current_bid": 2480.0,
+   "floor": 27.08690616040538,
+   "floor_trusted": false,
+   "lot_key": "4753-19877#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 2525.0,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "11227-17564#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 69.23894717354176,
+   "confidence": 0.39,
+   "current_bid": 2535.0,
+   "floor": 27.08690616040538,
+   "floor_trusted": false,
+   "lot_key": "116-1767#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 1384.7789434708352,
+   "confidence": 0.39,
+   "current_bid": 2900.0,
+   "floor": 541.7381232081076,
+   "floor_trusted": false,
+   "lot_key": "30279-96#untrusted",
+   "units": 20
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 2576.51,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "11227-17566#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 2614.0,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "432-42371#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 3637.783198949552,
+   "confidence": 0.39,
+   "current_bid": 3602.0,
+   "floor": 1423.1338887183344,
+   "floor_trusted": false,
+   "lot_key": "4788-15172#untrusted",
+   "units": 53
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 3000.0,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "9163-60#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 2470.9470785317712,
+   "confidence": 0.39,
+   "current_bid": 3650.0,
+   "floor": 966.6569810162272,
+   "floor_trusted": false,
+   "lot_key": "5815-590#untrusted",
+   "units": 36
+  },
+  {
+   "ceiling": 69.23894717354176,
+   "confidence": 0.39,
+   "current_bid": 3020.0,
+   "floor": 27.08690616040538,
+   "floor_trusted": false,
+   "lot_key": "4753-19992#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 3050.0,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "11227-17569#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 6863.741884810476,
+   "confidence": 0.39,
+   "current_bid": 5051.0,
+   "floor": 2685.1582806006313,
+   "floor_trusted": false,
+   "lot_key": "29404-285#untrusted",
+   "units": 100
+  },
+  {
+   "ceiling": 6081.165145330016,
+   "confidence": 0.39,
+   "current_bid": 5000.0,
+   "floor": 2379.007139213498,
+   "floor_trusted": false,
+   "lot_key": "30231-256#untrusted",
+   "units": 100
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 3801.51,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "11227-17565#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 8236.490261772571,
+   "confidence": 0.39,
+   "current_bid": 6001.0,
+   "floor": 3222.1899367207575,
+   "floor_trusted": false,
+   "lot_key": "29404-286#untrusted",
+   "units": 120
+  },
+  {
+   "ceiling": 8099.215424076361,
+   "confidence": 0.39,
+   "current_bid": 6000.0,
+   "floor": 3168.4867711087445,
+   "floor_trusted": false,
+   "lot_key": "20746-1326#untrusted",
+   "units": 118
+  },
+  {
+   "ceiling": 7687.390910987733,
+   "confidence": 0.39,
+   "current_bid": 6000.0,
+   "floor": 3007.377274272707,
+   "floor_trusted": false,
+   "lot_key": "19490-82#untrusted",
+   "units": 112
+  },
+  {
+   "ceiling": 8236.490261772571,
+   "confidence": 0.39,
+   "current_bid": 6600.0,
+   "floor": 3222.1899367207575,
+   "floor_trusted": false,
+   "lot_key": "29404-288#untrusted",
+   "units": 120
+  },
+  {
+   "ceiling": 83.25672972328404,
+   "confidence": 0.39,
+   "current_bid": 5000.0,
+   "floor": 32.57079024590649,
+   "floor_trusted": false,
+   "lot_key": "11805-65#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 83.25672972328404,
+   "confidence": 0.39,
+   "current_bid": 5050.0,
+   "floor": 32.57079024590649,
+   "floor_trusted": false,
+   "lot_key": "2938-2381#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 10089.700570671399,
+   "confidence": 0.39,
+   "current_bid": 7889.5,
+   "floor": 3947.1826724829275,
+   "floor_trusted": false,
+   "lot_key": "6246-723#untrusted",
+   "units": 147
+  },
+  {
+   "ceiling": 0.0,
+   "confidence": 0.39,
+   "current_bid": 6100.0,
+   "floor": 0.0,
+   "floor_trusted": false,
+   "lot_key": "29404-289#untrusted",
+   "units": 149
+  },
+  {
+   "ceiling": 28595.685182672747,
+   "confidence": 0.39,
+   "current_bid": 18000.0,
+   "floor": 11186.892244247423,
+   "floor_trusted": false,
+   "lot_key": "32255-14#untrusted",
+   "units": 413
+  },
+  {
+   "ceiling": 20934.41274867195,
+   "confidence": 0.39,
+   "current_bid": 18472.5,
+   "floor": 8189.732755831925,
+   "floor_trusted": false,
+   "lot_key": "6246-682#untrusted",
+   "units": 305
+  },
+  {
+   "ceiling": 68.63741884810476,
+   "confidence": 0.39,
+   "current_bid": 26509.0,
+   "floor": 26.851582806006313,
+   "floor_trusted": false,
+   "lot_key": "11961-61#untrusted",
+   "units": 1
+  },
+  {
+   "ceiling": 76013.39423735833,
+   "confidence": 0.39,
+   "current_bid": 65000.0,
+   "floor": 29737.131494512618,
+   "floor_trusted": false,
+   "lot_key": "31551-54#untrusted",
    "units": 913
   }
  ],

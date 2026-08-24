@@ -15,6 +15,8 @@ export interface SnapshotLot {
   exact_manifest: boolean;
   mix: MachineLine[];
   floor: number;
+  /** false when the bulk fit behind `floor` is too weak to underwrite against */
+  floor_trusted?: boolean;
   ceiling: number;
   ceiling_sources: Record<string, number>;
   expected_revenue: number;

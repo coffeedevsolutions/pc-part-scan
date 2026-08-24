@@ -67,6 +67,7 @@ class Valuation:
     exact_manifest: bool
     mix: list = field(default_factory=list)
     floor: float = 0.0
+    floor_trusted: bool = True
     ceiling: float = 0.0
     ceiling_sources: dict = field(default_factory=dict)
     expected_revenue: float = 0.0
@@ -151,7 +152,11 @@ def value_lot(rec: dict, single, basket, table, ebay, cfg: Config,
     )
 
     # --- floor: what the whole lot clears at auction ---------------------
+    # Reported either way, but only underwritten against when the bulk fit
+    # is sound: a weak fit that reads high would raise max_bid on exactly
+    # the pallet-sized lots where being wrong costs the most.
     v.floor = basket.value_mix(mix) if basket else 0.0
+    v.floor_trusted = bool(basket and basket.trusted)
 
     # --- ceiling: parts-out, blended across available sources ------------
     per_source = {}
@@ -181,9 +186,8 @@ def value_lot(rec: dict, single, basket, table, ebay, cfg: Config,
     v.ceiling = sum(per_source.values()) / len(per_source)
 
     # --- what you underwrite against -------------------------------------
-    live_units = v.units * (1 - cfg.dead_rate)
     parts_out = v.ceiling * (1 - cfg.dead_rate) * cfg.recovery
-    v.expected_revenue = max(parts_out, v.floor)
+    v.expected_revenue = max(parts_out, v.floor) if v.floor_trusted else parts_out
 
     v.max_bid = cfg.max_hammer(v.expected_revenue, v.units)
     v.headroom = v.max_bid - v.current_bid

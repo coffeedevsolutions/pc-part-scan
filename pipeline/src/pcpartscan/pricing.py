@@ -205,10 +205,22 @@ class BulkDiscountModel:
     and k is directly interpretable.
     """
 
+    # Below these the fit is not telling us anything: a non-positive R^2 means
+    # the model predicts worse than the corpus mean, and a handful of lots
+    # cannot pin down a market-wide discount. The floor is then reported but
+    # not underwritten against -- see grade.value_lot.
+    MIN_R2 = 0.05
+    MIN_OBS = 20
+
     def __init__(self, single: _FitModel, k: float, n_obs: int, r2: float,
                  residual_sd: float):
         self.single, self.k, self.n_obs = single, k, n_obs
         self.r2, self.residual_sd = r2, residual_sd
+
+    @property
+    def trusted(self) -> bool:
+        """Is this fit good enough to set a bid ceiling from?"""
+        return self.r2 >= self.MIN_R2 and self.n_obs >= self.MIN_OBS
 
     def value_mix(self, mix: list[dict]) -> float:
         return self.k * self.single.value_mix(mix)
@@ -218,7 +230,8 @@ class BulkDiscountModel:
 
     def to_json(self):
         return {"kind": "bulk_discount", "k": self.k, "n_obs": self.n_obs,
-                "r2": self.r2, "residual_sd": self.residual_sd}
+                "r2": self.r2, "residual_sd": self.residual_sd,
+                "trusted": self.trusted}
 
 
 def fit_basket_model(baskets: list[dict], single: _FitModel) -> BulkDiscountModel:
