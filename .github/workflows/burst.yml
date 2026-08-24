@@ -8,10 +8,6 @@ name: burst
 on:
   schedule:
     - cron: "40 22 * * 1-5"
-  push:
-    # TEMPORARY pre-merge verification trigger -- remove before merge
-    branches: [claude/self-sufficient-system-architecture-o15ag8]
-    paths: [".github/workflows/burst.yml"]
   workflow_dispatch:
     inputs:
       window:
@@ -47,5 +43,5 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: >
           pcps burst
-          --window ${{ inputs.window || 5 }}
+          --window ${{ inputs.window || 20 }}
           --horizon ${{ inputs.horizon || 100 }}
