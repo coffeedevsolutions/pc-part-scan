@@ -13,7 +13,7 @@ Decisions locked in with the owner (2026-08-23):
 | Web UI depth | Single-user interactive workbench (watchlist, notes, live assumptions) |
 | Scan cadence | Close-time-weighted baseline + one targeted burst window per weekday, sized to fit private-repo Actions minutes (2,000/month) |
 | Repo visibility | Stays private; schedules fit the free-minute cap (§5) |
-| eBay | Yes — official Browse/Insights API via a free developer account |
+| eBay | Browse API only (active asks), via a free developer account. Marketplace Insights — true sold prices — is restricted and confirmed unavailable to us |
 
 ## 1. What exists today (baseline)
 
@@ -67,7 +67,7 @@ Two structural problems drive most of this plan:
    └────────────────────────────────────────────────────────────────────────┘
 
    External: maestro.lqdt1.com (GovDeals JSON API) · api.ebay.com (Browse /
-   Marketplace Insights) · files.lqdt1.com (spec-sheet PDFs)
+   Browse) · files.lqdt1.com (spec-sheet PDFs)
 ```
 
 Division of labour, stated once:
@@ -225,7 +225,7 @@ how long to leave a bid to the last minute.
 `pcps fit`: rebuild observations from Mongo, refit the single-unit model and
 bulk discount, insert a `model_runs` doc. Then `pcps ebay-refresh`: for every
 CPU/config appearing in any open lot's manifest or title, query the eBay
-Browse API (Insights once approved), upsert `ebay_comps`. Comp queries are
+Browse API, upsert `ebay_comps`. Comp queries are
 deduplicated and cached for 24 h, keeping usage far under the 5,000
 calls/day free limit. If R² drops more than 0.05 from the previous run, the
 job opens a GitHub issue rather than silently shipping a worse model.
@@ -246,11 +246,17 @@ system — free, and it lands where the owner already looks.
 ## 6. Valuation upgrades
 
 - **eBay in the blend.** `EbayAdapter` stops calling the network at grade
-  time; it reads `ebay_comps` from Mongo (populated by `fit.yml`). Start with
-  Browse (active asks, haircut applied as the grader already does for asks);
-  apply for Marketplace Insights for true sold prices and flip `EBAY_INSIGHTS`
-  when approved.
-- **eBay auth model.** Browse and Marketplace Insights use the OAuth
+  time; it reads `ebay_comps` from Mongo (populated by `fit.yml`).
+- **eBay gives asks, not sales.** Marketplace Insights, the endpoint that
+  serves true sold prices, is heavily restricted and we are not getting
+  access. Browse returns ACTIVE listings, and an active listing is by
+  definition one that has not sold at that price. So the ceiling never sees
+  a raw ask: `EbayAdapter.calibrate()` pairs Browse asks against our own
+  realized single-unit GovDeals prices for the same CPU and takes the median
+  ratio as the haircut. Fewer than 12 usable pairs and the adapter reports
+  nothing at all — an unmeasured haircut is an invented number, and the
+  system already has one bad experience with those (§12).
+- **eBay auth model.** Browse uses the OAuth
   **client-credentials** flow: the daily job mints an application token from
   `EBAY_CLIENT_ID`/`EBAY_CLIENT_SECRET` (GitHub Actions secrets). No eBay
   user login, no user consent screen, no per-user accounts — nothing
@@ -358,7 +364,7 @@ sole writer of market data.
 | GovDeals changes/protects the maestro API | `raw_extra` preserves unknown fields; weekly routine diffs schema; client is one file (`api.py`); polite pacing (0.35 s) and honest UA keep the footprint low |
 | Atlas M0 fills | Change-only writes, post-close downsampling, weekly archive+prune, usage on `/ops` and in weekly review |
 | Actions cron jitter/skips | Observations timestamped at capture; overlapping scan coverage self-heals gaps; `job_runs` staleness alerting |
-| Marketplace Insights application denied | Browse-with-haircut path works from day one; Insights is an upgrade, not a dependency |
+| eBay only ever shows asking prices (Insights confirmed unavailable) | The haircut converting an ask to an expected sale is measured against our own realized singles, not assumed; below 12 usable pairs the source stays silent rather than guessing |
 | Free Actions minutes exhausted mid-month | Budget in §5 carries ~170 min headroom; `job_runs` tracks spend; if it ever pinches, a self-hosted runner on a spare machine lifts the cap entirely without going public |
 | Seller close-time behaviour drifts away from the burst window | Weekly health routine recomputes the close-hour histogram and proposes a new window |
 | TS/Python grading drift | Golden parity test in CI blocks merge on any divergence |
@@ -383,8 +389,9 @@ month-end Actions spend (from `job_runs`) is under 2,000 min.
 
 **Phase 3 — eBay in the blend**
 Developer account, secrets, `pcps ebay-refresh` in `fit.yml`, `ebay_comps`
-cache, adapter reads cache; Insights application submitted. *Done when:*
-graded lots show an eBay contribution in the valuation breakdown.
+cache, adapter reads cache. *Done when:* graded lots show an eBay
+contribution in the valuation breakdown, and the run reports a measured
+ask-to-realized haircut with the pair count behind it.
 
 **Phase 4 — Workbench MVP (read-only)**
 `apps/web` on Vercel, auth, Board + Lot detail with bid curves + Sold explorer

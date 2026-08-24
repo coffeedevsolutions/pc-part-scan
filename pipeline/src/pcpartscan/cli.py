@@ -238,6 +238,7 @@ def cmd_scan(a) -> int:
             "confidence_gate": grade.CONFIDENCE_GATE,
             "class_prices": classes.to_dict(
                 bulk.k if bulk and bulk.trusted else None),
+            "ebay": ebay.to_json(),
             "lots": [asdict(v) for v in vals],
         })
         idx = ds.update_index(run, {"last_config": asdict(cfg)})

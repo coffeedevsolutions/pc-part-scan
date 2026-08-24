@@ -8,7 +8,8 @@ the auction runs.
 
   floor    resale-as-lot value, from the sold BULK-lot model
   ceiling  parts-out value, from the sold SINGLE-unit model (with any
-           hand-pinned CPU prices substituted), optionally blended with eBay
+           hand-pinned CPU prices substituted), optionally blended with
+           eBay asks once their haircut to realized prices is measured
   target   the blend you actually underwrite against (see Config.recovery)
 """
 
@@ -372,7 +373,18 @@ def load_models():
     usable = sum(1 for q in table.quotes.values() if q.usable)
     print(f"  class comps: {usable} of {len(table.quotes)} item classes "
           f"priceable from sold lots")
-    return ceiling_model, basket, pricing.EbayAdapter(), table
+
+    # eBay can only tell us what sellers are ASKING, so the ask-to-realized
+    # haircut is measured against our own realized singles before the source
+    # is allowed to say anything. No measurement, no contribution.
+    ebay = pricing.EbayAdapter()
+    if ebay.enabled:
+        h = ebay.calibrate(obs["singles"])
+        print(f"  ebay: haircut {h:.2f} from {ebay.haircut_n} CPU pairs"
+              if h else
+              f"  ebay: credentials present but only {ebay.haircut_n} usable "
+              f"CPU pairs (need {ebay.MIN_CALIBRATION_PAIRS}); source silent")
+    return ceiling_model, basket, ebay, table
 
 
 def scan(live: dict | None = None, cfg: Config | None = None,
