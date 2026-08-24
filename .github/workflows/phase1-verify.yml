@@ -1,0 +1,45 @@
+name: phase1-verify
+
+# Proves the MongoDB secret and store layer work end to end: connect, run the
+# test suite, backfill the legacy data/ tree (idempotent), report counts.
+
+on:
+  push:
+    branches: [claude/self-sufficient-system-architecture-o15ag8]
+  workflow_dispatch:
+
+concurrency:
+  group: phase1-verify
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install --quiet "./pipeline[dev]"
+
+      - name: Unit tests
+        run: pytest pipeline/tests -q
+
+      - name: Smoke test connection
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pcps smoke
+
+      - name: Backfill legacy dataset
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pcps backfill --data data
+
+      - name: Counts after backfill
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pcps smoke

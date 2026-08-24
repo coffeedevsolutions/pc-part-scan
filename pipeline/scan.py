@@ -21,6 +21,9 @@ from dataclasses import asdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
+# scan.py is the legacy file-mode entry point; the Mongo path is `pcps scan`.
+os.environ.setdefault("PCPS_STORE", "files")
+
 from pcpartscan import dataset as ds
 from pcpartscan import grade, harvest, pricing
 

@@ -205,6 +205,40 @@ def bid_history_for(key: str) -> list[dict]:
     return [r for r in read_jsonl(BID_HISTORY) if r.get("key") == key]
 
 
+def sold_lots() -> dict[str, dict]:
+    """All sold lots keyed by lot key -- the shape harvest rebuilds from."""
+    return read_json(SOLD, {})
+
+
+def open_lots_raw() -> dict[str, dict]:
+    """Open lots mapped back onto the raw API shape the grader expects."""
+    latest: dict[str, dict] = {}
+    for r in read_jsonl(BID_HISTORY):     # chronological; last one wins
+        if r.get("key"):
+            latest[r["key"]] = r
+    out = {}
+    for key, lot in read_json(LOTS, {}).items():
+        if lot.get("status") != "open":
+            continue
+        h = latest.get(key)
+        out[key] = {
+            "accountId": lot["account_id"], "assetId": lot["asset_id"],
+            "assetShortDescription": lot.get("title"),
+            "currentBid": h["current_bid"] if h else 0.0,
+            "bidCount": h.get("bid_count") if h else None,
+            "companyName": lot.get("seller"),
+            "locationState": (lot.get("location") or {}).get("state"),
+            "locationCity": (lot.get("location") or {}).get("city"),
+            "assetAuctionEndDate": lot.get("auction_end"),
+            "assetAuctionEndDateUtc": lot.get("auction_end_utc"),
+            "assetAuctionEndDateDisplay": lot.get("auction_end") or "",
+            "categoryDescription": lot.get("category"),
+            "currencyCode": lot.get("currency"),
+            "isSoldAuction": False,
+        }
+    return out
+
+
 def upsert_sold(records: list[dict], observed_at: str) -> dict:
     sold = read_json(SOLD, {})
     added = 0

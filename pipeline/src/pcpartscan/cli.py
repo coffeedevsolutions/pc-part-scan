@@ -1,0 +1,246 @@
+"""pcps -- the pipeline command line.
+
+  pcps smoke                 verify MongoDB connectivity, print collection counts
+  pcps backfill [--data d]   load the legacy data/ tree into MongoDB (idempotent)
+  pcps scan [--full] ...     harvest, fit, grade; writes to the active store
+  pcps archive --out dir     dump every collection to jsonl.gz for archiving
+
+The store backend is selected by environment: MONGODB_URI set -> MongoDB,
+otherwise flat files under data/ (PCPS_STORE=files|mongo overrides).
+The connection string is never printed.
+"""
+
+from __future__ import annotations
+
+import argparse
+import glob
+import gzip
+import json
+import os
+import sys
+from dataclasses import asdict
+
+
+def _counts_line(db) -> str:
+    names = ["lots", "bid_observations", "sold", "manifests",
+             "model_runs", "snapshots", "job_runs"]
+    return "  ".join(f"{n}={db[n].estimated_document_count()}" for n in names)
+
+
+def cmd_smoke(_a) -> int:
+    from .store import mongo
+    db = mongo.get_db()
+    db.client.admin.command("ping")
+    info = db.client.server_info()
+    print(f"connected: MongoDB {info.get('version')} db={db.name}")
+    print(f"counts: {_counts_line(db)}")
+    return 0
+
+
+def cmd_backfill(a) -> int:
+    from pymongo import InsertOne, UpdateOne
+    from pymongo.errors import BulkWriteError
+
+    from . import dataset as fileds
+    from .store import mongo
+
+    d = a.data
+    db = mongo.get_db()
+    run = mongo.run_id()
+    mongo.job_start("backfill", run)
+    try:
+        lots = fileds.read_json(os.path.join(d, "lots.json"), {})
+        sold = fileds.read_json(os.path.join(d, "sold.json"), {})
+        rows = fileds.read_jsonl(os.path.join(d, "bid_history.jsonl"))
+        comps = fileds.read_json(os.path.join(d, "components.json"), {"runs": []})
+        models = fileds.read_json(os.path.join(d, "models.json"), {})
+        index = fileds.read_json(os.path.join(d, "index.json"), {})
+
+        # --- lots, with last_obs primed from the tail of the bid history ----
+        last: dict[str, dict] = {}
+        for r in rows:                      # file is chronological
+            if r.get("key"):
+                last[r["key"]] = r
+        ops = []
+        for key, lot in lots.items():
+            doc = {"_id": key, **lot}
+            h = last.get(key)
+            if h:
+                doc["last_obs"] = {"at": h.get("observed_at"),
+                                   "bid": h.get("current_bid"),
+                                   "bid_count": h.get("bid_count")}
+            ops.append(UpdateOne({"_id": key}, {"$set": doc}, upsert=True))
+        if ops:
+            db.lots.bulk_write(ops, ordered=False)
+        print(f"lots: {len(ops)} upserted")
+
+        ops = [UpdateOne({"_id": k}, {"$set": {"_id": k, **v}}, upsert=True)
+               for k, v in sold.items()]
+        if ops:
+            db.sold.bulk_write(ops, ordered=False)
+        print(f"sold: {len(ops)} upserted")
+
+        n_man = 0
+        for path in glob.glob(os.path.join(d, "manifests", "*.json")):
+            m = fileds.read_json(path, None)
+            if not m:
+                continue
+            key = m["key"]
+            db.manifests.replace_one(
+                {"_id": key}, {"_id": key, "parsed_by": "regex", **m}, upsert=True)
+            n_man += 1
+        print(f"manifests: {n_man} upserted")
+
+        inserted = 0
+        batch: list[InsertOne] = []
+
+        def flush():
+            nonlocal inserted, batch
+            if not batch:
+                return
+            try:
+                res = db.bid_observations.bulk_write(batch, ordered=False)
+                inserted += res.inserted_count
+            except BulkWriteError as e:   # duplicates on re-run are expected
+                inserted += e.details.get("nInserted", 0)
+            batch = []
+
+        for r in rows:
+            if not r.get("key") or r.get("current_bid") is None:
+                continue
+            batch.append(InsertOne({
+                "key": r["key"], "observed_at": r.get("observed_at"),
+                "run_id": r.get("run_id"), "bid": r["current_bid"],
+                "bid_count": r.get("bid_count"),
+                "is_sold": bool(r.get("is_sold")),
+                "reserve_not_met": bool(r.get("reserve_not_met")),
+                "source": "backfill",
+            }))
+            if len(batch) >= 5000:
+                flush()
+        flush()
+        print(f"bid_observations: {inserted} inserted ({len(rows)} in file)")
+
+        n_runs = 0
+        for entry in comps.get("runs", []):
+            doc = {"_id": entry["run_id"], **entry}
+            if models.get("run_id") == entry["run_id"]:
+                doc["single"] = models.get("single")
+                doc["bulk"] = models.get("bulk")
+            db.model_runs.replace_one({"_id": entry["run_id"]}, doc, upsert=True)
+            n_runs += 1
+        print(f"model_runs: {n_runs} upserted")
+
+        idx = mongo.update_index(index.get("last_run_id", run),
+                                 {"last_config": index.get("last_config")})
+        print(f"index: {json.dumps(idx['counts'])}")
+        mongo.job_finish("backfill", run, counts=idx["counts"])
+    except Exception as e:
+        mongo.job_finish("backfill", run, status="error", error=str(e))
+        raise
+    return 0
+
+
+def cmd_scan(a) -> int:
+    from . import grade, harvest, pricing
+    from .store import backend as ds
+
+    is_mongo = hasattr(ds, "job_start")
+    run = ds.run_id()
+    if is_mongo:
+        ds.job_start("scan", run)
+    try:
+        if not a.no_refresh:
+            print("refreshing sold archive...")
+            sold = harvest.sweep_sold(max_pages=12 if a.full else 4, run=run)
+            print("building observations...")
+            harvest.build_observations(sold, max_detail=600 if a.full else 120)
+            print("refreshing live lots...")
+            harvest.sweep_live(max_pages=8 if a.full else 4, run=run)
+
+        cfg = grade.Config(target_roi=a.target_roi, recovery=a.recovery,
+                           buyer_premium=a.buyer_premium)
+        live = harvest.load_live()
+        if a.states:
+            want = {s.strip().upper() for s in a.states.split(",") if s.strip()}
+            live = {k: v for k, v in live.items()
+                    if (v.get("locationState") or "").upper() in want}
+            print(f"state filter {sorted(want)}: {len(live)} lots")
+
+        single, bulk, table, ebay = grade.load_models()
+        vals = grade.scan(live=live, cfg=cfg, min_units=a.min_units,
+                          limit=a.limit, models=(single, bulk, table, ebay))
+
+        ds.record_components(run, single, bulk, pricing.StaticTable.PATH)
+        ds.write_snapshot(run, {
+            "config": asdict(cfg),
+            "model_fit": {"single_r2": single.r2, "single_n": single.n_obs,
+                          "bulk_k": bulk.k if bulk else None,
+                          "bulk_r2": bulk.r2 if bulk else None,
+                          "bulk_n": bulk.n_obs if bulk else 0},
+            "screened": len(vals),
+            "confidence_gate": grade.CONFIDENCE_GATE,
+            "lots": [asdict(v) for v in vals],
+        })
+        idx = ds.update_index(run, {"last_config": asdict(cfg)})
+
+        print("\n" + grade.report(vals, top=a.top))
+        print(f"\nrun {run}")
+        print(f"dataset: {json.dumps(idx['counts'])}")
+        if is_mongo:
+            ds.job_finish("scan", run, counts=idx["counts"])
+    except Exception as e:
+        if is_mongo:
+            ds.job_finish("scan", run, status="error", error=str(e))
+        raise
+    return 0
+
+
+def cmd_archive(a) -> int:
+    from .store import mongo
+    db = mongo.get_db()
+    os.makedirs(a.out, exist_ok=True)
+    names = ["lots", "bid_observations", "sold", "manifests",
+             "model_runs", "snapshots", "meta", "job_runs"]
+    for name in names:
+        path = os.path.join(a.out, f"{name}.jsonl.gz")
+        n = 0
+        with gzip.open(path, "wt") as f:
+            for doc in db[name].find({}):
+                f.write(json.dumps(doc, default=str, sort_keys=True) + "\n")
+                n += 1
+        print(f"{name}: {n} docs -> {path} "
+              f"({os.path.getsize(path) / 1e6:.1f} MB)")
+    return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(prog="pcps")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("smoke", help="verify MongoDB connectivity")
+
+    p = sub.add_parser("backfill", help="load the data/ tree into MongoDB")
+    p.add_argument("--data", default="data")
+
+    p = sub.add_parser("scan", help="harvest, fit and grade")
+    p.add_argument("--no-refresh", action="store_true")
+    p.add_argument("--full", action="store_true")
+    p.add_argument("--min-units", type=int, default=5)
+    p.add_argument("--limit", type=int, default=60)
+    p.add_argument("--top", type=int, default=25)
+    p.add_argument("--target-roi", type=float, default=0.60)
+    p.add_argument("--recovery", type=float, default=0.55)
+    p.add_argument("--buyer-premium", type=float, default=0.0)
+    p.add_argument("--states", default="")
+
+    p = sub.add_parser("archive", help="dump collections to jsonl.gz")
+    p.add_argument("--out", default="dump")
+
+    a = ap.parse_args()
+    return {"smoke": cmd_smoke, "backfill": cmd_backfill,
+            "scan": cmd_scan, "archive": cmd_archive}[a.cmd](a)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

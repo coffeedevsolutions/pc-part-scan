@@ -1,0 +1,45 @@
+name: archive
+
+# Weekly durable dump of every MongoDB collection to a GitHub Release, so the
+# free-tier cluster can be pruned without ever losing history.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: archive
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install --quiet ./pipeline
+
+      - name: Dump collections
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pcps archive --out dump
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="archive-$(date -u +%Y%m%d)"
+          gh release create "$tag" dump/*.jsonl.gz \
+            --title "Dataset archive $(date -u +%Y-%m-%d)" \
+            --notes "Automated weekly dump of all MongoDB collections." \
+            || gh release upload "$tag" dump/*.jsonl.gz --clobber

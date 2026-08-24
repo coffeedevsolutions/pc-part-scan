@@ -16,8 +16,8 @@ import time
 import urllib.error
 
 from . import api as gd
-from . import dataset as ds
 from . import specs
+from .store import backend as ds
 
 CACHE = "cache"
 ATTACH = os.path.join(CACHE, "attachments")
@@ -232,7 +232,7 @@ def build_observations_from_dataset(max_detail: int = 0) -> dict:
     rebuild every observation, which is what lets a scheduled run start from a
     bare checkout.
     """
-    sold_lots = ds.read_json(ds.SOLD, {})
+    sold_lots = ds.sold_lots()
     manifests = ds.all_manifests()
     singles, baskets = [], []
 
@@ -295,25 +295,6 @@ def load_live() -> dict:
     live = _load("live_raw.json", None)
     if live:
         return live
-    out = {}
-    for key, lot in ds.read_json(ds.LOTS, {}).items():
-        if lot.get("status") != "open":
-            continue
-        hist = [r for r in ds.read_jsonl(ds.BID_HISTORY) if r.get("key") == key]
-        bid = hist[-1]["current_bid"] if hist else 0.0
-        out[key] = {
-            "accountId": lot["account_id"], "assetId": lot["asset_id"],
-            "assetShortDescription": lot.get("title"),
-            "currentBid": bid,
-            "companyName": lot.get("seller"),
-            "locationState": (lot.get("location") or {}).get("state"),
-            "locationCity": (lot.get("location") or {}).get("city"),
-            "assetAuctionEndDate": lot.get("auction_end"),
-            "assetAuctionEndDateUtc": lot.get("auction_end_utc"),
-            "assetAuctionEndDateDisplay": lot.get("auction_end") or "",
-            "categoryDescription": lot.get("category"),
-            "currencyCode": lot.get("currency"),
-            "isSoldAuction": False,
-        }
+    out = ds.open_lots_raw()
     _p(f"live lots (from dataset): {len(out)}")
     return out
