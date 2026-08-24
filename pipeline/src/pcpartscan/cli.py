@@ -275,7 +275,11 @@ def cmd_burst(a) -> int:
                         break
                     page += 1
             observed = mongo.utcnow()
-            rec_list = list(recs.values())
+            # keep only lots actually closing inside the horizon: per-seller
+            # search returns the seller's whole inventory, and a burst should
+            # not accumulate their far-future non-computer listings
+            rec_list = [r for r in recs.values()
+                        if "" < (r.get("assetAuctionEndDateUtc") or "") <= cutoff]
             mongo.upsert_lots(rec_list, observed, sold=False)
             n = mongo.record_bids(rec_list, observed, run, source="burst")
             observations += n
