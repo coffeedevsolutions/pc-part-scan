@@ -239,6 +239,10 @@ export async function watchedKeys(): Promise<Set<string>> {
   return new Set(docs.map((d) => String(d._id)));
 }
 
+export async function isWatched(key: string): Promise<boolean> {
+  return (await coll("watchlist").findOne({ _id: key })) != null;
+}
+
 export async function getNote(key: string): Promise<string> {
   const doc = await coll("notes").findOne({ _id: key });
   return (doc?.text as string) ?? "";

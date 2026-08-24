@@ -58,16 +58,22 @@ Prompt sketch:
    the burst window in `.github/workflows/burst.yml` (22:40 UTC weekdays)?
    Any new `raw_extra` keys that suggest upstream API changes? Repeated job
    failures?
-3. For each real finding, open ONE GitHub issue on this repository titled
-   `health: <finding>` with the evidence and a proposed change — do not push
-   code. Skip issues for anything already reported and still open. End with
-   a one-paragraph summary either way.
+3. The final message is the deliverable: one paragraph per real finding with
+   the evidence and a concretely proposed change, or a two-sentence
+   all-clear. It reaches the owner through the routine's completion
+   notification. (Routine-fired sessions carry no GitHub tooling, so
+   findings are reported, not filed as issues — the owner turns them into
+   work.)
 
 ## Operational notes
 
-- The routines were created by the Claude session that built this system and
-  can be updated or deleted by any later Claude session (`list_triggers`,
-  `update_trigger`) or from claude.ai → Routines.
+- Created 2026-08-24 by the session that built this system:
+  `pcps manifest triage` (trig_01MS9dQjrBrMD7MHsaPCmkeY),
+  `pcps daily digest` (trig_01R6Exun9y5AZjsswN87jDpU, push+email
+  notifications), `pcps weekly health review`
+  (trig_01DqEtRWa6qVh18kQC2FM8mP, push+email). Manageable by any later
+  Claude session (`list_triggers` / `update_trigger`) or from
+  claude.ai → Routines.
 - Schedules (UTC): triage `30 9 * * *` · digest `30 11 * * 1-5` · health
   `0 13 * * 1`.
 - Cost control: triage caps at 8 sheets/run; all three end quietly when

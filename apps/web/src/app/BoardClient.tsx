@@ -10,7 +10,7 @@ import {
   type Grade,
 } from "@pcps/valuation";
 
-import { saveAssumptions, toggleWatch } from "@/lib/actions";
+import { saveAssumptions, setWatch } from "@/lib/actions";
 import type { SnapshotLot } from "@/lib/data";
 import { closesIn, usd } from "@/lib/format";
 
@@ -36,10 +36,12 @@ const FIELDS: {
 export function BoardClient({
   lots,
   defaults,
+  hasServerSaved,
   watched: watchedInit,
 }: {
   lots: BoardLot[];
   defaults: Record<string, number>;
+  hasServerSaved: boolean;
   watched: string[];
 }) {
   const base: Config = { ...DEFAULT_CONFIG, ...defaults };
@@ -48,22 +50,24 @@ export function BoardClient({
   const [state, setState] = useState<string>("all");
   const [watchedOnly, setWatchedOnly] = useState(false);
   const [watched, setWatched] = useState<Set<string>>(new Set(watchedInit));
-  const [loaded, setLoaded] = useState(false);
+  const touched = useRef(false);   // only the user's own edits reach the server
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // the server-saved config is the durable cross-device copy and wins;
+    // localStorage only fills in when the server has nothing yet
+    if (hasServerSaved) return;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setCfg({ ...base, ...JSON.parse(raw) });
+      if (raw) setCfg((c) => ({ ...c, ...JSON.parse(raw) }));
     } catch {
-      /* first visit / blocked storage: keep server-saved defaults */
+      /* first visit / blocked storage: keep defaults */
     }
-    setLoaded(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!loaded) return;
+    if (!touched.current) return;   // hydration must never clobber the server
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
     } catch {
@@ -74,22 +78,27 @@ export function BoardClient({
     saveTimer.current = setTimeout(() => {
       saveAssumptions(cfg as unknown as Record<string, number>).catch(() => {});
     }, 800);
-  }, [cfg, loaded]);
+  }, [cfg]);
+
+  function updateCfg(next: Config) {
+    touched.current = true;
+    setCfg(next);
+  }
 
   async function onToggleWatch(key: string) {
-    // optimistic; the server action is the source of truth on next load
+    const want = !watched.has(key);
     setWatched((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      if (want) next.add(key);
+      else next.delete(key);
       return next;
     });
     try {
-      await toggleWatch(key);
+      await setWatch(key, want);
     } catch {
       setWatched((prev) => {
         const next = new Set(prev);
-        if (next.has(key)) next.delete(key);
+        if (want) next.delete(key);
         else next.add(key);
         return next;
       });
@@ -129,12 +138,12 @@ export function BoardClient({
                 min={0}
                 value={f.pct ? round4(cfg[f.key]) : cfg[f.key]}
                 onChange={(e) =>
-                  setCfg({ ...cfg, [f.key]: Number(e.target.value) || 0 })
+                  updateCfg({ ...cfg, [f.key]: Number(e.target.value) || 0 })
                 }
               />
             </label>
           ))}
-          <button type="button" onClick={() => setCfg(base)}>
+          <button type="button" onClick={() => updateCfg(base)}>
             Reset
           </button>
         </div>

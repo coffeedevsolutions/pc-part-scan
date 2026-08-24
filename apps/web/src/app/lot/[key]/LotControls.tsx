@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { saveNote, setLotAction, toggleWatch } from "@/lib/actions";
+import { saveNote, setLotAction, setWatch } from "@/lib/actions";
 
 export function LotControls({
   lotKey,
@@ -25,37 +25,51 @@ export function LotControls({
     actionInit?.amount != null ? String(actionInit.amount) : "",
   );
 
+  const noteRef = useRef(note);
+  noteRef.current = note;
+
   async function onWatch() {
-    setWatched(!watched);
+    const want = !watched;
+    setWatched(want);
     try {
-      await toggleWatch(lotKey);
+      await setWatch(lotKey, want);
     } catch {
-      setWatched(watched);
+      setWatched(!want);
     }
   }
 
   async function onSaveNote() {
+    const sending = noteRef.current;
     setNoteState("saving");
     try {
-      await saveNote(lotKey, note);
-      setNoteState("saved");
+      await saveNote(lotKey, sending);
+      // edits made while the save was in flight must stay saveable
+      setNoteState(noteRef.current === sending ? "saved" : "dirty");
     } catch {
       setNoteState("dirty");
     }
   }
 
-  async function onAction(next: string) {
-    const value = next === action ? "none" : next;
-    setAction(value);
+  async function persistAction(value: string, amt: string) {
     try {
-      await setLotAction(
-        lotKey,
-        value,
-        amount.trim() === "" ? null : Number(amount),
-      );
+      await setLotAction(lotKey, value, amt.trim() === "" ? null : Number(amt));
+      return true;
     } catch {
-      setAction(action);
+      return false;
     }
+  }
+
+  /** Toggle a button: clicking the active action clears it. */
+  async function onAction(next: string) {
+    const prev = action;
+    const value = next === prev ? "none" : next;
+    setAction(value);
+    if (!(await persistAction(value, amount))) setAction(prev);
+  }
+
+  /** Re-save the current action with the amount — never toggles. */
+  async function onAmountBlur() {
+    if (action !== "none") await persistAction(action, amount);
   }
 
   return (
@@ -86,10 +100,11 @@ export function LotControls({
         <input
           className="priceedit"
           type="number"
+          min={0}
           placeholder="amount $"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          onBlur={() => action !== "none" && onAction(action)}
+          onBlur={onAmountBlur}
         />
       </div>
       <textarea
