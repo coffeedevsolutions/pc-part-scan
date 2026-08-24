@@ -6,10 +6,6 @@ name: archive
 on:
   schedule:
     - cron: "0 6 * * 1"   # Mondays 06:00 UTC
-  push:
-    # pre-merge testing: run when this workflow itself changes on the dev branch
-    branches: [claude/self-sufficient-system-architecture-o15ag8]
-    paths: [".github/workflows/archive.yml"]
   workflow_dispatch:
 
 permissions:
@@ -35,6 +31,7 @@ jobs:
 
       - name: Dump collections
         env:
+          PCPS_STORE: mongo
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: pcps archive --out dump
 

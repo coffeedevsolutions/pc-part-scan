@@ -210,6 +210,28 @@ def sold_lots() -> dict[str, dict]:
     return read_json(SOLD, {})
 
 
+def project_lot(lot: dict, bid: float | None, bid_count) -> dict:
+    """Map a normalized lot back onto the raw API shape the grader expects.
+
+    Shared by both storage backends -- the grader must see one shape.
+    """
+    return {
+        "accountId": lot["account_id"], "assetId": lot["asset_id"],
+        "assetShortDescription": lot.get("title"),
+        "currentBid": bid if bid is not None else 0.0,
+        "bidCount": bid_count,
+        "companyName": lot.get("seller"),
+        "locationState": (lot.get("location") or {}).get("state"),
+        "locationCity": (lot.get("location") or {}).get("city"),
+        "assetAuctionEndDate": lot.get("auction_end"),
+        "assetAuctionEndDateUtc": lot.get("auction_end_utc"),
+        "assetAuctionEndDateDisplay": lot.get("auction_end") or "",
+        "categoryDescription": lot.get("category"),
+        "currencyCode": lot.get("currency"),
+        "isSoldAuction": False,
+    }
+
+
 def open_lots_raw() -> dict[str, dict]:
     """Open lots mapped back onto the raw API shape the grader expects."""
     latest: dict[str, dict] = {}
@@ -221,21 +243,8 @@ def open_lots_raw() -> dict[str, dict]:
         if lot.get("status") != "open":
             continue
         h = latest.get(key)
-        out[key] = {
-            "accountId": lot["account_id"], "assetId": lot["asset_id"],
-            "assetShortDescription": lot.get("title"),
-            "currentBid": h["current_bid"] if h else 0.0,
-            "bidCount": h.get("bid_count") if h else None,
-            "companyName": lot.get("seller"),
-            "locationState": (lot.get("location") or {}).get("state"),
-            "locationCity": (lot.get("location") or {}).get("city"),
-            "assetAuctionEndDate": lot.get("auction_end"),
-            "assetAuctionEndDateUtc": lot.get("auction_end_utc"),
-            "assetAuctionEndDateDisplay": lot.get("auction_end") or "",
-            "categoryDescription": lot.get("category"),
-            "currencyCode": lot.get("currency"),
-            "isSoldAuction": False,
-        }
+        out[key] = project_lot(lot, h.get("current_bid") if h else None,
+                               h.get("bid_count") if h else None)
     return out
 
 
@@ -286,19 +295,15 @@ def all_manifests() -> dict[str, dict]:
 
 # -------------------------------------------------------------- components
 
-def record_components(run: str, single_model, bulk_model, table_path: str | None) -> None:
-    """Append this run's fitted component prices, keeping prior runs.
-
-    Component prices drift as the market moves; keeping every fit means you can
-    chart a CPU's value over time instead of only seeing today's number.
-    """
-    hist = read_json(COMPONENTS, {"schema_version": SCHEMA_VERSION, "runs": []})
+def model_summary(run: str, single_model, bulk_model,
+                  table_path: str | None) -> dict:
+    """Chartable per-run summary of a fit. Shared by both storage backends."""
     names = single_model.space.names
     prices = {}
     for cpu in single_model.space.cpus:
         prices[cpu] = round(single_model.value(
             {"cpu": cpu, "ram_gb": 0, "form_factor": None, "has_drive": False}), 2)
-    entry = {
+    return {
         "run_id": run,
         "fitted_at": utcnow(),
         "n_observations": single_model.n_obs,
@@ -311,6 +316,26 @@ def record_components(run: str, single_model, bulk_model, table_path: str | None
         "cpu_base_value_usd": prices,
         "static_table": table_path,
     }
+
+
+def save_full_models(run: str, single_model, bulk_model) -> None:
+    """Persist the full coefficients for this run (models.json in file mode)."""
+    write_json(MODELS, {
+        "schema_version": SCHEMA_VERSION,
+        "run_id": run,
+        "single": single_model.to_json(),
+        "bulk": bulk_model.to_json() if bulk_model else None,
+    })
+
+
+def record_components(run: str, single_model, bulk_model, table_path: str | None) -> None:
+    """Append this run's fitted component prices, keeping prior runs.
+
+    Component prices drift as the market moves; keeping every fit means you can
+    chart a CPU's value over time instead of only seeing today's number.
+    """
+    hist = read_json(COMPONENTS, {"schema_version": SCHEMA_VERSION, "runs": []})
+    entry = model_summary(run, single_model, bulk_model, table_path)
     hist["runs"] = [r for r in hist.get("runs", []) if r.get("run_id") != run]
     hist["runs"].append(entry)
     hist["runs"].sort(key=lambda r: r["run_id"])

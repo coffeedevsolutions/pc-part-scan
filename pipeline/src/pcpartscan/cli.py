@@ -57,6 +57,9 @@ def cmd_backfill(a) -> int:
         index = fileds.read_json(os.path.join(d, "index.json"), {})
 
         # --- lots, with last_obs primed from the tail of the bid history ----
+        # insert-only ($setOnInsert): a database that live scans have already
+        # advanced must never be regressed by the frozen legacy tree -- a $set
+        # here would revert sold lots to open and clobber final_price/last_obs
         last: dict[str, dict] = {}
         for r in rows:                      # file is chronological
             if r.get("key"):
@@ -69,16 +72,20 @@ def cmd_backfill(a) -> int:
                 doc["last_obs"] = {"at": h.get("observed_at"),
                                    "bid": h.get("current_bid"),
                                    "bid_count": h.get("bid_count")}
-            ops.append(UpdateOne({"_id": key}, {"$set": doc}, upsert=True))
+            ops.append(UpdateOne({"_id": key}, {"$setOnInsert": doc},
+                                 upsert=True))
+        n_new = 0
         if ops:
-            db.lots.bulk_write(ops, ordered=False)
-        print(f"lots: {len(ops)} upserted")
+            n_new = len(db.lots.bulk_write(ops, ordered=False).upserted_ids or {})
+        print(f"lots: {n_new} inserted, {len(ops) - n_new} already present")
 
-        ops = [UpdateOne({"_id": k}, {"$set": {"_id": k, **v}}, upsert=True)
+        ops = [UpdateOne({"_id": k}, {"$setOnInsert": {"_id": k, **v}},
+                         upsert=True)
                for k, v in sold.items()]
+        n_new = 0
         if ops:
-            db.sold.bulk_write(ops, ordered=False)
-        print(f"sold: {len(ops)} upserted")
+            n_new = len(db.sold.bulk_write(ops, ordered=False).upserted_ids or {})
+        print(f"sold: {n_new} inserted, {len(ops) - n_new} already present")
 
         n_man = 0
         for path in glob.glob(os.path.join(d, "manifests", "*.json")):
@@ -86,10 +93,12 @@ def cmd_backfill(a) -> int:
             if not m:
                 continue
             key = m["key"]
-            db.manifests.replace_one(
-                {"_id": key}, {"_id": key, "parsed_by": "regex", **m}, upsert=True)
+            db.manifests.update_one(
+                {"_id": key},
+                {"$setOnInsert": {"_id": key, "parsed_by": "regex", **m}},
+                upsert=True)
             n_man += 1
-        print(f"manifests: {n_man} upserted")
+        print(f"manifests: {n_man} processed (insert-only)")
 
         inserted = 0
         batch: list[InsertOne] = []
@@ -112,6 +121,8 @@ def cmd_backfill(a) -> int:
                 "key": r["key"], "observed_at": r.get("observed_at"),
                 "run_id": r.get("run_id"), "bid": r["current_bid"],
                 "bid_count": r.get("bid_count"),
+                "time_remaining": r.get("time_remaining"),
+                "auction_end_utc": r.get("auction_end_utc"),
                 "is_sold": bool(r.get("is_sold")),
                 "reserve_not_met": bool(r.get("reserve_not_met")),
                 "source": "backfill",
@@ -127,9 +138,10 @@ def cmd_backfill(a) -> int:
             if models.get("run_id") == entry["run_id"]:
                 doc["single"] = models.get("single")
                 doc["bulk"] = models.get("bulk")
-            db.model_runs.replace_one({"_id": entry["run_id"]}, doc, upsert=True)
+            db.model_runs.update_one({"_id": entry["run_id"]},
+                                     {"$setOnInsert": doc}, upsert=True)
             n_runs += 1
-        print(f"model_runs: {n_runs} upserted")
+        print(f"model_runs: {n_runs} processed (insert-only)")
 
         idx = mongo.update_index(index.get("last_run_id", run),
                                  {"last_config": index.get("last_config")})
@@ -146,6 +158,12 @@ def cmd_scan(a) -> int:
     from .store import backend as ds
 
     is_mongo = hasattr(ds, "job_start")
+    if os.environ.get("GITHUB_ACTIONS") == "true" and not is_mongo:
+        # an empty/rotated MONGODB_URI secret must fail the job loudly --
+        # a file-backend scan on an ephemeral runner silently discards data
+        raise SystemExit(
+            "refusing to scan with the file backend in CI: MONGODB_URI is "
+            "unset or empty, so all output would be discarded with the runner")
     run = ds.run_id()
     if is_mongo:
         ds.job_start("scan", run)
@@ -154,11 +172,13 @@ def cmd_scan(a) -> int:
             print("refreshing sold archive...")
             sold = harvest.sweep_sold(max_pages=12 if a.full else 4, run=run)
             print("building observations...")
-            harvest.build_observations(sold, max_detail=600 if a.full else 120)
+            detail = 600 if a.full else 120
             if is_mongo:
-                # the sweep only covers recent pages; refit against the full
-                # accumulated corpus, not just what this run happened to see
-                harvest.build_observations_from_dataset()
+                # single pass against the full accumulated corpus: the sweep
+                # above already upserted its records into the store
+                harvest.build_observations_from_dataset(max_detail=detail)
+            else:
+                harvest.build_observations(sold, max_detail=detail)
             print("refreshing live lots...")
             harvest.sweep_live(max_pages=8 if a.full else 4, run=run)
 
@@ -176,6 +196,7 @@ def cmd_scan(a) -> int:
                           limit=a.limit, models=(single, bulk, table, ebay))
 
         ds.record_components(run, single, bulk, pricing.StaticTable.PATH)
+        ds.save_full_models(run, single, bulk)
         ds.write_snapshot(run, {
             "config": asdict(cfg),
             "model_fit": {"single_r2": single.r2, "single_n": single.n_obs,
@@ -218,7 +239,7 @@ def cmd_archive(a) -> int:
     return 0
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="pcps")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -241,7 +262,7 @@ def main() -> int:
     p = sub.add_parser("archive", help="dump collections to jsonl.gz")
     p.add_argument("--out", default="dump")
 
-    a = ap.parse_args()
+    a = ap.parse_args(argv)
     return {"smoke": cmd_smoke, "backfill": cmd_backfill,
             "scan": cmd_scan, "archive": cmd_archive}[a.cmd](a)
 

@@ -1,0 +1,31 @@
+name: smoke
+
+# Read-only diagnostics: verify MongoDB connectivity and report collection
+# counts. Manual dispatch only. (Backfill is deliberately NOT dispatchable
+# from the Actions UI -- run `pcps backfill` locally if ever needed.)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install --quiet "./pipeline[dev]"
+
+      - name: Unit tests
+        run: pytest pipeline/tests -q
+
+      - name: Smoke test connection
+        env:
+          PCPS_STORE: mongo
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pcps smoke

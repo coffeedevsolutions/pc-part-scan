@@ -29,7 +29,10 @@ import os
 from pymongo import InsertOne, MongoClient, UpdateOne
 from pymongo.errors import BulkWriteError
 
-from ..dataset import SCHEMA_VERSION, lot_key, normalize_lot, run_id, utcnow  # noqa: F401
+from ..dataset import (  # noqa: F401
+    SCHEMA_VERSION, lot_key, model_summary, normalize_lot, project_lot,
+    run_id, utcnow,
+)
 
 HEARTBEAT_HOURS = 24
 
@@ -128,15 +131,20 @@ def record_bids(records: list[dict], observed_at: str, run: str,
         k = lot_key(rec)
         bid = float(rec["currentBid"])
         count = rec.get("bidCount")
+        is_sold = bool(rec.get("isSoldAuction"))
         prev = last.get(k)
         if prev and prev.get("bid") == bid and prev.get("bid_count") == count:
+            if is_sold:
+                continue      # a closed lot's bid never changes; no heartbeat
             prev_at = _parse_ts(prev.get("at"))
             if prev_at and now and (now - prev_at) < dt.timedelta(hours=HEARTBEAT_HOURS):
                 continue
         inserts.append(InsertOne({
             "key": k, "observed_at": observed_at, "run_id": run,
             "bid": bid, "bid_count": count,
-            "is_sold": bool(rec.get("isSoldAuction")),
+            "time_remaining": rec.get("timeRemaining"),
+            "auction_end_utc": rec.get("assetAuctionEndDateUtc"),
+            "is_sold": is_sold,
             "reserve_not_met": bool(rec.get("isReserveNotMet")),
             "source": source,
         }))
@@ -188,21 +196,8 @@ def open_lots_raw() -> dict[str, dict]:
     out = {}
     for lot in get_db().lots.find({"status": "open"}):
         last = lot.get("last_obs") or {}
-        out[lot["_id"]] = {
-            "accountId": lot["account_id"], "assetId": lot["asset_id"],
-            "assetShortDescription": lot.get("title"),
-            "currentBid": last.get("bid", 0.0),
-            "bidCount": last.get("bid_count"),
-            "companyName": lot.get("seller"),
-            "locationState": (lot.get("location") or {}).get("state"),
-            "locationCity": (lot.get("location") or {}).get("city"),
-            "assetAuctionEndDate": lot.get("auction_end"),
-            "assetAuctionEndDateUtc": lot.get("auction_end_utc"),
-            "assetAuctionEndDateDisplay": lot.get("auction_end") or "",
-            "categoryDescription": lot.get("category"),
-            "currencyCode": lot.get("currency"),
-            "isSoldAuction": False,
-        }
+        out[lot["_id"]] = project_lot(lot, last.get("bid"),
+                                      last.get("bid_count"))
     return out
 
 
@@ -233,27 +228,17 @@ def all_manifests() -> dict[str, dict]:
 def record_components(run: str, single_model, bulk_model,
                       table_path: str | None) -> None:
     """One doc per fit run: chartable summary plus the full coefficients."""
-    names = single_model.space.names
-    prices = {}
-    for cpu in single_model.space.cpus:
-        prices[cpu] = round(single_model.value(
-            {"cpu": cpu, "ram_gb": 0, "form_factor": None, "has_drive": False}), 2)
     get_db().model_runs.replace_one({"_id": run}, {
-        "_id": run, "run_id": run,
-        "fitted_at": utcnow(),
+        "_id": run,
         "schema_version": SCHEMA_VERSION,
-        "n_observations": single_model.n_obs,
-        "r2": round(single_model.r2, 4),
-        "ram_per_8gb": round(float(single_model.coef[names.index("ram_gb")]), 2),
-        "drive_adder": round(float(single_model.coef[names.index("has_drive")]), 2),
-        "bulk_discount_k": round(bulk_model.k, 4) if bulk_model else None,
-        "bulk_n": bulk_model.n_obs if bulk_model else 0,
-        "bulk_r2": round(bulk_model.r2, 4) if bulk_model else None,
-        "cpu_base_value_usd": prices,
-        "static_table": table_path,
+        **model_summary(run, single_model, bulk_model, table_path),
         "single": single_model.to_json(),
         "bulk": bulk_model.to_json() if bulk_model else None,
     }, upsert=True)
+
+
+def save_full_models(run: str, single_model, bulk_model) -> None:
+    """No-op: record_components already stores the full coefficients."""
 
 
 def component_price_series(cpu: str) -> list[dict]:

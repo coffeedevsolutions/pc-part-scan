@@ -10,6 +10,7 @@ Two kinds of comp observation come out of this:
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import time
@@ -111,24 +112,39 @@ def sweep_live(queries=QUERIES, rows=100, max_pages=8, run: str | None = None) -
     return found
 
 
+RETRY_EMPTY_DAYS = 7    # how long a cached empty parse suppresses re-attempts
+
+
+def _empty_and_stale(manifest: dict) -> bool:
+    if manifest.get("machines"):
+        return False
+    cutoff = (dt.datetime.now(dt.timezone.utc)
+              - dt.timedelta(days=RETRY_EMPTY_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return (manifest.get("parsed_at") or "") < cutoff
+
+
 def fetch_manifest(account_id: int, asset_id: int,
                    use_cache: bool = True) -> list[specs.Machine]:
     """Detail-fetch a lot, download any spec PDF, return the parsed machine mix.
 
-    A previous parse attempt -- successful or empty -- is stored by the
-    backend and returned as-is, so scheduled runs do not re-download the
-    same unparseable spec sheets forever.
+    Parse attempts are stored durably -- including empty ones, so scheduled
+    runs do not re-download the same unparseable sheets every time. But an
+    empty result can also be transient (a download blip, a spec sheet the
+    seller has not uploaded yet), so cached-empty entries expire after
+    RETRY_EMPTY_DAYS, and an attempt with a failed download is not cached
+    at all.
     """
     key = f"{account_id}-{asset_id}"
     if use_cache:
         cached = ds.load_manifest(key)
-        if cached is not None:
+        if cached is not None and not _empty_and_stale(cached):
             return [specs.Machine(**m) for m in cached.get("machines", [])]
     os.makedirs(ATTACH, exist_ok=True)
     detail = gd.asset(asset_id, account_id)
     out: list[specs.Machine] = []
     seen_sizes: set[int] = set()
     used: list[str] = []
+    download_failed = False
     for att in detail.get("assetAttachments") or []:
         fn = att.get("fileName") or ""
         if not fn.lower().endswith(".pdf"):
@@ -138,6 +154,7 @@ def fetch_manifest(account_id: int, asset_id: int,
             try:
                 gd.download(gd.attachment_url(account_id, fn), dest)
             except Exception:
+                download_failed = True
                 continue
         # sellers often attach the same sheet twice ("- Copy") -- dedupe by size
         sz = os.path.getsize(dest)
@@ -150,9 +167,10 @@ def fetch_manifest(account_id: int, asset_id: int,
             continue
         out.extend(parsed)
         used.append(fn)
-    # an empty result is recorded too: "attempted, unparseable" is exactly
-    # what keeps rescans cheap and gives the manifest-triage routine its queue
-    ds.save_manifest(key, [m.to_dict() for m in out], used)
+    if out or not download_failed:
+        # cache the attempt only when every attachment was actually inspected:
+        # a network blip must stay retryable on the next run
+        ds.save_manifest(key, [m.to_dict() for m in out], used)
     return out
 
 
@@ -241,16 +259,18 @@ if __name__ == "__main__":
 
 
 def build_observations_from_dataset(max_detail: int = 0) -> dict:
-    """Rebuild priced observations from the committed dataset alone.
+    """Rebuild priced observations from the durable store alone.
 
-    cache/ is scratch and gitignored, so a fresh clone has none of it. The
-    durable record -- data/sold.json plus data/manifests/ -- is enough to
-    rebuild every observation, which is what lets a scheduled run start from a
-    bare checkout.
+    cache/ is scratch and gitignored, so a fresh clone or CI runner has none
+    of it. The durable record -- sold lots plus manifests -- is enough to
+    rebuild every observation, which is what lets a scheduled run start from
+    a bare checkout. With max_detail > 0, bulk lots that have never had a
+    manifest attempt get one, up to that budget.
     """
     sold_lots = ds.sold_lots()
     manifests = ds.all_manifests()
     singles, baskets = [], []
+    detail_budget = max_detail
 
     for key, lot in sold_lots.items():
         title = lot.get("title") or ""
@@ -275,7 +295,17 @@ def build_observations_from_dataset(max_detail: int = 0) -> dict:
             continue
 
         man = manifests.get(key)
-        mix = man["machines"] if man else []
+        if man is None and detail_budget > 0 \
+                and lot.get("account_id") and lot.get("asset_id"):
+            detail_budget -= 1
+            try:
+                mix = [m.to_dict() for m in
+                       fetch_manifest(lot["account_id"], lot["asset_id"])]
+            except Exception:
+                mix = []
+            time.sleep(POLITE_DELAY)
+        else:
+            mix = man["machines"] if man else []
         units = sum(m.get("qty", 1) for m in mix)
         baskets.append({
             "key": key, "price": float(price), "title": title,
