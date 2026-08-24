@@ -9,7 +9,11 @@ no scraping of rendered HTML. See [docs/API.md](docs/API.md) for the endpoints
 and the three non-obvious headers you need.
 
 The plan for evolving this into a scheduled, MongoDB-backed system with a web
-workbench is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+workbench is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The pipeline
+lives in `pipeline/` (`pcps` CLI, scheduled by GitHub Actions, writing to
+MongoDB), the web workbench in `apps/web/` (Next.js, deployed on Vercel), and
+the shared grading math in `packages/valuation/` (kept in lockstep with the
+Python grader by a golden parity test).
 
 ## What it does
 

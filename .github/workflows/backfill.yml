@@ -1,0 +1,34 @@
+name: backfill
+
+# One-shot, manual-only: load the committed data/ tree into MongoDB.
+# Safe to re-run: every write is insert-only ($setOnInsert) and bid
+# observations are deduplicated by a unique index, so a database that live
+# scans have advanced cannot be regressed. Requires typing "yes" to run.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "yes" to confirm the backfill'
+        required: true
+
+jobs:
+  backfill:
+    if: inputs.confirm == 'yes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install --quiet ./pipeline
+
+      - name: Backfill (insert-only)
+        env:
+          PCPS_STORE: mongo
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pcps backfill --data data
