@@ -6,7 +6,8 @@
  * same concept being explained three slightly different ways.
  */
 export const HELP = {
-  grade: "Overall verdict, from headroom discounted by how much we trust the estimate. A lot we cannot identify is capped at C no matter how good the numbers look.",
+  grade: "Overall verdict, from headroom discounted by how much we trust the estimate. A lot whose contents we cannot identify gets no grade at all — see \u201Cunrated\u201D.",
+  unrated: "Fewer than half this lot's units have a component we recognise, so its value would come from a generic per-unit rate — a number driven by how many things are on the pallet, not by what they are. Rather than publish that as a max bid we show nothing and rank the lot last.",
   confidence: "0-1. How much of this lot we can actually price: does it have a readable spec sheet, and do we recognise the parts inside? Low confidence means the value below is a guess from unit count alone.",
   maxBid: "The most you can pay and still clear your target return, after buyer premium, tax, pickup and per-unit handling. Not a prediction of the closing price.",
   headroom: "Max bid minus the current bid. What is left on the table right now. It shrinks as people bid.",

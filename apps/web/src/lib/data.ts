@@ -14,6 +14,14 @@ export interface SnapshotLot {
   state: string | null;
   exact_manifest: boolean;
   mix: MachineLine[];
+  /**
+   * false when too few of the lot's units have an identified component to
+   * price it — the lot is UNRATED and the numbers below are diagnostics,
+   * not a bid ceiling. Absent on snapshots written before abstention.
+   */
+  contents_known?: boolean;
+  /** units whose CPU the mix actually names */
+  identified_units?: number;
   floor: number;
   /** false when the bulk fit behind `floor` is too weak to underwrite against */
   floor_trusted?: boolean;

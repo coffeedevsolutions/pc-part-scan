@@ -36,7 +36,18 @@ export const DEFAULT_CONFIG: Config = {
 
 export const CONFIDENCE_GATE = 0.5;
 
-export type Grade = "A" | "B" | "C" | "D" | "F";
+/**
+ * The grade of a lot we refuse to price (grade.py UNRATED).
+ *
+ * When fewer than half a lot's units have an identified component, the
+ * ceiling is driven by how many things are on the pallet rather than by
+ * what they are, so every number downstream of it is arithmetic we do not
+ * stand behind. "U" sorts after "F", which keeps abstentions out of every
+ * "grade at least" filter and at the bottom of the default ranking.
+ */
+export const UNRATED = "U";
+
+export type Grade = "A" | "B" | "C" | "D" | "F" | "U";
 
 /** All-in cost of winning a lot at `hammer` (grade.py Config.all_in). */
 export function allIn(cfg: Config, hammer: number, units: number): number {
@@ -60,7 +71,12 @@ export function maxHammer(
 }
 
 /** Headroom-based grade, discounted and gated by confidence (grade.py _grade). */
-export function gradeFrom(relHeadroom: number, confidence: number): Grade {
+export function gradeFrom(
+  relHeadroom: number,
+  confidence: number,
+  contentsKnown = true,
+): Grade {
+  if (!contentsKnown) return UNRATED;
   const s = relHeadroom * (0.5 + 0.5 * confidence);
   let g: Grade;
   if (s >= 0.6) g = "A";
@@ -87,6 +103,14 @@ export interface LotFacts {
   floor_trusted?: boolean;
   ceiling: number;
   confidence: number;
+  /**
+   * Whether enough of the lot's units have an identified component to price
+   * it at all. False makes the lot UNRATED: the numbers are still computed
+   * so the lot page can show what a generic estimate would have said, but
+   * the UI must not present them as a bid ceiling. Absent means known
+   * (snapshots written before abstention existed).
+   */
+  contents_known?: boolean;
 }
 
 export interface Regrade {
@@ -112,7 +136,7 @@ export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
     max_bid,
     headroom,
     roi_at_current,
-    grade: gradeFrom(rel, lot.confidence),
+    grade: gradeFrom(rel, lot.confidence, lot.contents_known !== false),
   };
 }
 
@@ -120,8 +144,10 @@ export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
  * Confidence-weighted headroom, ascending — the board's default order and
  * the pipeline's (grade.py scan). Negated so a plain ascending sort puts
  * the most attractive lot first: a large headroom we do not believe should
- * not outrank a smaller one we do.
+ * not outrank a smaller one we do. Abstentions have no number to rank on,
+ * so they sink to the bottom whatever their arithmetic says.
  */
 export function rankKey(v: Regrade, confidence: number): number {
+  if (v.grade === UNRATED) return Infinity;
   return -(v.headroom * confidence);
 }

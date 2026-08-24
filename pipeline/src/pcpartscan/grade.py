@@ -66,6 +66,11 @@ class Valuation:
     state: str | None
     exact_manifest: bool
     mix: list = field(default_factory=list)
+    # Whether we know what is actually in the lot. False means too few units
+    # have an identified CPU, so the rest fell back to a generic bucket and
+    # the ceiling is driven by unit count rather than by contents.
+    contents_known: bool = True
+    identified_units: int = 0
     floor: float = 0.0
     floor_trusted: bool = True
     ceiling: float = 0.0
@@ -106,9 +111,32 @@ GATED_MAX_GRADE = "C"
 # the fit per machine rather than competing with it.
 MIN_SOURCE_COVERAGE = 0.5
 
+# Share of a lot's units that must have an identified CPU before we will
+# assert a price for the lot at all. Below this, most units priced at a
+# generic bucket rate and the ceiling says more about how many things are on
+# the pallet than about what they are -- 300 laptop chargers and 300 i7
+# desktops come out within a few dollars a unit of each other. Rather than
+# publish that number as a bid ceiling we abstain: the lot is UNRATED, still
+# listed and still searchable, but with no max bid attached until the
+# contents-aware valuation can price what is actually there.
+MIN_IDENTIFIED_SHARE = 0.5
+UNRATED = "U"
 
-def _grade(roi_headroom: float, confidence: float) -> str:
-    """Grade on headroom-to-max-bid, discounted and then GATED by confidence."""
+
+def _contents_known(identified_units: int, units: int) -> bool:
+    """Do we know enough about the contents to stand behind a price?"""
+    return units > 0 and identified_units >= units * MIN_IDENTIFIED_SHARE
+
+
+def _grade(roi_headroom: float, confidence: float,
+           contents_known: bool = True) -> str:
+    """Grade on headroom-to-max-bid, discounted and then GATED by confidence.
+
+    Sorts after "F" so an abstention never passes a "grade at least" filter
+    and always ranks below a lot we actually priced.
+    """
+    if not contents_known:
+        return UNRATED
     s = roi_headroom * (0.5 + 0.5 * confidence)
     if s >= 0.60:
         g = "A"
@@ -206,9 +234,11 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
     cost_now = cfg.all_in(v.current_bid, v.units)
     v.roi_at_current = (v.expected_revenue - cost_now) / cost_now if cost_now > 0 else 0.0
 
+    v.identified_units = n_cpu_known
+    v.contents_known = _contents_known(n_cpu_known, v.units)
     v.confidence = _confidence(v, single, n_cpu_known)
     rel = v.headroom / v.max_bid if v.max_bid > 0 else -1.0
-    v.grade = _grade(rel, v.confidence)
+    v.grade = _grade(rel, v.confidence, v.contents_known)
     return v
 
 
@@ -260,8 +290,10 @@ def scan(live: dict | None = None, cfg: Config | None = None,
 
     out = [value_lot(r, single, basket, ebay, cfg) for r in cands]
     # rank on confidence-weighted headroom: a big number we do not believe
-    # should not outrank a smaller one we do
-    out.sort(key=lambda v: (-(v.headroom * v.confidence), -v.confidence))
+    # should not outrank a smaller one we do. Abstentions have no number to
+    # rank on at all, so they go last whatever their arithmetic says.
+    out.sort(key=lambda v: (not v.contents_known,
+                            -(v.headroom * v.confidence), -v.confidence))
     return out
 
 
@@ -271,12 +303,20 @@ def report(vals: list[Valuation], top: int = 20) -> str:
              f"{'max bid':>10}{'headroom':>10}  closes")
     L.append("-" * 96)
     for v in vals[:top]:
+        # An abstention's max bid and headroom are arithmetic on a ceiling we
+        # do not stand behind; printing them invites reading them as advice.
+        maxbid = f"{v.max_bid:>10,.0f}" if v.contents_known else f"{'—':>10}"
+        head = f"{v.headroom:>10,.0f}" if v.contents_known else f"{'—':>10}"
         L.append(f"{v.grade:<6}{v.confidence:<6.2f}{v.lot_key:<14}{v.units:>6}"
-                 f"{v.current_bid:>10,.0f}{v.max_bid:>10,.0f}{v.headroom:>10,.0f}"
+                 f"{v.current_bid:>10,.0f}{maxbid}{head}"
                  f"  {v.end_date[:22]}")
         L.append(f"      {v.title[:74]}")
-        L.append(f"      floor ${v.floor:,.0f}  ceiling ${v.ceiling:,.0f} "
-                 f"{v.ceiling_sources}  {v.url}")
+        if v.contents_known:
+            L.append(f"      floor ${v.floor:,.0f}  ceiling ${v.ceiling:,.0f} "
+                     f"{v.ceiling_sources}  {v.url}")
+        else:
+            L.append(f"      unrated: {v.identified_units}/{v.units} units "
+                     f"identified  {v.url}")
     return "\n".join(L)
 
 

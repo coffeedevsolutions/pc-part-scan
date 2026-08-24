@@ -44,7 +44,8 @@ def regrade(lot: dict, cfg: grade.Config) -> dict:
         "max_bid": round(max_bid, 2),
         "headroom": round(headroom, 2),
         "roi_at_current": round(roi, 6),
-        "grade": grade._grade(rel, lot["confidence"]),
+        "grade": grade._grade(rel, lot["confidence"],
+                              lot.get("contents_known", True)),
     }
 
 
@@ -60,6 +61,11 @@ def main() -> int:
     lots = ([{**lot, "floor_trusted": True} for lot in lots]
             + [{**lot, "lot_key": lot["lot_key"] + "#untrusted",
                 "floor_trusted": False} for lot in lots])
+    # And cover abstention: a lot whose contents we cannot identify must come
+    # out UNRATED under every config, however good its arithmetic looks.
+    lots = ([{**lot, "contents_known": True} for lot in lots]
+            + [{**lot, "lot_key": lot["lot_key"] + "#unrated",
+                "contents_known": False} for lot in lots])
     cases = []
     for overrides in CONFIGS:
         cfg = grade.Config(**overrides)

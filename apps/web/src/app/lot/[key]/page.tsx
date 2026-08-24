@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
 
+import { UNRATED } from "@pcps/valuation";
+
+import { Grade } from "@/components/Fields";
+
 import {
   bidSeries,
   getLot,
@@ -36,6 +40,10 @@ export default async function LotPage({
     ]);
   if (!lot) notFound();
   const v = snap?.lot;
+  // An abstention: too little of the lot is identifiable to price it. The
+  // numbers are still on the record below, labelled as the diagnostics they
+  // are, but nothing here may present them as a bid ceiling.
+  const unrated = v?.contents_known === false;
 
   return (
     <main>
@@ -57,7 +65,7 @@ export default async function LotPage({
           <div className="stat">
             <div className="label">Grade · confidence</div>
             <div className="value">
-              <span className={`grade grade-${v.grade}`}>{v.grade}</span>{" "}
+              <Grade grade={unrated ? UNRATED : v.grade} />{" "}
               <span className="muted" style={{ fontSize: 15 }}>
                 {v.confidence.toFixed(2)}
               </span>
@@ -65,19 +73,43 @@ export default async function LotPage({
           </div>
           <div className="stat">
             <div className="label">Max bid (run {snap.run_id})</div>
-            <div className="value">{usd(v.max_bid)}</div>
+            <div className="value">
+              {unrated ? <span className="muted">—</span> : usd(v.max_bid)}
+            </div>
           </div>
           <div className="stat">
             <div className="label">Headroom vs current</div>
-            <div className={`value ${v.headroom >= 0 ? "pos" : "neg"}`}>
-              {usd(v.headroom)}
+            <div className={`value ${unrated ? "" : v.headroom >= 0 ? "pos" : "neg"}`}>
+              {unrated ? <span className="muted">—</span> : usd(v.headroom)}
             </div>
           </div>
           <div className="stat">
-            <div className="label">Floor → ceiling</div>
-            <div className="value" style={{ fontSize: 17 }}>
-              {usd(v.floor)} → {usd(v.ceiling)}
+            <div className="label">
+              {unrated ? "Units identified" : "Floor → ceiling"}
             </div>
+            <div className="value" style={{ fontSize: 17 }}>
+              {unrated
+                ? `${(v.identified_units ?? 0).toLocaleString()} of ${v.units.toLocaleString()}`
+                : `${usd(v.floor)} → ${usd(v.ceiling)}`}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {unrated && (
+        <div className="card notice">
+          <strong>Not priced.</strong> Only{" "}
+          {(v!.identified_units ?? 0).toLocaleString()} of{" "}
+          {v!.units.toLocaleString()} units here have a component we
+          recognise, so any value we produced would come from a generic
+          per-unit rate — a number that says how many things are on the
+          pallet, not what they are. A pallet of laptop power adapters and a
+          pallet of i7 desktops come out within a few dollars a unit of each
+          other that way, so we show nothing rather than a figure you might
+          bid against.
+          <div className="muted small" style={{ marginTop: 6 }}>
+            To price it: check the machine mix below, then pin the parts you
+            recognise on the <a href="/models">Models</a> page.
           </div>
         </div>
       )}
@@ -129,6 +161,13 @@ export default async function LotPage({
       {v && (
         <div className="card">
           <h2 style={{ marginTop: 0 }}>Valuation</h2>
+          {unrated && (
+            <p className="muted small" style={{ marginTop: 0 }}>
+              Shown for diagnosis only. This lot is unrated, so none of these
+              numbers is underwritten — they are what a generic per-unit rate
+              would have produced.
+            </p>
+          )}
           <table className="data" style={{ maxWidth: 560 }}>
             <tbody>
               {Object.entries(v.ceiling_sources).map(([src, val]) => (

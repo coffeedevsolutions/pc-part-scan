@@ -186,6 +186,14 @@ tr.rowlink:hover td {
 .grade-C { background: #9a6600; }
 .grade-D { background: #b5502a; }
 .grade-F { background: #a82c2c; }
+/* not a grade: an abstention. Grey so it reads as "no answer" rather than
+   as a rank between F and A. */
+.grade-U {
+  background: #5c626e;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
 
 .pos { color: var(--good-text); }
 .neg { color: var(--critical); }
@@ -229,6 +237,14 @@ tr.rowlink:hover td {
   font: inherit;
   cursor: pointer;
 }
+
+/* A card that explains why something is missing, rather than showing data.
+   Warm-toned and left-ruled so it reads as an explanation, not an error. */
+.card.notice {
+  border-left: 3px solid var(--warning);
+  color: var(--text-secondary);
+}
+.card.notice strong { color: var(--text-primary); }
 
 .statrow {
   display: grid;

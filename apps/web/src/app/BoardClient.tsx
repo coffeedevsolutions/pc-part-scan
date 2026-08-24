@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   DEFAULT_CONFIG,
+  UNRATED,
   rankKey,
   regrade,
   type Config,
@@ -39,6 +40,7 @@ export function BoardClient({
   const [gradeMin, setGradeMin] = useState("all");
   const [state, setState] = useState("all");
   const [watchedOnly, setWatchedOnly] = useState(false);
+  const [hideUnrated, setHideUnrated] = useState(false);
   const [watched, setWatched] = useState<Set<string>>(new Set(watchedInit));
   const touched = useRef(false); // only the user's own edits reach the server
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -106,6 +108,7 @@ export function BoardClient({
     return lots
       .map((lot) => ({ lot, v: regrade(lot, cfg) }))
       .filter(({ lot, v }) => {
+        if (hideUnrated && v.grade === UNRATED) return false;
         if (watchedOnly && !watched.has(lot.lot_key)) return false;
         if (state !== "all" && lot.state !== state) return false;
         if (gradeMin !== "all" && v.grade > gradeMin) return false;
@@ -116,7 +119,12 @@ export function BoardClient({
       // smaller one we do. Sorting the table by raw headroom instead put
       // huge low-confidence unknowns on top. Clicking a header overrides.
       .sort((a, b) => rankKey(a.v, a.lot.confidence) - rankKey(b.v, b.lot.confidence));
-  }, [lots, cfg, gradeMin, state, watchedOnly, watched]);
+  }, [lots, cfg, gradeMin, state, watchedOnly, hideUnrated, watched]);
+
+  const unratedCount = useMemo(
+    () => rows.filter(({ v }) => v.grade === UNRATED).length,
+    [rows],
+  );
 
   const columns: Column<Row>[] = useMemo(() => [
     {
@@ -140,7 +148,7 @@ export function BoardClient({
       header: "Grade",
       help: "grade",
       helpLabel: "grade",
-      width: "84px",
+      width: "96px",
       // A is best, so ascending letters are descending quality
       sortValue: ({ v }) => v.grade,
       cell: ({ v }) => <Grade grade={v.grade} />,
@@ -185,8 +193,12 @@ export function BoardClient({
       help: "maxBid",
       helpLabel: "max bid",
       numeric: true,
-      sortValue: ({ v }) => v.max_bid,
-      cell: ({ v }) => usd(v.max_bid),
+      // An abstention has no max bid. Sorting it as null keeps it out of the
+      // top of a "highest max bid" sort instead of letting a number we do
+      // not stand behind win the column.
+      sortValue: ({ v }) => (v.grade === UNRATED ? null : v.max_bid),
+      cell: ({ v }) =>
+        v.grade === UNRATED ? <span className="muted">—</span> : usd(v.max_bid),
     },
     {
       id: "headroom",
@@ -194,10 +206,13 @@ export function BoardClient({
       help: "headroom",
       helpLabel: "headroom",
       numeric: true,
-      sortValue: ({ v }) => v.headroom,
-      cell: ({ v }) => (
-        <span className={v.headroom >= 0 ? "pos" : "neg"}>{usd(v.headroom)}</span>
-      ),
+      sortValue: ({ v }) => (v.grade === UNRATED ? null : v.headroom),
+      cell: ({ v }) =>
+        v.grade === UNRATED ? (
+          <span className="muted">—</span>
+        ) : (
+          <span className={v.headroom >= 0 ? "pos" : "neg"}>{usd(v.headroom)}</span>
+        ),
     },
     {
       id: "closes",
@@ -327,10 +342,20 @@ export function BoardClient({
             />
             Watched only
           </label>
+          <label className="checkfield">
+            <input
+              type="checkbox"
+              checked={hideUnrated}
+              onChange={(e) => setHideUnrated(e.target.checked)}
+            />
+            Hide unrated
+            <HelpIcon k="unrated" label="unrated lots" />
+          </label>
           <span className="spacer" />
           <span className="muted small" style={{ height: 30, lineHeight: "30px" }}>
             {rows.length} lots · ranked by confidence-weighted headroom
             <HelpIcon k="ranking" label="the default ranking" />
+            {unratedCount > 0 && ` · ${unratedCount} unrated`}
           </span>
         </div>
       </div>
