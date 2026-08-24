@@ -15,6 +15,8 @@ export interface SnapshotLot {
   exact_manifest: boolean;
   mix: MachineLine[];
   floor: number;
+  /** false when the bulk fit behind `floor` is too weak to underwrite against */
+  floor_trusted?: boolean;
   ceiling: number;
   ceiling_sources: Record<string, number>;
   expected_revenue: number;
@@ -211,6 +213,14 @@ export async function searchSold(
   return docs.map((d) => clean<LotDoc>(d));
 }
 
+/** States present in the sold corpus, for the explorer's filter. */
+export async function soldStates(): Promise<string[]> {
+  const vals = await coll("sold").distinct("location.state");
+  return (vals as (string | null)[])
+    .filter((v): v is string => typeof v === "string" && v.length > 0)
+    .sort();
+}
+
 export async function modelRuns(limit = 60): Promise<ModelRunDoc[]> {
   const docs = await coll("model_runs")
     .find({})
@@ -260,10 +270,15 @@ export async function getLotAction(
     : null;
 }
 
+/** Pins a human set. Anything not explicitly seeded counts, so pins made
+ *  before provenance existed are not orphaned. */
 export async function componentPrices(): Promise<
   { cpu: string; value_usd: number; note: string }[]
 > {
-  const docs = await coll("component_prices").find({}).sort({ _id: 1 }).toArray();
+  const docs = await coll("component_prices")
+    .find({ source: { $ne: "seed" } })
+    .sort({ _id: 1 })
+    .toArray();
   return docs.map((d) => ({
     cpu: d._id,
     value_usd: d.value_usd as number,

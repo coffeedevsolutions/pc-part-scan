@@ -77,6 +77,14 @@ export interface LotFacts {
   units: number;
   current_bid: number;
   floor: number;
+  /**
+   * Whether the bulk-discount fit behind `floor` is sound enough to
+   * underwrite against. When false the floor is still shown, but revenue
+   * comes from the parts-out estimate alone — a weak fit reading high
+   * would inflate max bid on exactly the biggest lots. Absent means
+   * trusted (snapshots written before the gate existed).
+   */
+  floor_trusted?: boolean;
   ceiling: number;
   confidence: number;
 }
@@ -91,10 +99,9 @@ export interface Regrade {
 
 /** Re-derive every config-dependent number for one lot. */
 export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
-  const revenue = Math.max(
-    lot.ceiling * (1 - cfg.dead_rate) * cfg.recovery,
-    lot.floor,
-  );
+  const partsOut = lot.ceiling * (1 - cfg.dead_rate) * cfg.recovery;
+  const revenue =
+    lot.floor_trusted === false ? partsOut : Math.max(partsOut, lot.floor);
   const max_bid = maxHammer(cfg, revenue, lot.units);
   const headroom = max_bid - lot.current_bid;
   const costNow = allIn(cfg, lot.current_bid, lot.units);
@@ -109,7 +116,12 @@ export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
   };
 }
 
-/** Confidence-weighted headroom: the board's ranking key (grade.py scan). */
+/**
+ * Confidence-weighted headroom, ascending — the board's default order and
+ * the pipeline's (grade.py scan). Negated so a plain ascending sort puts
+ * the most attractive lot first: a large headroom we do not believe should
+ * not outrank a smaller one we do.
+ */
 export function rankKey(v: Regrade, confidence: number): number {
   return -(v.headroom * confidence);
 }

@@ -31,7 +31,9 @@ CONFIGS = [
 
 
 def regrade(lot: dict, cfg: grade.Config) -> dict:
-    rev = max(lot["ceiling"] * (1 - cfg.dead_rate) * cfg.recovery, lot["floor"])
+    parts_out = lot["ceiling"] * (1 - cfg.dead_rate) * cfg.recovery
+    rev = (max(parts_out, lot["floor"])
+           if lot.get("floor_trusted", True) else parts_out)
     max_bid = cfg.max_hammer(rev, lot["units"])
     headroom = max_bid - lot["current_bid"]
     cost_now = cfg.all_in(lot["current_bid"], lot["units"])
@@ -53,6 +55,11 @@ def main() -> int:
     lots = [{k: lot[k] for k in
              ("lot_key", "units", "current_bid", "floor", "ceiling", "confidence")}
             for lot in snap["lots"]]
+    # Cover the floor gate on both settings: an untrusted floor must drop out
+    # of expected revenue entirely rather than raising the bid ceiling.
+    lots = ([{**lot, "floor_trusted": True} for lot in lots]
+            + [{**lot, "lot_key": lot["lot_key"] + "#untrusted",
+                "floor_trusted": False} for lot in lots])
     cases = []
     for overrides in CONFIGS:
         cfg = grade.Config(**overrides)

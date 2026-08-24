@@ -7,8 +7,8 @@ MAX BID: the most you can pay and still clear your target return. Headroom
 the auction runs.
 
   floor    resale-as-lot value, from the sold BULK-lot model
-  ceiling  parts-out value, from the sold SINGLE-unit model, optionally
-           blended with the static table and eBay
+  ceiling  parts-out value, from the sold SINGLE-unit model (with any
+           hand-pinned CPU prices substituted), optionally blended with eBay
   target   the blend you actually underwrite against (see Config.recovery)
 """
 
@@ -67,6 +67,7 @@ class Valuation:
     exact_manifest: bool
     mix: list = field(default_factory=list)
     floor: float = 0.0
+    floor_trusted: bool = True
     ceiling: float = 0.0
     ceiling_sources: dict = field(default_factory=dict)
     expected_revenue: float = 0.0
@@ -98,6 +99,13 @@ def _confidence(v: Valuation, single: pricing._FitModel, n_cpu_known: int) -> fl
 CONFIDENCE_GATE = 0.50
 GATED_MAX_GRADE = "C"
 
+# An independent source must cover at least this share of a lot's units
+# before it joins the ceiling blend, so a handful of recognised machines
+# cannot be extrapolated across a pallet of unknown ones. This gates rival
+# estimates like eBay; pinned prices are not gated, because a pin overrides
+# the fit per machine rather than competing with it.
+MIN_SOURCE_COVERAGE = 0.5
+
 
 def _grade(roi_headroom: float, confidence: float) -> str:
     """Grade on headroom-to-max-bid, discounted and then GATED by confidence."""
@@ -117,7 +125,7 @@ def _grade(roi_headroom: float, confidence: float) -> str:
     return g
 
 
-def value_lot(rec: dict, single, basket, table, ebay, cfg: Config,
+def value_lot(rec: dict, single, basket, ebay, cfg: Config,
               fetch_manifest: bool = True) -> Valuation:
     title = rec.get("assetShortDescription") or ""
     units = specs.parse_unit_count(title)
@@ -151,39 +159,46 @@ def value_lot(rec: dict, single, basket, table, ebay, cfg: Config,
     )
 
     # --- floor: what the whole lot clears at auction ---------------------
+    # Reported either way, but only underwritten against when the bulk fit
+    # is sound: a weak fit that reads high would raise max_bid on exactly
+    # the pallet-sized lots where being wrong costs the most.
     v.floor = basket.value_mix(mix) if basket else 0.0
+    v.floor_trusted = bool(basket and basket.trusted)
 
     # --- ceiling: parts-out, blended across available sources ------------
     per_source = {}
     per_source["govdeals_singles"] = single.value_mix(mix)
 
-    t_total, t_hit = 0.0, 0
-    for m in mix:
-        tv = table.value(m)
-        if tv is not None:
-            t_total += tv * m.get("qty", 1)
-            t_hit += m.get("qty", 1)
-    if t_hit:
-        # scale partial coverage up to the full mix
-        per_source["static_table"] = t_total * (units / t_hit) if t_hit < units else t_total
+    def priced_source(value_of) -> float | None:
+        """Total for a mix under one independent source, or None if sparse.
+
+        A source that knows only a couple of the machines in a mixed pallet
+        used to have its total scaled up to the whole lot, which let one
+        known price speak for hundreds of unknown units and then carry
+        equal weight in the blend. It now has to cover most of the lot
+        before it is allowed an opinion at all.
+        """
+        total, hit = 0.0, 0
+        for m in mix:
+            val = value_of(m)
+            if val is not None:
+                total += val * m.get("qty", 1)
+                hit += m.get("qty", 1)
+        if not hit or hit < units * MIN_SOURCE_COVERAGE:
+            return None
+        return total * (units / hit) if hit < units else total
 
     if ebay.enabled:
-        e_total, e_hit = 0.0, 0
-        for m in mix:
-            ev = ebay.value(m)
-            if ev is not None:
-                e_total += ev * m.get("qty", 1)
-                e_hit += m.get("qty", 1)
-        if e_hit:
-            per_source["ebay"] = e_total * (units / e_hit) if e_hit < units else e_total
+        ev = priced_source(ebay.value)
+        if ev is not None:
+            per_source["ebay"] = ev
 
     v.ceiling_sources = {k: round(x, 2) for k, x in per_source.items()}
     v.ceiling = sum(per_source.values()) / len(per_source)
 
     # --- what you underwrite against -------------------------------------
-    live_units = v.units * (1 - cfg.dead_rate)
     parts_out = v.ceiling * (1 - cfg.dead_rate) * cfg.recovery
-    v.expected_revenue = max(parts_out, v.floor)
+    v.expected_revenue = max(parts_out, v.floor) if v.floor_trusted else parts_out
 
     v.max_bid = cfg.max_hammer(v.expected_revenue, v.units)
     v.headroom = v.max_bid - v.current_bid
@@ -209,22 +224,25 @@ def load_models():
     except ValueError as e:
         print(f"  note: basket model unavailable ({e}); floor falls back to 0")
         basket = None
-    if not os.path.exists(pricing.StaticTable.PATH):
-        pricing.StaticTable.seed_from(single)
     pricing.save_models(single, basket)
-    # workbench-edited prices win over the CSV when the store carries them
+    # Pinned prices override the fit per machine. In store-backed mode they
+    # are the ones a human set; in file mode they come from the editable
+    # CSV. Either way the floor keeps using the raw fit, since the bulk
+    # discount was measured against it.
     from .store import backend as ds
-    overrides = ds.component_overrides() if hasattr(ds, "component_overrides") else {}
-    table = (pricing.StaticTable.from_overrides(overrides)
-             if overrides else pricing.StaticTable())
-    return single, basket, table, pricing.EbayAdapter()
+    if hasattr(ds, "component_overrides"):
+        pins = ds.component_overrides()
+    else:
+        pins = pricing.StaticTable().as_pins()
+    ceiling_model = pricing.PinnedModel(single, pins) if pins else single
+    return ceiling_model, basket, pricing.EbayAdapter()
 
 
 def scan(live: dict | None = None, cfg: Config | None = None,
          min_units: int = 5, limit: int = 60,
          models: tuple | None = None) -> list[Valuation]:
     cfg = cfg or Config()
-    single, basket, table, ebay = models if models else load_models()
+    single, basket, ebay = models if models else load_models()
     live = live or harvest._load("live_raw.json", {})
 
     cands = []
@@ -240,7 +258,7 @@ def scan(live: dict | None = None, cfg: Config | None = None,
     cands.sort(key=lambda r: -(r.get("currentBid") or 0))
     cands = cands[:limit]
 
-    out = [value_lot(r, single, basket, table, ebay, cfg) for r in cands]
+    out = [value_lot(r, single, basket, ebay, cfg) for r in cands]
     # rank on confidence-weighted headroom: a big number we do not believe
     # should not outrank a smaller one we do
     out.sort(key=lambda v: (-(v.headroom * v.confidence), -v.confidence))

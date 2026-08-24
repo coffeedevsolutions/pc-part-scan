@@ -142,8 +142,18 @@ export default async function LotPage({
                 <td className="num">{usd(v.ceiling)}</td>
               </tr>
               <tr>
-                <td>floor (resale as lot)</td>
-                <td className="num">{usd(v.floor)}</td>
+                <td>
+                  floor (resale as lot)
+                  {v.floor_trusted === false && (
+                    <div className="muted small">
+                      not used in the estimate below — the bulk-resale fit is
+                      currently too weak to underwrite against
+                    </div>
+                  )}
+                </td>
+                <td className={`num ${v.floor_trusted === false ? "muted" : ""}`}>
+                  {usd(v.floor)}
+                </td>
               </tr>
               <tr>
                 <td>expected revenue (underwritten)</td>

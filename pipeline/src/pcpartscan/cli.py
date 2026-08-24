@@ -166,6 +166,8 @@ def cmd_backfill(a) -> int:
                         {"$setOnInsert": {
                             "value_usd": value,
                             "note": (row.get("note") or "").strip(),
+                            # reference only -- never overrides a live fit
+                            "source": "seed",
                         }},
                         upsert=True)
                     n_prices += 1
@@ -220,9 +222,9 @@ def cmd_scan(a) -> int:
                     if (v.get("locationState") or "").upper() in want}
             print(f"state filter {sorted(want)}: {len(live)} lots")
 
-        single, bulk, table, ebay = grade.load_models()
+        single, bulk, ebay = grade.load_models()
         vals = grade.scan(live=live, cfg=cfg, min_units=a.min_units,
-                          limit=a.limit, models=(single, bulk, table, ebay))
+                          limit=a.limit, models=(single, bulk, ebay))
 
         ds.record_components(run, single, bulk, pricing.StaticTable.PATH)
         ds.save_full_models(run, single, bulk)

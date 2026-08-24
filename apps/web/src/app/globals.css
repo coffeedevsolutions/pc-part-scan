@@ -62,25 +62,53 @@ a:hover {
   margin: 0 auto;
   padding: 0 20px 48px;
 }
-.topnav {
-  display: flex;
-  align-items: baseline;
-  gap: 18px;
-  padding: 14px 0;
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--surface-1) 92%, transparent);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--grid);
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
-.topnav .brand {
-  font-weight: 650;
+.topbar-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  height: 60px;
+}
+.topbar nav {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.brand {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
-  margin-right: 6px;
 }
-.topnav a {
+.brand:hover { text-decoration: none; }
+.brand-accent { color: var(--series-1); }
+.navlink {
+  position: relative;
   color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 19px 12px;
+  border-bottom: 2px solid transparent;
 }
-.topnav a:hover {
+.navlink:hover {
   color: var(--text-primary);
   text-decoration: none;
+}
+.navlink.active {
+  color: var(--text-primary);
+  font-weight: 650;
+  border-bottom-color: var(--series-1);
 }
 
 h1 {
@@ -136,19 +164,28 @@ tr.rowlink:hover td {
   background: color-mix(in srgb, var(--series-1) 6%, transparent);
 }
 
+/* Solid fills, white text, each darkened until it clears 4.5:1 -- the old
+   low-alpha washes were near-invisible against the surface. Identical in
+   both themes because the badge carries its own background. */
 .grade {
-  display: inline-block;
-  min-width: 22px;
-  text-align: center;
-  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 7px;
   border-radius: 6px;
-  padding: 1px 6px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: #6b6b68;
 }
-.grade-A { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good-text); }
-.grade-B { background: color-mix(in srgb, var(--series-1) 16%, transparent); }
-.grade-C { background: color-mix(in srgb, var(--warning) 20%, transparent); }
-.grade-D,
-.grade-F { background: color-mix(in srgb, var(--critical) 14%, transparent); }
+.grade-A { background: #0a7a0a; }
+.grade-B { background: #1c5cab; }
+.grade-C { background: #9a6600; }
+.grade-D { background: #b5502a; }
+.grade-F { background: #a82c2c; }
 
 .pos { color: var(--good-text); }
 .neg { color: var(--critical); }
@@ -290,4 +327,188 @@ input.priceedit {
 .chart-tip .v {
   font-weight: 650;
   font-size: 13px;
+}
+
+
+/* ---------------------------------------------------------------- help */
+.helpwrap {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+.helpicon {
+  width: 15px;
+  height: 15px;
+  margin-left: 5px;
+  border-radius: 50%;
+  border: 1px solid var(--baseline);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.helpicon:hover,
+.helpicon:focus-visible {
+  border-color: var(--series-1);
+  color: var(--series-1);
+  outline: none;
+}
+.helpbubble {
+  /* fixed, positioned from the trigger's measured rect -- absolute
+     positioning is clipped by scrollable table containers */
+  position: fixed;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 11px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  z-index: 30;
+}
+
+/* --------------------------------------------------------- data tables */
+.tablewrap {
+  overflow-x: auto;
+}
+.thinner {
+  display: inline-flex;
+  align-items: center;
+}
+th.num .thinner {
+  justify-content: flex-end;
+  width: 100%;
+}
+.sortbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: inherit;
+}
+.sortbtn:hover { color: var(--text-primary); }
+.sortbtn.active { color: var(--text-primary); font-weight: 650; }
+.sortcaret {
+  font-size: 9px;
+  opacity: 0.45;
+}
+.sortbtn.active .sortcaret { opacity: 1; color: var(--series-1); }
+
+/* -------------------------------------------------------------- fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fieldlabel {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.inputwrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface-1);
+  border: 1px solid var(--baseline);
+  border-radius: 6px;
+  padding: 0 8px;
+  height: 30px;
+  width: 92px;
+}
+.inputwrap:focus-within {
+  border-color: var(--series-1);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--series-1) 20%, transparent);
+}
+.inputwrap input {
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  text-align: right;
+  outline: none;
+}
+.inputwrap input::-webkit-outer-spin-button,
+.inputwrap input::-webkit-inner-spin-button { margin-left: 2px; }
+.suffix,
+.prefix { color: var(--text-muted); font-size: 12px; flex: none; }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  align-items: flex-end;
+}
+.controls .spacer { flex: 1 1 auto; }
+.btn {
+  background: var(--surface-1);
+  border: 1px solid var(--baseline);
+  color: var(--text-primary);
+  border-radius: 6px;
+  height: 30px;
+  padding: 0 14px;
+  font: inherit;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--series-1); color: var(--series-1); }
+.btn-primary {
+  background: var(--series-1);
+  border-color: var(--series-1);
+  color: #fff;
+}
+.btn-primary:hover { color: #fff; opacity: 0.9; }
+.checkfield {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  height: 30px;
+  white-space: nowrap;
+}
+select.select {
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1px solid var(--baseline);
+  border-radius: 6px;
+  height: 30px;
+  padding: 0 8px;
+  font: inherit;
+}
+
+.lottitle {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  display: block;
+  max-width: 60ch;
+}
+.lottitle:hover { color: var(--series-1); }
+table.data td { vertical-align: middle; }
+table.data tbody tr:hover td {
+  background: color-mix(in srgb, var(--series-1) 5%, transparent);
 }

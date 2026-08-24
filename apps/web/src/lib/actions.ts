@@ -106,6 +106,7 @@ export async function saveComponentPrice(
       {
         _id: id,
         value_usd: value,
+        source: "user",
         note: "pinned from workbench",
         updated_at: now(),
       } as never,

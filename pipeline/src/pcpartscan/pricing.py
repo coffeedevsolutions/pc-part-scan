@@ -8,12 +8,13 @@ the floor/ceiling framing:
   SingleModel  - fitted on sold SINGLE machines. Answers "what does one of these
                  clear when listed by itself?" -> the parts-out CEILING.
 
-Two optional sources refine the ceiling:
+Two things refine the ceiling:
 
-  StaticTable  - hand-maintained CSV, seeded from the fits, fully overridable.
-  EbayAdapter  - official eBay API. Requires your own credentials; see the class
-                 docstring. eBay actively blocks scraping, so there is no
-                 scrape fallback here by design.
+  PinnedModel  - the single-unit fit with hand-pinned CPU prices substituted
+                 per machine. A pin is an override, not a rival estimate.
+  EbayAdapter  - official eBay API, a genuinely independent second opinion.
+                 Requires your own credentials; see the class docstring. eBay
+                 actively blocks scraping, so there is no scrape fallback.
 
 Both models are ridge-regularized least squares over the same feature space,
 with negative coefficients clamped (a faster CPU never subtracts value).
@@ -188,6 +189,51 @@ def fit_single_model(singles: list[dict]) -> _FitModel:
     return _FitModel(space, coef, int(keep.sum()), _r2(X[keep], y[keep], coef))
 
 
+class PinnedModel:
+    """The fitted single-unit model with hand-pinned CPU prices substituted.
+
+    A pin means "for this CPU, use my number instead of yours", so it is
+    applied per machine rather than offered as a rival estimate to be
+    averaged in. Blending it as a separate source meant a pin only counted
+    when it happened to cover most of a lot, which is not what pinning a
+    price means -- and left every un-pinned attribute of that source, RAM
+    included, valued at zero.
+
+    Everything not pinned -- the RAM and drive adders, every other CPU --
+    still comes from the fit. Attribute access falls through to the base
+    model so this stands in for it wherever a fit is expected.
+    """
+
+    def __init__(self, base: _FitModel, pins: dict[str, float]):
+        self.base = base
+        self.cpu_pins = {k: float(v) for k, v in pins.items()
+                         if k != "_ram_per_8gb"}
+        if "_ram_per_8gb" in pins:
+            self.ram_per_8gb = float(pins["_ram_per_8gb"])
+        else:
+            names = base.space.names
+            self.ram_per_8gb = float(base.coef[names.index("ram_gb")])
+
+    def __getattr__(self, name):
+        # r2, n_obs, space, coef, to_json() -- the fit is still the fit
+        return getattr(self.base, name)
+
+    def value(self, machine: dict) -> float:
+        cpu = machine.get("cpu")
+        if cpu in self.cpu_pins:
+            ram_units = (machine.get("ram_gb") or 0) / 8.0
+            return max(0.0, self.cpu_pins[cpu] + self.ram_per_8gb * ram_units)
+        return self.base.value(machine)
+
+    def value_mix(self, mix: list[dict]) -> float:
+        return float(sum(self.value(m) * m.get("qty", 1) for m in mix))
+
+    def pins_applied(self, mix: list[dict]) -> int:
+        """Units in this mix whose price came from a pin."""
+        return sum(m.get("qty", 1) for m in mix
+                   if m.get("cpu") in self.cpu_pins)
+
+
 class BulkDiscountModel:
     """How far below parts-out value a bulk lot actually clears.
 
@@ -205,10 +251,22 @@ class BulkDiscountModel:
     and k is directly interpretable.
     """
 
+    # Below these the fit is not telling us anything: a non-positive R^2 means
+    # the model predicts worse than the corpus mean, and a handful of lots
+    # cannot pin down a market-wide discount. The floor is then reported but
+    # not underwritten against -- see grade.value_lot.
+    MIN_R2 = 0.05
+    MIN_OBS = 20
+
     def __init__(self, single: _FitModel, k: float, n_obs: int, r2: float,
                  residual_sd: float):
         self.single, self.k, self.n_obs = single, k, n_obs
         self.r2, self.residual_sd = r2, residual_sd
+
+    @property
+    def trusted(self) -> bool:
+        """Is this fit good enough to set a bid ceiling from?"""
+        return self.r2 >= self.MIN_R2 and self.n_obs >= self.MIN_OBS
 
     def value_mix(self, mix: list[dict]) -> float:
         return self.k * self.single.value_mix(mix)
@@ -218,7 +276,8 @@ class BulkDiscountModel:
 
     def to_json(self):
         return {"kind": "bulk_discount", "k": self.k, "n_obs": self.n_obs,
-                "r2": self.r2, "residual_sd": self.residual_sd}
+                "r2": self.r2, "residual_sd": self.residual_sd,
+                "trusted": self.trusted}
 
 
 def fit_basket_model(baskets: list[dict], single: _FitModel) -> BulkDiscountModel:
@@ -272,20 +331,12 @@ class StaticTable:
                     else:
                         self.cpu_value[k] = v
 
-    @classmethod
-    def from_overrides(cls, overrides: dict[str, float]) -> "StaticTable":
-        """Layer stored overrides (the workbench's pins) over the CSV table.
-
-        Overrides win per key; everything the CSV knows and the overrides
-        don't mention — other CPUs, the RAM adder — stays intact, so one
-        pinned price can never silently discard the rest of the blend.
-        """
-        t = cls()   # starts from the CSV when present
-        if "_ram_per_8gb" in overrides:
-            t.ram_per_8gb = float(overrides["_ram_per_8gb"])
-        t.cpu_value.update({k: float(v) for k, v in overrides.items()
-                            if k != "_ram_per_8gb"})
-        return t
+    def as_pins(self) -> dict[str, float]:
+        """This table expressed as per-CPU pins for PinnedModel."""
+        pins = dict(self.cpu_value)
+        if self.ram_per_8gb:
+            pins["_ram_per_8gb"] = self.ram_per_8gb
+        return pins
 
     def value(self, machine: dict) -> float | None:
         cpu = machine.get("cpu")

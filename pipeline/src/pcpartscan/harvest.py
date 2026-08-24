@@ -174,17 +174,40 @@ def fetch_manifest(account_id: int, asset_id: int,
     return out
 
 
+def manifest_mix(key: str, account_id, asset_id,
+                 manifests: dict[str, dict],
+                 may_fetch: bool) -> tuple[list[dict], bool]:
+    """The machine mix for one bulk lot. Returns (mix, spent_fetch_budget).
+
+    The single decision point for "do we already know this lot's mix, and
+    if not may we go find out". Both observation builders route through it
+    so neither can resurrect a stale empty parse: an empty attempt older
+    than RETRY_EMPTY_DAYS is re-fetched, exactly as fetch_manifest would.
+    """
+    man = manifests.get(key)
+    if man is not None and (man.get("machines") or not _empty_and_stale(man)):
+        return list(man.get("machines") or []), False
+    if not (may_fetch and account_id and asset_id):
+        return list((man or {}).get("machines") or []), False
+    try:
+        mix = [m.to_dict() for m in fetch_manifest(account_id, asset_id)]
+    except Exception:
+        mix = []
+    time.sleep(POLITE_DELAY)
+    # keep the in-run view current so one pass never re-fetches the same lot
+    manifests[key] = {"key": key, "machines": mix, "parsed_at": ds.utcnow()}
+    return mix, True
+
+
 def build_observations(sold: dict, max_detail: int = 400) -> dict:
     """Turn raw sold records into priced observations.
 
     Returns {"singles": [...], "baskets": [...]}.
     """
-    manifests = _load("manifests.json", None)
-    if manifests is None:
-        # fresh runner: prime the scratch cache from the durable store so the
-        # detail budget goes to lots never attempted, not re-fetches
-        manifests = {k: m.get("machines", [])
-                     for k, m in ds.all_manifests().items()}
+    # the durable store is the only manifest source of truth; the old
+    # scratch copy in cache/manifests.json was a lossy duplicate that
+    # dropped parse timestamps, which is what made empty parses permanent
+    manifests = dict(ds.all_manifests())
     singles, baskets = [], []
     detail_budget = max_detail
 
@@ -211,21 +234,11 @@ def build_observations(sold: dict, max_detail: int = 400) -> dict:
             continue
 
         # bulk lot -- try for an exact manifest
-        if key in manifests:
-            mix = [specs.Machine(**m) for m in manifests[key]]
-        elif detail_budget > 0:
+        mix_d, spent = manifest_mix(key, r.get("accountId"), r.get("assetId"),
+                                    manifests, detail_budget > 0)
+        if spent:
             detail_budget -= 1
-            try:
-                mix = fetch_manifest(r["accountId"], r["assetId"])
-            except Exception:
-                mix = []
-            manifests[key] = [m.to_dict() for m in mix]
-            time.sleep(POLITE_DELAY)
-            if len(manifests) % 25 == 0:
-                _save("manifests.json", manifests)
-                _p(f"  manifests cached: {len(manifests)}")
-        else:
-            mix = []
+        mix = [specs.Machine(**m) for m in mix_d]
 
         units = sum(m.qty for m in mix)
         baskets.append({
@@ -239,7 +252,6 @@ def build_observations(sold: dict, max_detail: int = 400) -> dict:
             "state": r.get("locationState"),
         })
 
-    _save("manifests.json", manifests)
     obs = {"singles": singles, "baskets": baskets}
     _save("observations.json", obs)
     _p(f"observations: {len(singles)} singles, {len(baskets)} baskets "
@@ -294,18 +306,11 @@ def build_observations_from_dataset(max_detail: int = 0) -> dict:
         if n < 5:
             continue
 
-        man = manifests.get(key)
-        if man is None and detail_budget > 0 \
-                and lot.get("account_id") and lot.get("asset_id"):
+        mix, spent = manifest_mix(key, lot.get("account_id"),
+                                  lot.get("asset_id"), manifests,
+                                  detail_budget > 0)
+        if spent:
             detail_budget -= 1
-            try:
-                mix = [m.to_dict() for m in
-                       fetch_manifest(lot["account_id"], lot["asset_id"])]
-            except Exception:
-                mix = []
-            time.sleep(POLITE_DELAY)
-        else:
-            mix = man["machines"] if man else []
         units = sum(m.get("qty", 1) for m in mix)
         baskets.append({
             "key": key, "price": float(price), "title": title,
