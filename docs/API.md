@@ -68,6 +68,15 @@ must be `false`, not `0`.
 Returns the full lot detail including `assetLongDesc`, `assetPhotos`,
 `assetAttributes`, and `assetAttachments`.
 
+**No bid fields.** The detail response carries no `currentBid`, `bidCount`
+or reserve state — the SPA fetches those separately. To read a lot's current
+bid you must go through `POST /search/list`; scoping it with
+`accountIds: [<seller>]` returns every live lot for that seller (bids
+included) in one request, which is what `pcps burst` uses. The sort fields
+(`timeRemaining`, `auctionenddate`, …) are silently ignored on that
+endpoint — results come back in bestfit order regardless, so end-time
+filtering has to happen client-side.
+
 ## Attachments
 
 ```

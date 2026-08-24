@@ -1,0 +1,51 @@
+name: burst
+
+# Tight-loop bid sampling on the day's peak closing window (see
+# docs/ARCHITECTURE.md §5): weekdays 22:40 UTC, sampling lots that close
+# before ~00:20 UTC every ~2.5 minutes for 20 minutes. Change-only writes
+# mean only moved bids are stored.
+
+on:
+  schedule:
+    - cron: "40 22 * * 1-5"
+  push:
+    # TEMPORARY pre-merge verification trigger -- remove before merge
+    branches: [claude/self-sufficient-system-architecture-o15ag8]
+    paths: [".github/workflows/burst.yml"]
+  workflow_dispatch:
+    inputs:
+      window:
+        description: "Minutes to keep sampling"
+        type: number
+        default: 20
+      horizon:
+        description: "Target lots closing within this many minutes"
+        type: number
+        default: 100
+
+concurrency:
+  group: burst
+  cancel-in-progress: false
+
+jobs:
+  burst:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install --quiet ./pipeline
+
+      - name: Burst
+        env:
+          PCPS_STORE: mongo
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: >
+          pcps burst
+          --window ${{ inputs.window || 5 }}
+          --horizon ${{ inputs.horizon || 100 }}
