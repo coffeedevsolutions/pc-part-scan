@@ -197,6 +197,8 @@ tr.rowlink:hover td {
 
 .pos { color: var(--good-text); }
 .neg { color: var(--critical); }
+/* a countdown inside the burst window, not an error */
+.warn { color: var(--serious); }
 .muted { color: var(--text-muted); }
 .small { font-size: 12px; }
 

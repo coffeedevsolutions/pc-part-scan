@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { UNRATED } from "@pcps/valuation";
 
 import { Grade } from "@/components/Fields";
+import { Ago, Countdown } from "@/components/Live";
 
 import {
   bidSeries,
@@ -13,7 +14,7 @@ import {
   isWatched,
   snapshotEntry,
 } from "@/lib/data";
-import { closesIn, shortDate, usd } from "@/lib/format";
+import { agoFrom, remainingFrom, shortDate, usd } from "@/lib/format";
 
 import { BidCurve } from "./BidCurve";
 import { LotControls } from "./LotControls";
@@ -44,6 +45,13 @@ export default async function LotPage({
   // numbers are still on the record below, labelled as the diagnostics they
   // are, but nothing here may present them as a bid ceiling.
   const unrated = v?.contents_known === false;
+  const open = lot.status !== "sold";
+  // The freshest bid we have. The snapshot's copy is as old as the last
+  // scan, and on a lot closing in twenty minutes that is the difference
+  // between headroom and a lost deposit.
+  const bid = lot.last_obs?.bid ?? v?.current_bid ?? null;
+  const bidAt = lot.last_obs?.at ?? null;
+  const headroom = v && bid != null ? v.max_bid - bid : null;
 
   return (
     <main>
@@ -51,62 +59,101 @@ export default async function LotPage({
       <p className="sub">
         {key} · {lot.seller ?? "unknown seller"} ·{" "}
         {lot.location?.city ? `${lot.location.city}, ` : ""}
-        {lot.location?.state ?? "—"} ·{" "}
-        {lot.status === "sold" ? (
-          <>sold {usd(lot.final_price)}</>
-        ) : (
-          <>closes in {closesIn(lot.auction_end_utc)}</>
-        )}{" "}
-        · <a href={lot.url}>view on GovDeals ↗</a>
+        {lot.location?.state ?? "—"}
+        {lot.status === "sold" ? <> · sold {usd(lot.final_price)}</> : null} ·{" "}
+        <a href={lot.url}>view on GovDeals ↗</a>
       </p>
 
-      {v && (
-        <div className="statrow">
-          <div className="stat">
-            <div className="label">Grade · confidence</div>
-            <div className="value">
-              <Grade grade={unrated ? UNRATED : v.grade} />{" "}
-              <span className="muted" style={{ fontSize: 15 }}>
-                {v.confidence.toFixed(2)}
+      <div className="statrow">
+        <div className="stat">
+          <div className="label">{open ? "Closes in" : "Closed"}</div>
+          <div className="value">
+            {open ? (
+              <Countdown
+                endUtc={lot.auction_end_utc}
+                initial={remainingFrom(lot.auction_end_utc)}
+              />
+            ) : (
+              <span className="muted" style={{ fontSize: 17 }}>
+                {shortDate(lot.auction_end_utc)}
               </span>
-            </div>
-          </div>
-          <div className="stat">
-            <div className="label">Max bid (run {snap.run_id})</div>
-            <div className="value">
-              {unrated ? <span className="muted">—</span> : usd(v.max_bid)}
-            </div>
-          </div>
-          <div className="stat">
-            <div className="label">Headroom vs current</div>
-            <div className={`value ${unrated ? "" : v.headroom >= 0 ? "pos" : "neg"}`}>
-              {unrated ? <span className="muted">—</span> : usd(v.headroom)}
-            </div>
-          </div>
-          <div className="stat">
-            <div className="label">
-              {unrated ? "Units identified" : "Floor → ceiling"}
-            </div>
-            <div className="value" style={{ fontSize: 17 }}>
-              {unrated
-                ? `${(v.identified_units ?? 0).toLocaleString()} of ${v.units.toLocaleString()}`
-                : `${usd(v.floor)} → ${usd(v.ceiling)}`}
-            </div>
+            )}
           </div>
         </div>
-      )}
+        <div className="stat">
+          <div className="label">Current bid</div>
+          <div className="value">{usd(bid)}</div>
+          <div className="muted small">
+            {bidAt ? (
+              <>
+                as of <Ago at={bidAt} initial={agoFrom(bidAt)} />
+                {lot.last_obs?.bid_count != null
+                  ? ` · ${lot.last_obs.bid_count} bids`
+                  : ""}
+              </>
+            ) : (
+              "no observation yet"
+            )}
+          </div>
+        </div>
+        {v && (
+          <>
+            <div className="stat">
+              <div className="label">Grade · confidence</div>
+              <div className="value">
+                <Grade grade={unrated ? UNRATED : v.grade} />{" "}
+                <span className="muted" style={{ fontSize: 15 }}>
+                  {v.confidence.toFixed(2)}
+                </span>
+              </div>
+            </div>
+            <div className="stat">
+              <div className="label">Max bid</div>
+              <div className="value">
+                {unrated ? <span className="muted">—</span> : usd(v.max_bid)}
+              </div>
+              <div className="muted small">run {snap!.run_id}</div>
+            </div>
+            <div className="stat">
+              <div className="label">Headroom vs current</div>
+              <div
+                className={`value ${
+                  unrated || headroom == null ? "" : headroom >= 0 ? "pos" : "neg"
+                }`}
+              >
+                {unrated || headroom == null ? (
+                  <span className="muted">—</span>
+                ) : (
+                  usd(headroom)
+                )}
+              </div>
+              <div className="muted small">against the bid above</div>
+            </div>
+            <div className="stat">
+              <div className="label">
+                {unrated ? "Units identified" : "Floor → ceiling"}
+              </div>
+              <div className="value" style={{ fontSize: 17 }}>
+                {unrated
+                  ? `${(v.identified_units ?? 0).toLocaleString()} of ${v.units.toLocaleString()}`
+                  : `${usd(v.floor)} → ${usd(v.ceiling)}`}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       {unrated && (
         <div className="card notice">
-          <strong>Not priced.</strong> Only{" "}
-          {(v!.identified_units ?? 0).toLocaleString()} of{" "}
-          {v!.units.toLocaleString()} units here have a component we
-          recognise, so any value we produced would come from a generic
-          per-unit rate — a number that says how many things are on the
-          pallet, not what they are. A pallet of laptop power adapters and a
-          pallet of i7 desktops come out within a few dollars a unit of each
-          other that way, so we show nothing rather than a figure you might
-          bid against.
+          <strong>Not priced.</strong>{" "}
+          {(v!.identified_units ?? 0) === 0
+            ? `Nothing in this lot's ${v!.units.toLocaleString()} units is a component we recognise`
+            : `Only ${(v!.identified_units ?? 0).toLocaleString()} of ${v!.units.toLocaleString()} units here have a component we recognise`}
+          , so any value we produced would come from a generic per-unit rate —
+          a number that says how many things are on the pallet, not what they
+          are. A pallet of laptop power adapters and a pallet of i7 desktops
+          come out within a few dollars a unit of each other that way, so we
+          show nothing rather than a figure you might bid against.
           <div className="muted small" style={{ marginTop: 6 }}>
             To price it: check the machine mix below, then pin the parts you
             recognise on the <a href="/models">Models</a> page.

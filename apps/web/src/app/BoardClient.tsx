@@ -17,7 +17,8 @@ import { DataTable, type Column } from "@/components/DataTable";
 import { Grade, MoneyField, PercentField } from "@/components/Fields";
 import { HelpIcon } from "@/components/Tooltip";
 import type { SnapshotLot } from "@/lib/data";
-import { closesIn, usd } from "@/lib/format";
+import { Countdown } from "@/components/Live";
+import { remainingFrom, usd } from "@/lib/format";
 
 type BoardLot = SnapshotLot & { end_utc: string | null };
 type Row = { lot: BoardLot; v: Regrade };
@@ -221,7 +222,14 @@ export function BoardClient({
       helpLabel: "the closing time",
       sortValue: ({ lot }) =>
         lot.end_utc ? new Date(lot.end_utc).getTime() : null,
-      cell: ({ lot }) => closesIn(lot.end_utc) || lot.end_date,
+      // live, because the board's whole job is telling you what is about to
+      // close and a server-rendered string starts aging the moment it lands
+      cell: ({ lot }) =>
+        lot.end_utc ? (
+          <Countdown endUtc={lot.end_utc} initial={remainingFrom(lot.end_utc)} />
+        ) : (
+          lot.end_date
+        ),
     },
     {
       id: "confidence",
