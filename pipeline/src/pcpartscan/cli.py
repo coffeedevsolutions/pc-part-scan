@@ -222,9 +222,9 @@ def cmd_scan(a) -> int:
                     if (v.get("locationState") or "").upper() in want}
             print(f"state filter {sorted(want)}: {len(live)} lots")
 
-        single, bulk, ebay = grade.load_models()
+        single, bulk, ebay, classes = grade.load_models()
         vals = grade.scan(live=live, cfg=cfg, min_units=a.min_units,
-                          limit=a.limit, models=(single, bulk, ebay))
+                          limit=a.limit, models=(single, bulk, ebay, classes))
 
         ds.record_components(run, single, bulk, pricing.StaticTable.PATH)
         ds.save_full_models(run, single, bulk)
@@ -236,6 +236,7 @@ def cmd_scan(a) -> int:
                           "bulk_n": bulk.n_obs if bulk else 0},
             "screened": len(vals),
             "confidence_gate": grade.CONFIDENCE_GATE,
+            "class_prices": classes.to_dict(bulk.k if bulk else None),
             "lots": [asdict(v) for v in vals],
         })
         idx = ds.update_index(run, {"last_config": asdict(cfg)})

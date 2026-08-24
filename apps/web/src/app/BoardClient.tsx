@@ -171,6 +171,27 @@ export function BoardClient({
       ),
     },
     {
+      id: "kind",
+      header: "Kind",
+      help: "itemClass",
+      helpLabel: "the kind",
+      width: "104px",
+      sortValue: ({ lot }) => lot.item_class ?? null,
+      cell: ({ lot }) =>
+        lot.item_class ? (
+          <span
+            className={`kind kind-${lot.item_family ?? "unknown"}`}
+            title={lot.class_reason}
+          >
+            {lot.item_class}
+          </span>
+        ) : (
+          <span className="muted small" title={lot.class_reason}>
+            unread
+          </span>
+        ),
+    },
+    {
       id: "units",
       header: "Units",
       help: "units",

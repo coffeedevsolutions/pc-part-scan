@@ -6,7 +6,9 @@
  * same concept being explained three slightly different ways.
  */
 export const HELP = {
-  grade: "Overall verdict, from headroom discounted by how much we trust the estimate. A lot whose contents we cannot identify gets no grade at all — see \u201Cunrated\u201D.",
+  grade: "Overall verdict, from headroom discounted by how much we trust the estimate. A lot priced only from comps for its kind is capped at C; a lot whose contents we cannot read at all gets no grade — see \u201Cunrated\u201D.",
+  itemClass: "What we think the lot holds, read from its title. A lot read as computers is priced from the parts inside it; a lot read as chargers, docks or monitors is priced from what sold lots of the same kind fetched. \u201Cunread\u201D means the title named several things at once, or nothing we recognise.",
+  classComps: "Per-unit prices for kinds of thing the machine model has no features for. Both numbers come from sold GovDeals lots of that kind and nothing else: the pallet price is what a lot of them clears, the parts-out price is what one is worth sold alone, capped so the two cannot disagree by more than the bulk discount.",
   unrated: "Fewer than half this lot's units have a component we recognise, so its value would come from a generic per-unit rate — a number driven by how many things are on the pallet, not by what they are. Rather than publish that as a max bid we show nothing and rank the lot last.",
   confidence: "0-1. How much of this lot we can actually price: does it have a readable spec sheet, and do we recognise the parts inside? Low confidence means the value below is a guess from unit count alone.",
   maxBid: "The most you can pay and still clear your target return, after buyer premium, tax, pickup and per-unit handling. Not a prediction of the closing price.",

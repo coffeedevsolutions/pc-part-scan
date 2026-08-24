@@ -17,6 +17,7 @@ import time
 import urllib.error
 
 from . import api as gd
+from . import classprice
 from . import specs
 from .store import backend as ds
 
@@ -208,7 +209,7 @@ def build_observations(sold: dict, max_detail: int = 400) -> dict:
     # scratch copy in cache/manifests.json was a lossy duplicate that
     # dropped parse timestamps, which is what made empty parses permanent
     manifests = dict(ds.all_manifests())
-    singles, baskets = [], []
+    singles, baskets, lots = [], [], []
     detail_budget = max_detail
 
     for key, r in sold.items():
@@ -219,6 +220,10 @@ def build_observations(sold: dict, max_detail: int = 400) -> dict:
         n = specs.parse_unit_count(title)
         if n is None:
             continue          # plural title with no stated count -- unusable
+        # every priced lot with a stated count feeds the per-class table,
+        # including the ones the machine model has no features for
+        lots.append({"key": key, "title": title, "units": n,
+                     "price": float(price)})
         if n == 1:
             m = specs.machine_from_text(title, 1)
             if m.cpu:
@@ -252,10 +257,11 @@ def build_observations(sold: dict, max_detail: int = 400) -> dict:
             "state": r.get("locationState"),
         })
 
-    obs = {"singles": singles, "baskets": baskets}
+    obs = {"singles": singles, "baskets": baskets, "lots": lots}
     _save("observations.json", obs)
     _p(f"observations: {len(singles)} singles, {len(baskets)} baskets "
-       f"({sum(1 for b in baskets if b['exact'])} with exact manifests)")
+       f"({sum(1 for b in baskets if b['exact'])} with exact manifests), "
+       f"{len(lots)} class comps")
     return obs
 
 
@@ -282,6 +288,7 @@ def build_observations_from_dataset(max_detail: int = 0) -> dict:
     sold_lots = ds.sold_lots()
     manifests = ds.all_manifests()
     singles, baskets = [], []
+    lots = classprice.class_observations(sold_lots)
     detail_budget = max_detail
 
     for key, lot in sold_lots.items():
@@ -322,17 +329,20 @@ def build_observations_from_dataset(max_detail: int = 0) -> dict:
             "state": (lot.get("location") or {}).get("state"),
         })
 
-    obs = {"singles": singles, "baskets": baskets}
+    obs = {"singles": singles, "baskets": baskets, "lots": lots}
     _save("observations.json", obs)
     _p(f"observations (from dataset): {len(singles)} singles, {len(baskets)} baskets "
-       f"({sum(1 for b in baskets if b['exact'])} with exact manifests)")
+       f"({sum(1 for b in baskets if b['exact'])} with exact manifests), "
+       f"{len(lots)} class comps")
     return obs
 
 
 def load_observations() -> dict:
     """Prefer the scratch cache when present, else rebuild from the dataset."""
     obs = _load("observations.json", None)
-    if obs and obs.get("singles"):
+    # a cache written before the per-class table existed has no "lots" key;
+    # rebuilding is cheap and beats silently pricing nothing by class
+    if obs and obs.get("singles") and obs.get("lots"):
         return obs
     return build_observations_from_dataset()
 

@@ -62,11 +62,22 @@ export function ValuationWaterfall({
   const headroom = maxBid - bid;
 
   const sourceCount = Object.keys(lot.ceiling_sources ?? {}).length;
+  const byClass = lot.priced_by === "class";
+  const q = lot.class_quote;
+  const kind = lot.item_class ?? "item";
 
   const steps: Step[] = [
     {
       label: "What the parts are worth",
-      why: (
+      why: byClass ? (
+        <>
+          We could not read what is inside, so this is {lot.units.toLocaleString()}{" "}
+          {lot.units === 1 ? kind : `${kind}s`} at{" "}
+          {usd(q?.ceiling_per_unit ?? 0, 2)} each — what sold lots of the same
+          kind imply one is worth. It cannot tell a new one from a ten-year-old
+          one, which is why this lot can never grade above C.
+        </>
+      ) : (
         <>
           {lot.units.toLocaleString()}{" "}
           {lot.units === 1 ? "machine" : "machines"} priced one at a time,
@@ -98,12 +109,24 @@ export function ValuationWaterfall({
     {
       label: "Flipping the whole pallet would make",
       why: floorCounts ? (
-        "Higher than parting it out, so this is what you underwrite against — you would take the easier route."
+        byClass && q ? (
+          <>
+            {q.bulk_n} sold pallets of {kind}s cleared{" "}
+            {usd(q.floor_per_unit, 2)} a unit or better. Higher than parting it
+            out, so this is what you underwrite against.
+          </>
+        ) : (
+          "Higher than parting it out, so this is what you underwrite against — you would take the easier route."
+        )
       ) : lot.floor_trusted === false ? (
-        <>
-          Ignored: the bulk-resale fit behind it is too weak to bid on. See{" "}
-          <Link href="/models">Models</Link>.
-        </>
+        byClass ? (
+          `Too few sold pallets of ${kind}s to put a number on it.`
+        ) : (
+          <>
+            Ignored: the bulk-resale fit behind it is too weak to bid on. See{" "}
+            <Link href="/models">Models</Link>.
+          </>
+        )
       ) : (
         "Lower than parting it out, so it does not set the price."
       ),
@@ -193,7 +216,14 @@ export function ValuationWaterfall({
           ))}
         </tbody>
       </table>
-      {sourceCount > 1 && (
+      {byClass && q && (
+        <p className="muted small">
+          Comps behind this: {q.bulk_n} sold pallets of {kind}s (
+          {usd(q.bulk_p25, 2)}–{usd(q.bulk_p75, 2)} a unit) and {q.single_n}{" "}
+          sold on their own ({usd(q.single_p25, 2)}–{usd(q.single_p75, 2)}).
+        </p>
+      )}
+      {!byClass && sourceCount > 1 && (
         <p className="muted small">
           Parts-out sources:{" "}
           {Object.entries(lot.ceiling_sources)

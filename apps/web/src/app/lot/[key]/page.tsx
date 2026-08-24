@@ -17,6 +17,8 @@ import {
   isWatched,
   savedAssumptions,
   snapshotEntry,
+  type ManifestDoc,
+  type SnapshotLot,
 } from "@/lib/data";
 import { agoFrom, remainingFrom, shortDate, usd } from "@/lib/format";
 
@@ -157,17 +159,17 @@ export default async function LotPage({
       {unrated && (
         <div className="card notice">
           <strong>Not priced.</strong>{" "}
-          {(v!.identified_units ?? 0) === 0
-            ? `Nothing in this lot's ${v!.units.toLocaleString()} units is a component we recognise`
-            : `Only ${(v!.identified_units ?? 0).toLocaleString()} of ${v!.units.toLocaleString()} units here have a component we recognise`}
-          , so any value we produced would come from a generic per-unit rate —
-          a number that says how many things are on the pallet, not what they
-          are. A pallet of laptop power adapters and a pallet of i7 desktops
-          come out within a few dollars a unit of each other that way, so we
-          show nothing rather than a figure you might bid against.
+          {v!.item_class
+            ? `We read this as ${v!.item_class}s, but too few ${v!.item_class} lots have sold for us to put a number on one.`
+            : `We cannot tell what this lot holds — ${v!.class_reason || "the title does not name it"}.`}{" "}
+          Anything we produced would come from a generic per-unit rate — a
+          number that says how many things are on the pallet, not what they
+          are. A pallet of laptop chargers and a pallet of i7 desktops come
+          out within a few dollars a unit of each other that way, so we show
+          nothing rather than a figure you might bid against.
           <div className="muted small" style={{ marginTop: 6 }}>
-            To price it: check the machine mix below, then pin the parts you
-            recognise on the <a href="/models">Models</a> page.
+            To price it: check what is in the lot below, then pin the parts
+            you recognise on the <Link href="/models">Models</Link> page.
           </div>
         </div>
       )}
@@ -249,21 +251,10 @@ export default async function LotPage({
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>
-          Machine mix
-          <HelpIcon k="machineMix" label="the machine mix" />{" "}
-          <span className="muted small">
-            {manifest
-              ? manifest.machines.length
-                ? `from spec sheet (${manifest.parsed_by ?? "regex"}, ${manifest.unit_total} units)`
-                : "spec sheet attempted — unparseable"
-              : v?.exact_manifest
-                ? "exact manifest"
-                : "inferred from title"}
-          </span>
+          What is in this lot
+          <HelpIcon k="machineMix" label="the contents" />
         </h2>
-        <MixTable
-          mix={manifest?.machines.length ? manifest.machines : (v?.mix ?? [])}
-        />
+        <Contents lot={v} manifest={manifest} />
         {manifest?.source_files.length ? (
           <p className="muted small">
             Source: {manifest.source_files.join(", ")}
@@ -271,6 +262,94 @@ export default async function LotPage({
         ) : null}
       </div>
     </main>
+  );
+}
+
+/**
+ * What we believe the lot holds and how that belief was reached.
+ *
+ * Two very different readings end up here. Either the spec sheet or the
+ * title named the machines and the CPU model priced them one by one, or it
+ * did not and the lot was priced from sold lots of the same kind of thing.
+ * The second is a much cruder answer and has to say so on the page, not
+ * only in the code.
+ */
+function Contents({
+  lot,
+  manifest,
+}: {
+  lot: SnapshotLot | undefined;
+  manifest: ManifestDoc | null;
+}) {
+  const mix = manifest?.machines.length ? manifest.machines : (lot?.mix ?? []);
+  const q = lot?.class_quote;
+  const kind = lot?.item_class;
+  // A synthesized one-row "mix" with no CPU is not a machine list, it is the
+  // absence of one wearing a table. On a pallet of chargers it read as one
+  // unknown laptop x 300, which is worse than showing nothing.
+  const realMix =
+    mix.length > 1 || mix.some((m) => m.cpu) || !!manifest?.machines.length;
+  return (
+    <>
+      <table className="data waterfall" style={{ marginBottom: 10 }}>
+        <tbody>
+          <tr>
+            <td style={{ width: 150 }}>Read as</td>
+            <td>
+              {kind ? (
+                <>
+                  <strong>{kind}s</strong>{" "}
+                  <span className="muted">— {lot?.class_reason}</span>
+                </>
+              ) : (
+                <span className="muted">
+                  {lot?.class_reason || "not identified"}
+                </span>
+              )}
+            </td>
+          </tr>
+          <tr>
+            <td>Spec sheet</td>
+            <td>
+              {manifest
+                ? manifest.machines.length
+                  ? `read (${manifest.parsed_by ?? "regex"}, ${manifest.unit_total} units)`
+                  : "attached but unreadable — the triage routine will retry it"
+                : "none attached"}
+            </td>
+          </tr>
+          <tr>
+            <td>Priced from</td>
+            <td>
+              {lot?.priced_by === "machines" ? (
+                <>
+                  the machine model —{" "}
+                  {(lot.identified_units ?? 0).toLocaleString()} of{" "}
+                  {lot.units.toLocaleString()} units have a component we
+                  recognise
+                </>
+              ) : lot?.priced_by === "class" && q ? (
+                <>
+                  sold lots of the same kind — {q.bulk_n} pallets and{" "}
+                  {q.single_n} single sales of {kind}s. Not from what is
+                  actually inside this one, which is why it caps at grade C.
+                </>
+              ) : (
+                <span className="muted">nothing — this lot is unrated</span>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      {realMix ? (
+        <MixTable mix={mix} />
+      ) : (
+        <p className="muted small" style={{ margin: 0 }}>
+          No per-unit breakdown: nothing named a component we recognise, so
+          there is nothing to list beyond the count above.
+        </p>
+      )}
+    </>
   );
 }
 

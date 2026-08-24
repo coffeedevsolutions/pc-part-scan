@@ -22,6 +22,18 @@ export interface SnapshotLot {
   contents_known?: boolean;
   /** units whose CPU the mix actually names */
   identified_units?: number;
+  /** what kind of thing we think the lot holds (classify.py) */
+  item_class?: string | null;
+  item_family?: "computer" | "part" | null;
+  /** plain-language account of how we read the title, shown as-is */
+  class_reason?: string;
+  class_confidence?: number;
+  /**
+   * "machines" when the CPU feature model priced it, "class" when it fell
+   * back to sold comps for this kind of thing, absent when neither could.
+   */
+  priced_by?: "machines" | "class" | null;
+  class_quote?: ClassQuote | null;
   floor: number;
   /** false when the bulk fit behind `floor` is too weak to underwrite against */
   floor_trusted?: boolean;
@@ -33,6 +45,25 @@ export interface SnapshotLot {
   roi_at_current: number;
   confidence: number;
   grade: string;
+}
+
+/** What sold comps say one unit of an item class is worth (classprice.py). */
+export interface ClassQuote {
+  item_class: string;
+  family: string;
+  single_n: number;
+  single_p25: number;
+  single_p50: number;
+  single_p75: number;
+  bulk_n: number;
+  bulk_p25: number;
+  bulk_p50: number;
+  bulk_p75: number;
+  usable: boolean;
+  has_floor: boolean;
+  has_ceiling: boolean;
+  ceiling_per_unit: number;
+  floor_per_unit: number;
 }
 
 export interface MachineLine {
@@ -57,6 +88,7 @@ export interface Snapshot {
     bulk_n: number;
   };
   confidence_gate: number;
+  class_prices?: Record<string, ClassQuote>;
   lots: SnapshotLot[];
 }
 

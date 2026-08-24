@@ -20,6 +20,8 @@ import os
 from dataclasses import dataclass, field
 
 from . import api as gd
+from . import classify
+from . import classprice
 from . import harvest
 from . import pricing
 from . import specs
@@ -71,6 +73,15 @@ class Valuation:
     # the ceiling is driven by unit count rather than by contents.
     contents_known: bool = True
     identified_units: int = 0
+    # What we think the lot holds, and how we ended up pricing it.
+    # priced_by is "machines" when the CPU feature model did the work and
+    # "class" when it fell back to sold comps for this kind of thing.
+    item_class: str | None = None
+    item_family: str | None = None
+    class_reason: str = ""
+    class_confidence: float = 0.0
+    priced_by: str | None = None
+    class_quote: dict | None = None
     floor: float = 0.0
     floor_trusted: bool = True
     ceiling: float = 0.0
@@ -97,6 +108,26 @@ def _confidence(v: Valuation, single: pricing._FitModel, n_cpu_known: int) -> fl
     return round(min(1.0, c), 2)
 
 
+def _class_confidence(v: Valuation, quote: classprice.ClassQuote) -> float:
+    """0-1 for a lot priced from comps for its kind rather than its parts.
+
+    Deliberately lower-ceilinged than the machine path: knowing a pallet is
+    laptops is real information, but it is not the same as knowing which
+    laptops. Two things drive it -- how sure we are of the reading, and how
+    many sold lots of the same kind stand behind the number.
+    """
+    n = max(quote.bulk_n, quote.single_n)
+    c = 0.45 * v.class_confidence
+    c += 0.25 * min(1.0, n / 40.0)
+    c += 0.10 if v.state else 0.0
+    # Held below the confidence gate on purpose. Knowing a pallet is laptops
+    # is worth a look; it is never worth a top grade, because this path
+    # cannot tell an 11th-gen i7 from a 2010 ThinkPad and the difference is
+    # the whole trade. A class-priced lot tops out at C until somebody --
+    # the manifest routine, or you -- says what is actually in it.
+    return round(min(CLASS_MAX_CONFIDENCE, c), 2)
+
+
 # Without a spec sheet we do not know what CPUs are in a lot, so every machine
 # falls back to a generic bucket value. That makes the ceiling a function of
 # unit count alone -- a 253-unit lot of unknown junk then looks identical to a
@@ -121,6 +152,10 @@ MIN_SOURCE_COVERAGE = 0.5
 # contents-aware valuation can price what is actually there.
 MIN_IDENTIFIED_SHARE = 0.5
 UNRATED = "U"
+
+# A lot priced from comps for its kind, rather than from its own parts, is
+# never allowed past the confidence gate -- so it can reach C and no higher.
+CLASS_MAX_CONFIDENCE = CONFIDENCE_GATE - 0.01
 
 
 def _contents_known(identified_units: int, units: int) -> bool:
@@ -154,7 +189,8 @@ def _grade(roi_headroom: float, confidence: float,
 
 
 def value_lot(rec: dict, single, basket, ebay, cfg: Config,
-              fetch_manifest: bool = True) -> Valuation:
+              fetch_manifest: bool = True,
+              class_table: classprice.ClassPriceTable | None = None) -> Valuation:
     title = rec.get("assetShortDescription") or ""
     units = specs.parse_unit_count(title)
     key = f"{rec['accountId']}-{rec['assetId']}"
@@ -185,6 +221,19 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
         end_date=rec.get("assetAuctionEndDateDisplay") or "",
         state=rec.get("locationState"), exact_manifest=exact, mix=mix,
     )
+
+    # What kind of thing is this? The machine model can only price machines,
+    # so a pallet of chargers has to be recognised as chargers before it can
+    # be priced as anything other than 300 nondescript computers.
+    kind = classify.classify(title)
+    v.item_class, v.item_family = kind.item_class, kind.family
+    v.class_reason, v.class_confidence = kind.reason, kind.confidence
+    quote = (class_table.get(kind.item_class) if class_table else None)
+    machines_known = _contents_known(n_cpu_known, units)
+
+    if not machines_known and quote is not None:
+        k = basket.k if basket else classprice.DEFAULT_K
+        return _value_by_class(v, quote, cfg, k)
 
     # --- floor: what the whole lot clears at auction ---------------------
     # Reported either way, but only underwritten against when the bulk fit
@@ -235,10 +284,45 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
     v.roi_at_current = (v.expected_revenue - cost_now) / cost_now if cost_now > 0 else 0.0
 
     v.identified_units = n_cpu_known
-    v.contents_known = _contents_known(n_cpu_known, v.units)
+    v.contents_known = machines_known
+    v.priced_by = "machines" if machines_known else None
     v.confidence = _confidence(v, single, n_cpu_known)
     rel = v.headroom / v.max_bid if v.max_bid > 0 else -1.0
     v.grade = _grade(rel, v.confidence, v.contents_known)
+    return v
+
+
+def _value_by_class(v: Valuation, quote: classprice.ClassQuote,
+                    cfg: Config, bulk_discount: float) -> Valuation:
+    """Price a lot from sold comps for its kind rather than its parts.
+
+    This is the path for everything the machine model has no features
+    for -- chargers, docks, monitors -- and for computer lots whose CPUs
+    the title and spec sheet never named. It is a cruder number than the
+    machine fit and says so: one price per unit, from lots of the same
+    kind, with the comp count carried through to confidence.
+    """
+    v.priced_by = "class"
+    v.contents_known = True
+    v.class_quote = quote.to_dict(bulk_discount)
+
+    v.ceiling = quote.ceiling_per_unit(bulk_discount) * v.units
+    v.ceiling_sources = ({"comps_for_this_kind": round(v.ceiling, 2)}
+                         if v.ceiling else {})
+    v.floor = quote.floor_per_unit * v.units
+    v.floor_trusted = quote.has_floor
+
+    parts_out = v.ceiling * (1 - cfg.dead_rate) * cfg.recovery
+    v.expected_revenue = max(parts_out, v.floor) if v.floor_trusted else parts_out
+    v.max_bid = cfg.max_hammer(v.expected_revenue, v.units)
+    v.headroom = v.max_bid - v.current_bid
+    cost_now = cfg.all_in(v.current_bid, v.units)
+    v.roi_at_current = ((v.expected_revenue - cost_now) / cost_now
+                        if cost_now > 0 else 0.0)
+
+    v.confidence = _class_confidence(v, quote)
+    rel = v.headroom / v.max_bid if v.max_bid > 0 else -1.0
+    v.grade = _grade(rel, v.confidence, True)
     return v
 
 
@@ -265,14 +349,18 @@ def load_models():
     else:
         pins = pricing.StaticTable().as_pins()
     ceiling_model = pricing.PinnedModel(single, pins) if pins else single
-    return ceiling_model, basket, pricing.EbayAdapter()
+    table = classprice.fit(obs.get("lots") or [])
+    usable = sum(1 for q in table.quotes.values() if q.usable)
+    print(f"  class comps: {usable} of {len(table.quotes)} item classes "
+          f"priceable from sold lots")
+    return ceiling_model, basket, pricing.EbayAdapter(), table
 
 
 def scan(live: dict | None = None, cfg: Config | None = None,
          min_units: int = 5, limit: int = 60,
          models: tuple | None = None) -> list[Valuation]:
     cfg = cfg or Config()
-    single, basket, ebay = models if models else load_models()
+    single, basket, ebay, table = models if models else load_models()
     live = live or harvest._load("live_raw.json", {})
 
     cands = []
@@ -288,7 +376,8 @@ def scan(live: dict | None = None, cfg: Config | None = None,
     cands.sort(key=lambda r: -(r.get("currentBid") or 0))
     cands = cands[:limit]
 
-    out = [value_lot(r, single, basket, ebay, cfg) for r in cands]
+    out = [value_lot(r, single, basket, ebay, cfg, class_table=table)
+           for r in cands]
     # rank on confidence-weighted headroom: a big number we do not believe
     # should not outrank a smaller one we do. Abstentions have no number to
     # rank on at all, so they go last whatever their arithmetic says.
