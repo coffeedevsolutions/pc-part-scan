@@ -27,7 +27,7 @@ from __future__ import annotations
 import json
 import math
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from . import api as gd
 from . import classify
@@ -44,6 +44,14 @@ class Config:
     sales_tax: float = 0.00       # if you are not tax-exempt
     pickup_cost: float = 0.00     # flat per-lot travel/freight
     per_unit_handling: float = 3.00   # test, wipe, photograph, pack each machine
+    # The same work on a charger is dropping it in a box. One rate for both
+    # is not conservatism, it is a defect: at $3 a unit, handling comes to
+    # 121% of expected revenue on the median charger pallet, and all 21 in
+    # the backtest corpus get a max bid of zero however cheap they are --
+    # the tool literally cannot recommend one at any price. Defaults to the
+    # same $3 so nothing changes until you say what your own sorting costs;
+    # the lot page shows the rate each lot would need to be worth bidding.
+    part_handling: float = 3.00
 
     # --- what you actually realize --------------------------------------
     # What you get per unit through YOUR channel, as a multiple of what the
@@ -64,6 +72,16 @@ class Config:
 
     # --- underwriting ----------------------------------------------------
     target_roi: float = 0.60      # required return over all-in cost
+
+    def for_family(self, family: str | None) -> "Config":
+        """This config with the handling rate that applies to `family`.
+
+        Returning a Config rather than a bare rate keeps every downstream
+        formula untouched: the family question is answered once, here.
+        """
+        if family != "part" or self.part_handling == self.per_unit_handling:
+            return self
+        return replace(self, per_unit_handling=self.part_handling)
 
     def all_in(self, hammer: float, units: int) -> float:
         return (hammer * (1 + self.buyer_premium) * (1 + self.sales_tax)
@@ -107,6 +125,12 @@ class Valuation:
     class_confidence: float = 0.0
     priced_by: str | None = None
     class_quote: dict | None = None
+    # Handling rate per unit actually applied, and the rate at which this
+    # lot's max bid would reach zero. On cheap part lots the second number
+    # is the whole story: at $3 a unit every charger pallet in the corpus
+    # is unbiddable at any price, and this says what it would have to be.
+    handling_applied: float = 0.0
+    handling_breakeven: float = 0.0
     floor: float = 0.0
     floor_trusted: bool = True
     ceiling: float = 0.0
@@ -326,6 +350,7 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
     v.ceiling = sum(per_source.values()) / len(per_source)
 
     # --- what you underwrite against -------------------------------------
+    cfg = cfg.for_family(v.item_family)
     parts_out = v.ceiling * (1 - cfg.dead_rate) * cfg.recovery
     v.expected_revenue = max(parts_out, v.floor) if v.floor_trusted else parts_out
 
@@ -335,6 +360,7 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
     cost_now = cfg.all_in(v.current_bid, v.units)
     v.roi_at_current = (v.expected_revenue - cost_now) / cost_now if cost_now > 0 else 0.0
 
+    _record_handling(v, cfg)
     v.identified_units = n_cpu_known
     v.contents_known = machines_known
     v.priced_by = "machines" if machines_known else None
@@ -342,6 +368,18 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
     rel = v.headroom / v.max_bid if v.max_bid > 0 else -1.0
     v.grade = _grade(rel, v.confidence, v.contents_known)
     return v
+
+
+def _record_handling(v: Valuation, cfg: Config) -> None:
+    """What handling cost this lot, and what it could have borne.
+
+    Break-even is the per-unit rate at which max_bid hits zero: everything
+    the lot is expected to make, less the pickup, spread over its units.
+    """
+    v.handling_applied = cfg.per_unit_handling
+    if v.units > 0:
+        budget = v.expected_revenue / (1 + cfg.target_roi) - cfg.pickup_cost
+        v.handling_breakeven = round(max(0.0, budget / v.units), 2)
 
 
 def _value_by_class(v: Valuation, quote: classprice.ClassQuote,
@@ -364,6 +402,7 @@ def _value_by_class(v: Valuation, quote: classprice.ClassQuote,
     v.floor = quote.floor_per_unit * v.units
     v.floor_trusted = quote.has_floor
 
+    cfg = cfg.for_family(v.item_family)
     parts_out = v.ceiling * (1 - cfg.dead_rate) * cfg.recovery
     v.expected_revenue = max(parts_out, v.floor) if v.floor_trusted else parts_out
     v.max_bid = cfg.max_hammer(v.expected_revenue, v.units)
@@ -372,6 +411,7 @@ def _value_by_class(v: Valuation, quote: classprice.ClassQuote,
     v.roi_at_current = ((v.expected_revenue - cost_now) / cost_now
                         if cost_now > 0 else 0.0)
 
+    _record_handling(v, cfg)
     v.confidence = _class_confidence(v, quote)
     rel = v.headroom / v.max_bid if v.max_bid > 0 else -1.0
     v.grade = _grade(rel, v.confidence, True)

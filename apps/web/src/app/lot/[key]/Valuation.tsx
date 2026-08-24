@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { maxHammer, type Config } from "@pcps/valuation";
+import { forFamily, maxHammer, type Config } from "@pcps/valuation";
 
 import { HelpIcon } from "@/components/Tooltip";
 import type { SnapshotLot } from "@/lib/data";
@@ -36,7 +36,7 @@ interface Step {
 
 export function ValuationWaterfall({
   lot,
-  cfg,
+  cfg: baseCfg,
   bid,
   muted = false,
 }: {
@@ -47,6 +47,9 @@ export function ValuationWaterfall({
    *  colours that say "this is money on the table" */
   muted?: boolean;
 }) {
+  // A lot of chargers is not handled like a lot of PCs, so the rate is
+  // chosen once here and every step below just uses it.
+  const cfg = forFamily(baseCfg, lot.item_family);
   const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 
   const afterDead = lot.ceiling * (1 - cfg.dead_rate);
@@ -60,6 +63,9 @@ export function ValuationWaterfall({
   // whatever the premium and tax divisor takes out, as a movement
   const onTop = Math.max(0, budget - fixed) - maxBid;
   const headroom = maxBid - bid;
+  // the per-unit handling at which max bid would reach zero
+  const breakeven =
+    lot.units > 0 ? (revenue / (1 + cfg.target_roi) - cfg.pickup_cost) / lot.units : -1;
 
   const sourceCount = Object.keys(lot.ceiling_sources ?? {}).length;
   const byClass = lot.priced_by === "class";
@@ -153,7 +159,10 @@ export function ValuationWaterfall({
     },
     {
       label: `Less handling (${lot.units.toLocaleString()} × ${usd(cfg.per_unit_handling, 2)}${cfg.pickup_cost ? ` + ${usd(cfg.pickup_cost)} pickup` : ""})`,
-      why: "Testing, wiping, photographing and packing every unit, plus getting the lot home.",
+      why:
+        lot.item_family === "part"
+          ? `Your handling rate for parts, plus getting the lot home. Sorting ${lot.item_class}s is not the same work as testing and wiping a PC — set the two rates apart on the Board if they differ for you.`
+          : "Testing, wiping, photographing and packing every unit, plus getting the lot home.",
       amount: fixed,
       sign: "minus",
     },
@@ -221,6 +230,15 @@ export function ValuationWaterfall({
           ))}
         </tbody>
       </table>
+      {fixed > 0 && maxBid <= 0 && breakeven >= 0 && (
+        <p className="muted small">
+          <strong>Handling is what stops this lot.</strong> At{" "}
+          {usd(cfg.per_unit_handling, 2)} a unit it costs {usd(fixed)}, which
+          is more than the {usd(revenue)} the lot is expected to make. It would
+          need to be under <strong>{usd(breakeven, 2)}</strong> a unit for any
+          bid to clear your target return.
+        </p>
+      )}
       {byClass && q && (
         <p className="muted small">
           Comps behind this: {q.bulk_n} sold pallets of {kind}s (

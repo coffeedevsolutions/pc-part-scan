@@ -19,6 +19,16 @@ export interface Config {
   sales_tax: number;
   pickup_cost: number;
   per_unit_handling: number;
+  /**
+   * Handling for a lot of parts rather than machines. Testing, wiping and
+   * photographing a PC is not the same work as dropping a charger in a box,
+   * and one rate for both is a defect rather than caution: at $3 a unit
+   * handling comes to 121% of expected revenue on the median charger
+   * pallet, and every one in the backtest corpus gets a max bid of zero
+   * however cheap it is. Defaults to the machine rate so nothing changes
+   * until somebody says what their own sorting costs.
+   */
+  part_handling: number;
   recovery: number;
   dead_rate: number;
   target_roi: number;
@@ -29,6 +39,7 @@ export const DEFAULT_CONFIG: Config = {
   sales_tax: 0.0,
   pickup_cost: 0.0,
   per_unit_handling: 3.0,
+  part_handling: 3.0,
   recovery: 0.55,
   dead_rate: 0.1,
   target_roi: 0.6,
@@ -48,6 +59,17 @@ export const CONFIDENCE_GATE = 0.5;
 export const UNRATED = "U";
 
 export type Grade = "A" | "B" | "C" | "D" | "F" | "U";
+
+/**
+ * This config with the handling rate that applies to `family`
+ * (grade.py Config.for_family). Answering the family question once, here,
+ * leaves every formula below untouched.
+ */
+export function forFamily(cfg: Config, family?: string | null): Config {
+  const part = cfg.part_handling ?? cfg.per_unit_handling;
+  if (family !== "part" || part === cfg.per_unit_handling) return cfg;
+  return { ...cfg, per_unit_handling: part };
+}
 
 /** All-in cost of winning a lot at `hammer` (grade.py Config.all_in). */
 export function allIn(cfg: Config, hammer: number, units: number): number {
@@ -111,6 +133,8 @@ export interface LotFacts {
    * (snapshots written before abstention existed).
    */
   contents_known?: boolean;
+  /** "computer" or "part" -- decides which handling rate applies */
+  item_family?: "computer" | "part" | null;
 }
 
 export interface Regrade {
@@ -119,10 +143,15 @@ export interface Regrade {
   headroom: number;
   roi_at_current: number;
   grade: Grade;
+  /** handling rate actually applied, after the family split */
+  handling_applied: number;
+  /** per-unit handling at which max bid would reach zero */
+  handling_breakeven: number;
 }
 
 /** Re-derive every config-dependent number for one lot. */
-export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
+export function regrade(lot: LotFacts, base: Config = DEFAULT_CONFIG): Regrade {
+  const cfg = forFamily(base, lot.item_family);
   const partsOut = lot.ceiling * (1 - cfg.dead_rate) * cfg.recovery;
   const revenue =
     lot.floor_trusted === false ? partsOut : Math.max(partsOut, lot.floor);
@@ -131,12 +160,15 @@ export function regrade(lot: LotFacts, cfg: Config = DEFAULT_CONFIG): Regrade {
   const costNow = allIn(cfg, lot.current_bid, lot.units);
   const roi_at_current = costNow > 0 ? (revenue - costNow) / costNow : 0.0;
   const rel = max_bid > 0 ? headroom / max_bid : -1.0;
+  const budget = revenue / (1 + cfg.target_roi) - cfg.pickup_cost;
   return {
     expected_revenue: revenue,
     max_bid,
     headroom,
     roi_at_current,
     grade: gradeFrom(rel, lot.confidence, lot.contents_known !== false),
+    handling_applied: cfg.per_unit_handling,
+    handling_breakeven: lot.units > 0 ? Math.max(0, budget / lot.units) : 0,
   };
 }
 

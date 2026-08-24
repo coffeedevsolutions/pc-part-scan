@@ -305,10 +305,18 @@ export function BoardClient({
             step={0.5}
           />
           <MoneyField
-            label="Handling / unit"
+            label="Handling / machine"
             help="handling"
             value={cfg.per_unit_handling}
             onChange={(v) => updateCfg({ per_unit_handling: v })}
+            step={0.5}
+          />
+          <MoneyField
+            label="Handling / part"
+            help="partHandling"
+            value={cfg.part_handling ?? cfg.per_unit_handling}
+            onChange={(v) => updateCfg({ part_handling: v })}
+            step={0.5}
           />
           <MoneyField
             label="Pickup"

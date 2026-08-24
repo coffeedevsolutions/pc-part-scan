@@ -13,6 +13,8 @@ interface GoldenCase {
       headroom: number;
       roi_at_current: number;
       grade: string;
+      handling_applied: number;
+      handling_breakeven: number;
     }
   >;
 }
@@ -57,6 +59,14 @@ describe("parity with the Python grader", () => {
           `${lot.lot_key} roi_at_current`,
         ).toBeLessThanOrEqual(RATIO_TOL);
         expect(got.grade, `${lot.lot_key} grade`).toBe(want!.grade);
+        expect(
+          Math.abs(got.handling_applied - want!.handling_applied),
+          `${lot.lot_key} handling_applied`,
+        ).toBeLessThanOrEqual(MONEY_TOL);
+        expect(
+          Math.abs(got.handling_breakeven - want!.handling_breakeven),
+          `${lot.lot_key} handling_breakeven`,
+        ).toBeLessThanOrEqual(MONEY_TOL);
       }
     });
   }

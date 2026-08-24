@@ -475,6 +475,34 @@ documented as a multiple of GovDeals rates rather than a fraction of retail,
 and the win curve is on the page so the setting can be chosen against
 evidence.
 
+## 11c. Handling is two rates, not one
+
+`per_unit_handling` was a flat $3 across everything, which is right for a PC
+you test, wipe, photograph and pack and wrong for a charger you drop in a
+box. Measured over the 2,097 priced pallets in the backtest, the damage is
+entirely confined to one class and total there:
+
+| class | pallets | median handling as share of expected revenue | max bid driven to zero |
+|---|---|---|---|
+| adapter | 21 | **121%** | **21** |
+| desktop | 1,156 | 14% | 1 |
+| laptop | 572 | 8% | 0 |
+| aio | 288 | 9% | 0 |
+
+Every charger pallet in the corpus is unbiddable at any price, purely
+because of an assumption about labour. So `Config.part_handling` applies to
+the part family and `per_unit_handling` to machines, chosen once in
+`Config.for_family()` so every formula downstream is untouched.
+
+It defaults to the same $3, because what sorting costs is a fact about a
+workshop the corpus cannot see. Instead the lot page derives the number
+that decides it: *"at $3.00 a unit handling costs $900, more than the $619
+this lot is expected to make; it would need to be under $1.29 a unit for
+any bid to clear your target return."* Sweeping the rate over the corpus,
+adapters go 0/21 winnable at $3 and at $1, 3/21 at $0.50 and 6/21 at $0.25,
+while desktops stay at 116/1,156 throughout — the split moves exactly what
+it should and nothing else.
+
 ## 12. Measured and deliberately not built
 
 Two ideas that look obviously right and did not survive contact with the

@@ -27,10 +27,14 @@ CONFIGS = [
     {"target_roi": 1.00, "recovery": 0.40, "dead_rate": 0.25},
     {"buyer_premium": 0.125, "sales_tax": 0.07, "pickup_cost": 150.0,
      "per_unit_handling": 5.0},
+    # the family split: parts must take the cheaper rate and machines must
+    # not, which only shows up when the two differ
+    {"per_unit_handling": 4.0, "part_handling": 0.5},
 ]
 
 
-def regrade(lot: dict, cfg: grade.Config) -> dict:
+def regrade(lot: dict, base: grade.Config) -> dict:
+    cfg = base.for_family(lot.get("item_family"))
     parts_out = lot["ceiling"] * (1 - cfg.dead_rate) * cfg.recovery
     rev = (max(parts_out, lot["floor"])
            if lot.get("floor_trusted", True) else parts_out)
@@ -46,6 +50,10 @@ def regrade(lot: dict, cfg: grade.Config) -> dict:
         "roi_at_current": round(roi, 6),
         "grade": grade._grade(rel, lot["confidence"],
                               lot.get("contents_known", True)),
+        "handling_applied": round(cfg.per_unit_handling, 2),
+        "handling_breakeven": round(max(
+            0.0, (rev / (1 + cfg.target_roi) - cfg.pickup_cost) / lot["units"]
+        ) if lot["units"] > 0 else 0.0, 6),
     }
 
 
@@ -66,6 +74,10 @@ def main() -> int:
     lots = ([{**lot, "contents_known": True} for lot in lots]
             + [{**lot, "lot_key": lot["lot_key"] + "#unrated",
                 "contents_known": False} for lot in lots])
+    # And cover the handling split: a part lot must pick up the part rate.
+    lots = ([{**lot, "item_family": "computer"} for lot in lots]
+            + [{**lot, "lot_key": lot["lot_key"] + "#part",
+                "item_family": "part"} for lot in lots])
     cases = []
     for overrides in CONFIGS:
         cfg = grade.Config(**overrides)
@@ -74,6 +86,7 @@ def main() -> int:
                 "buyer_premium": cfg.buyer_premium, "sales_tax": cfg.sales_tax,
                 "pickup_cost": cfg.pickup_cost,
                 "per_unit_handling": cfg.per_unit_handling,
+                "part_handling": cfg.part_handling,
                 "recovery": cfg.recovery, "dead_rate": cfg.dead_rate,
                 "target_roi": cfg.target_roi,
             },
