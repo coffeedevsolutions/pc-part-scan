@@ -409,6 +409,49 @@ Manifest triage, daily digest, weekly health review. *Done when:* the
 bulk-discount fit's n has grown week-over-week without human PDF-reading, and
 the owner gets a useful digest daily.
 
+## 11b. Backtest — the only section that can say the grader is wrong
+
+`pcps backtest` (weekly, `backtest.yml`) re-grades every closed lot with its
+own outcome held out of the models that price it: 5-fold, refitting the
+single-unit model, the bulk discount and the per-class quotes each time.
+Results land in `backtests` and render on Models.
+
+Two rules make the numbers mean anything.
+
+**Pallets are reported separately from single units.** A sold lot of one
+machine with its CPU in the title is exactly what the single-unit model is
+fitted to predict, and 87% of the machine-priced corpus is single units.
+Pooled, `hammer / ceiling` reads 1.11 and the ceiling looks like a perfect
+predictor; on pallets of 5+ it reads 0.77, and on 50+ it reads 0.64. Only
+the pallet rows describe pallets, which is all this tool ever buys.
+
+**Grade is not backtestable yet.** Grade is headroom against the *current*
+bid, and the sold archive was swept after close: 3 of 7,149 lots carry any
+observation from before their auction ended. Confidence is bucketed instead
+— it does not depend on the bid, and it holds up: floors land within 2× of
+the hammer 70% of the time at confidence 0.8+, against 30% at 0.4+.
+
+What the first run said, over 2,359 closed pallets:
+
+| | median | reading |
+|---|---|---|
+| hammer ÷ ceiling | 0.77 | a pallet clears at about the bulk discount off the summed per-unit value |
+| hammer ÷ floor | 1.76 | the floor is roughly half what pallets actually fetch |
+| would have won | 14% | at the default 55% recovery and 60% target ROI |
+
+The last row is the finding. Sweeping the two levers on the same predictions
+shows target return barely matters (60% → 20% moves the win rate 14% → 21%)
+while recovery dominates (55% → 200% moves it 14% → 64%). That is because
+the ceiling is fitted on GovDeals single-unit *sales* — a wholesale clearing
+price, not a retail parts-out price — so multiplying it by 0.55 assumes you
+resell for roughly half what the wholesale market already pays.
+
+The default is left alone: what you realize per unit is a fact about your
+resale channel, not something the corpus can measure. But `recovery` is now
+documented as a multiple of GovDeals rates rather than a fraction of retail,
+and the win curve is on the page so the setting can be chosen against
+evidence.
+
 ## 12. Measured and deliberately not built
 
 Two ideas that look obviously right and did not survive contact with the

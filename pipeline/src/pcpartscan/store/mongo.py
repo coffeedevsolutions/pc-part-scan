@@ -12,6 +12,8 @@ Collections (database `pcps` unless PCPS_DB overrides):
   sold              closed lots with realized hammer price.
   manifests         parsed spec-sheet machine mixes, _id = lot key.
   model_runs        one doc per fit run: summary prices + full coefficients.
+  backtests         one doc per backtest: how the grader did against lots
+                    that have already closed, out of sample.
   snapshots         graded output of each scan run, _id = run id.
   meta              _id="index": counts, last run, last config.
   job_runs          one doc per scheduled job execution.
@@ -310,6 +312,24 @@ def write_snapshot(run: str, payload: dict) -> str:
     return f"snapshots/{run}"
 
 
+def write_backtest(run: str, report: dict) -> str:
+    """Persist one backtest run.
+
+    The per-lot predictions are kept out of the document: 7,000 of them is
+    megabytes, and on an M0 free tier the summary is what earns its space.
+    They stay available by re-running, which takes seconds.
+    """
+    doc = {k: v for k, v in report.items() if k != "predictions"}
+    get_db().backtests.replace_one({"_id": run}, {
+        "_id": run, "run_id": run, "generated_at": utcnow(), **doc,
+    }, upsert=True)
+    return f"backtests/{run}"
+
+
+def latest_backtest() -> dict | None:
+    return get_db().backtests.find_one(sort=[("_id", -1)])
+
+
 def update_index(run: str, extra: dict | None = None) -> dict:
     db = get_db()
     idx = {
@@ -325,6 +345,7 @@ def update_index(run: str, extra: dict | None = None) -> dict:
             "manifests": db.manifests.estimated_document_count(),
             "snapshots": db.snapshots.estimated_document_count(),
             "model_runs": db.model_runs.estimated_document_count(),
+            "backtests": db.backtests.estimated_document_count(),
         },
     }
     if extra:

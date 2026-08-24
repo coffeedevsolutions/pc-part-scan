@@ -1,18 +1,25 @@
-import { componentPrices, latestSnapshot, modelRuns } from "@/lib/data";
+import {
+  componentPrices,
+  latestBacktest,
+  latestSnapshot,
+  modelRuns,
+} from "@/lib/data";
 import { usd } from "@/lib/format";
 
 import { HelpIcon } from "@/components/Tooltip";
 
+import { BacktestPanel } from "./Backtest";
 import { ModelTrends } from "./ModelTrends";
 import { PriceEditor } from "./PriceEditor";
 
 export const dynamic = "force-dynamic";
 
 export default async function ModelsPage() {
-  const [runs, pinned, snap] = await Promise.all([
+  const [runs, pinned, snap, bt] = await Promise.all([
     modelRuns(),
     componentPrices(),
     latestSnapshot(),
+    latestBacktest(),
   ]);
   const classes = Object.values(snap?.class_prices ?? {})
     .filter((q) => q.usable)
@@ -75,6 +82,8 @@ export default async function ModelsPage() {
           </div>
         </div>
       )}
+
+      {bt && <BacktestPanel bt={bt} />}
 
       <ModelTrends
         runs={runs.map((r) => ({

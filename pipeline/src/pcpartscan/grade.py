@@ -7,10 +7,19 @@ MAX BID: the most you can pay and still clear your target return. Headroom
 the auction runs.
 
   floor    resale-as-lot value, from the sold BULK-lot model
-  ceiling  parts-out value, from the sold SINGLE-unit model (with any
-           hand-pinned CPU prices substituted), optionally blended with
-           eBay asks once their haircut to realized prices is measured
+  ceiling  the lot's units priced ONE AT A TIME, from the sold single-unit
+           model (with any hand-pinned CPU prices substituted), optionally
+           blended with eBay asks once their haircut is measured
   target   the blend you actually underwrite against (see Config.recovery)
+
+A warning about the ceiling, from the backtest (pcps backtest). It is often
+called a "parts-out" number, and it is not one: it is fitted on GovDeals
+single-unit SALES, so it is a wholesale clearing price per unit, not what
+the parts fetch at retail. Across 2,351 closed pallets it predicted the
+whole lot's hammer at a median ratio of 0.77 -- roughly the bulk discount,
+which is what you would expect if both numbers describe the same market.
+
+That matters for Config.recovery, which multiplies it.
 """
 
 from __future__ import annotations
@@ -37,8 +46,19 @@ class Config:
     per_unit_handling: float = 3.00   # test, wipe, photograph, pack each machine
 
     # --- what you actually realize --------------------------------------
-    # Fraction of the parts-out ceiling you expect to capture after dead units,
-    # listing fees, and time. 0.55 is deliberately conservative.
+    # What you get per unit through YOUR channel, as a multiple of what the
+    # unit fetches at GovDeals auction -- because that, not a retail
+    # parts-out price, is what the ceiling measures (see the module
+    # docstring). So 1.00 means you resell at GovDeals rates and 2.00 means
+    # you get double, which is roughly what parting out on eBay is for.
+    #
+    # 0.55 is inherited from when the ceiling was believed to be a retail
+    # number. Read literally it says you realize 55% of wholesale, which is
+    # a loss on every lot, and the backtest agrees: at this setting you
+    # would have been outbid on 92% of closed pallets. Left alone because
+    # what you actually realize is a fact about your resale operation, not
+    # something the model can measure -- but see `pcps backtest` before
+    # trusting it.
     recovery: float = 0.55
     dead_rate: float = 0.10       # share of units assumed non-functional
 
@@ -195,7 +215,15 @@ def _grade(roi_headroom: float, confidence: float,
 
 def value_lot(rec: dict, single, basket, ebay, cfg: Config,
               fetch_manifest: bool = True,
-              class_table: classprice.ClassPriceTable | None = None) -> Valuation:
+              class_table: classprice.ClassPriceTable | None = None,
+              manifests: dict | None = None) -> Valuation:
+    """Value one lot.
+
+    `manifests` is an already-loaded {lot_key: manifest} map. Passing it
+    keeps the grader off the network entirely, which is what makes a
+    thousands-of-lots backtest possible at all -- one fetch per lot would
+    be hours of polite HTTP.
+    """
     title = rec.get("assetShortDescription") or ""
     units = specs.parse_unit_count(title)
     key = f"{rec['accountId']}-{rec['assetId']}"
@@ -204,16 +232,20 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
         units = 1        # provisional; a manifest below will correct it
 
     mix, exact = [], False
-    if (unknown_count or units >= 5) and fetch_manifest:
-        try:
-            ms = harvest.fetch_manifest(rec["accountId"], rec["assetId"])
-            mix = [m.to_dict() for m in ms]
-            got = sum(m["qty"] for m in mix)
-            exact = bool(mix) and abs(got - units) <= max(1, units * 0.05)
+    if unknown_count or units >= 5:
+        if manifests is not None:
+            mix = list((manifests.get(key) or {}).get("machines") or [])
+        elif fetch_manifest:
+            try:
+                mix = [m.to_dict() for m in
+                       harvest.fetch_manifest(rec["accountId"], rec["assetId"])]
+            except Exception:
+                mix = []
+        if mix:
+            got = sum(m.get("qty", 1) for m in mix)
+            exact = abs(got - units) <= max(1, units * 0.05)
             if exact:
                 units = got
-        except Exception:
-            mix = []
     if not mix:
         mix = [specs.machine_from_text(title, units).to_dict()]
 

@@ -2,6 +2,48 @@ import "server-only";
 
 import { getDb } from "./mongo";
 
+/** A distribution of one ratio across a bucket of backtested lots. */
+export interface Spread {
+  n: number;
+  p10: number;
+  p25: number;
+  median: number;
+  p75: number;
+  p90: number;
+}
+
+export interface BacktestBucket {
+  name: string;
+  n: number;
+  n_priced: number;
+  vs_max_bid: Spread | Record<string, never>;
+  vs_floor: Spread | Record<string, never>;
+  vs_ceiling: Spread | Record<string, never>;
+  win_rate?: number;
+  floor_within_2x?: number;
+}
+
+/** How the grader did against lots that already closed (backtest.py). */
+export interface Backtest {
+  run_id: string;
+  generated_at: string;
+  folds: number;
+  n_lots: number;
+  config: Record<string, number>;
+  overall: BacktestBucket;
+  pallets: BacktestBucket;
+  by_size: Record<string, BacktestBucket>;
+  by_confidence: Record<string, BacktestBucket>;
+  by_path: Record<string, BacktestBucket>;
+  by_class: Record<string, BacktestBucket>;
+  win_curves: {
+    n_pallets: number;
+    by_target_roi: { target_roi: number; n: number; win_rate: number; median_ratio: number }[];
+    by_recovery: { recovery: number; n: number; win_rate: number; median_ratio: number }[];
+    grid: { target_roi: number; recovery: number; win_rate: number }[];
+  };
+}
+
 /** One graded lot from a scan snapshot (grade.py Valuation, serialized). */
 export interface SnapshotLot {
   lot_key: string;
@@ -187,6 +229,16 @@ export async function latestSnapshot(): Promise<Snapshot | null> {
     .limit(1)
     .next();
   return doc ? clean<Snapshot>(doc) : null;
+}
+
+/** The most recent backtest, or null before one has ever been run. */
+export async function latestBacktest(): Promise<Backtest | null> {
+  const doc = await coll("backtests")
+    .find({})
+    .sort({ _id: -1 })
+    .limit(1)
+    .next();
+  return doc ? clean<Backtest>(doc) : null;
 }
 
 /** Fresher bids than the snapshot: last_obs per key from the lots collection. */

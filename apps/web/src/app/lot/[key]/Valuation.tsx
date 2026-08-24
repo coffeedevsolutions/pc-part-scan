@@ -68,7 +68,7 @@ export function ValuationWaterfall({
 
   const steps: Step[] = [
     {
-      label: "What the parts are worth",
+      label: "The units priced one at a time",
       why: byClass ? (
         <>
           We could not read what is inside, so this is {lot.units.toLocaleString()}{" "}
@@ -80,9 +80,11 @@ export function ValuationWaterfall({
       ) : (
         <>
           {lot.units.toLocaleString()}{" "}
-          {lot.units === 1 ? "machine" : "machines"} priced one at a time,
-          from what comparable single units have actually sold for
-          {sourceCount > 1 ? ", averaged across sources" : ""}.
+          {lot.units === 1 ? "machine" : "machines"} at what comparable single
+          units fetched at GovDeals auction
+          {sourceCount > 1 ? ", averaged across sources" : ""}. A wholesale
+          number, not a retail one — closed pallets clear at a median of
+          0.77× it.
         </>
       ),
       amount: lot.ceiling,
@@ -96,13 +98,16 @@ export function ValuationWaterfall({
       sign: "minus",
     },
     {
-      label: `Less what you never recover (${pct(1 - cfg.recovery)})`,
-      why: "Listing fees, returns, price drops, and your time. You keep the rest.",
-      amount: afterDead - partsOut,
-      sign: "minus",
+      label:
+        cfg.recovery <= 1
+          ? `Less what you never recover (${pct(1 - cfg.recovery)})`
+          : `Plus what you make above GovDeals rates (${pct(cfg.recovery - 1)})`,
+      why: `Your recovery setting says you realise ${pct(cfg.recovery)} of what a unit fetches at GovDeals auction. Below 100% you are assuming you resell for less than the wholesale market pays.`,
+      amount: Math.abs(afterDead - partsOut),
+      sign: partsOut < afterDead ? "minus" : undefined,
     },
     {
-      label: "Parting it out would make",
+      label: "Selling the units separately would make",
       amount: partsOut,
       total: true,
     },
