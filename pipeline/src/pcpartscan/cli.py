@@ -236,7 +236,8 @@ def cmd_scan(a) -> int:
                           "bulk_n": bulk.n_obs if bulk else 0},
             "screened": len(vals),
             "confidence_gate": grade.CONFIDENCE_GATE,
-            "class_prices": classes.to_dict(bulk.k if bulk else None),
+            "class_prices": classes.to_dict(
+                bulk.k if bulk and bulk.trusted else None),
             "lots": [asdict(v) for v in vals],
         })
         idx = ds.update_index(run, {"last_config": asdict(cfg)})

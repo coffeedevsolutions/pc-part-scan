@@ -22,6 +22,8 @@ export interface SnapshotLot {
   contents_known?: boolean;
   /** units whose CPU the mix actually names */
   identified_units?: number;
+  /** false when the title never said how many things are in the lot */
+  count_known?: boolean;
   /** what kind of thing we think the lot holds (classify.py) */
   item_class?: string | null;
   item_family?: "computer" | "part" | null;

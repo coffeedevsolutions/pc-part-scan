@@ -101,6 +101,16 @@ _COUNT_PATTERNS = [
     re.compile(r"\bqty\.?[:\s]+(\d{1,4})\b", re.I),
     re.compile(r"\bquantity[:\s]+(\d{1,4})\b", re.I),
     re.compile(r"\b(\d{1,4})\s*ea\b", re.I),
+    # "LAPTOPS APPROX 150", "approximately 26"
+    re.compile(r"\bapprox(?:imately)?\.?\s*(\d{1,4})\b", re.I),
+    # "(26 Items)", "(40 units)", "50 pieces"
+    re.compile(r"\(?\s*(\d{1,4})\s*(?:items?|units?|pieces?|pcs?)\b", re.I),
+    # a parenthesised count anywhere: "... and fifty (1750) Lenovo 100e".
+    # Not "(LOT 1)", "(ID #47379)" or "(26-2144-5)", which are labels.
+    re.compile(r"(?<![\w#])\(\s*(\d{1,4})\s*\)\s*(?=[A-Za-z])", re.I),
+    # a bare count after a lead-in: "Bulk Auction: 40 Dell Latitude 7320"
+    re.compile(r"(?:^|[:\u2013\u2014]\s*|\s-\s)\s*(\d{1,4})\s+"
+               r"(?!GB|TB|MB|GHZ|MHZ|IN\b|\")", re.I),
     # leading bare count: "137 Various Brands/Models of Micro Computers"
     re.compile(r"^\s*(\d{1,4})\s+(?!GB|TB|MB|GHZ|MHZ|IN\b|\")", re.I),
 ]

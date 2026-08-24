@@ -401,3 +401,40 @@ C-grade lot gets burst sampling.
 Manifest triage, daily digest, weekly health review. *Done when:* the
 bulk-discount fit's n has grown week-over-week without human PDF-reading, and
 the owner gets a useful digest daily.
+
+## 12. Measured and deliberately not built
+
+Two ideas that look obviously right and did not survive contact with the
+data. Recorded so they are not re-argued from first principles every time
+somebody reads a title with a generation in it.
+
+### A generation multiplier on class-priced computer lots
+
+Titles often name an Intel generation without naming a CPU ("Dell Latitude
+Laptops 5th-11th Gen"), and the relationship to price is real: fitting
+`log($/unit) ~ generation` over the 64 sold bulk lots that state one gives
+**+27.4% per generation, R² 0.396**, monotone from $31/unit at 5th gen to
+$133 at 11th.
+
+It is still not worth building yet:
+
+- **It barely predicts.** Leave-one-out median absolute error is 18%,
+  against 20% for a flat median of the same lots. A bootstrap over 2,000
+  resamples has the regression beating that baseline 94% of the time — real,
+  but a 2-point error reduction.
+- **It barely applies.** Of 706 live computer lots, 24 state a generation
+  far enough from the corpus median for the multiplier to move the number
+  at all. Most say "5th-11th Gen", whose midpoint is the median.
+- **The path is already capped.** Class-priced lots top out at grade C, so
+  a better class price cannot promote a lot into the recommendations.
+
+Revisit after the backtest (Phase 10) can say whether it improves realized
+outcomes rather than in-sample fit, or once the corpus carries a few hundred
+generation-tagged lots instead of 64.
+
+### Sub-class specifics for parts
+
+Wattage for chargers and screen size for monitors were checked as ways to
+split a class quote finer. Neither has the data: 12 of 21 charger pallets
+state a wattage and 45W and 65W both clear about $3 a unit, and 3 of 237
+monitor lots state a size. There is nothing to fit.

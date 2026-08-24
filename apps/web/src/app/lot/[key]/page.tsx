@@ -159,9 +159,11 @@ export default async function LotPage({
       {unrated && (
         <div className="card notice">
           <strong>Not priced.</strong>{" "}
-          {v!.item_class
-            ? `We read this as ${v!.item_class}s, but too few ${v!.item_class} lots have sold for us to put a number on one.`
-            : `We cannot tell what this lot holds — ${v!.class_reason || "the title does not name it"}.`}{" "}
+          {v!.count_known === false
+            ? `The title never says how many things are in this lot, and no spec sheet settled it. Every number here is per unit, so without a count there is nothing to multiply.`
+            : v!.item_class
+              ? `We read this as ${v!.item_class}s, but too few ${v!.item_class} lots have sold for us to put a number on one.`
+              : `We cannot tell what this lot holds — ${v!.class_reason || "the title does not name it"}.`}{" "}
           Anything we produced would come from a generic per-unit rate — a
           number that says how many things are on the pallet, not what they
           are. A pallet of laptop chargers and a pallet of i7 desktops come
@@ -305,6 +307,21 @@ function Contents({
                 <span className="muted">
                   {lot?.class_reason || "not identified"}
                 </span>
+              )}
+            </td>
+          </tr>
+          <tr>
+            <td>Count</td>
+            <td>
+              {lot?.count_known === false ? (
+                <span className="muted">
+                  not stated anywhere — the lot cannot be priced per unit
+                </span>
+              ) : (
+                <>
+                  {lot?.units.toLocaleString()} units
+                  {lot?.exact_manifest ? " (from the spec sheet)" : " (from the title)"}
+                </>
               )}
             </td>
           </tr>

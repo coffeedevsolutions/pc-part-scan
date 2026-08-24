@@ -73,3 +73,22 @@ def test_abstention_beats_a_generous_grade():
     # the arithmetic says A; not knowing the contents overrules it
     assert grade._grade(0.95, 1.0) == "A"
     assert grade._grade(0.95, 1.0, contents_known=False) == grade.UNRATED
+
+
+def test_a_lot_with_no_stated_count_is_not_priced_as_one(monkeypatch):
+    """"LAPTOPS" is a pallet, and a pallet is not one laptop.
+
+    Every number in the system is per unit, so a missing count silently
+    became units=1 -- which turned a pallet into a $21 max bid and hid it at
+    the bottom of the board rather than flagging it as unreadable.
+    """
+    v = _value("LAPTOPS", monkeypatch)
+    assert v.count_known is False
+    assert v.contents_known is False
+    assert v.grade == grade.UNRATED
+
+
+def test_a_stated_count_is_still_used(monkeypatch):
+    v = _value("LAPTOPS APPROX 150", monkeypatch)
+    assert v.count_known is True
+    assert v.units == 150

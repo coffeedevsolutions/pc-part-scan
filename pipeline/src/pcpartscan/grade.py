@@ -73,6 +73,10 @@ class Valuation:
     # the ceiling is driven by unit count rather than by contents.
     contents_known: bool = True
     identified_units: int = 0
+    # False when the title never said how many things are in the lot and no
+    # spec sheet settled it. A per-unit price times an unknown count is not
+    # an estimate, so such a lot is never graded.
+    count_known: bool = True
     # What we think the lot holds, and how we ended up pricing it.
     # priced_by is "machines" when the CPU feature model did the work and
     # "class" when it fell back to sold comps for this kind of thing.
@@ -231,8 +235,23 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
     quote = (class_table.get(kind.item_class) if class_table else None)
     machines_known = _contents_known(n_cpu_known, units)
 
+    # "LAPTOPS", "Pallet of Think Centre Computers" -- plainly a pallet, with
+    # no number anywhere. Every value here is per unit, so pricing one of
+    # these as a single machine turns a pallet into a $21 max bid and buries
+    # it at the bottom of the board. Say we do not know instead.
+    v.count_known = not (unknown_count and not exact)
+    if not v.count_known:
+        v.identified_units = n_cpu_known
+        v.contents_known = False
+        v.confidence = 0.0
+        v.grade = UNRATED
+        return v
+
     if not machines_known and quote is not None:
-        k = basket.k if basket else classprice.DEFAULT_K
+        # only the fitted discount when the fit is sound; an untrusted k
+        # would be doing real work here, since it is what converts a pallet
+        # price into the parts-out ceiling that caps the class quote
+        k = (basket.k if basket and basket.trusted else classprice.DEFAULT_K)
         return _value_by_class(v, quote, cfg, k)
 
     # --- floor: what the whole lot clears at auction ---------------------
