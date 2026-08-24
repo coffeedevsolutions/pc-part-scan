@@ -14,3 +14,7 @@ report.json
 # Downloaded spec PDFs are re-fetchable; the parsed result lives in
 # data/manifests/ instead.
 attachments/
+
+# archive dumps and build artifacts
+dump/
+*.egg-info/

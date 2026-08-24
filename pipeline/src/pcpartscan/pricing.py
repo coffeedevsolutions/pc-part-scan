@@ -323,11 +323,16 @@ class EbayAdapter:
     INSIGHTS_URL = ("https://api.ebay.com/buy/marketplace_insights/v1_beta"
                     "/item_sales/search")
 
+    MAX_CONSECUTIVE_FAILURES = 3   # circuit breaker: stop calling for the run
+    CALL_TIMEOUT = 10              # seconds; a degraded API must not stall a scan
+
     def __init__(self):
         self.cid = os.environ.get("EBAY_CLIENT_ID")
         self.secret = os.environ.get("EBAY_CLIENT_SECRET")
         self.insights = os.environ.get("EBAY_INSIGHTS") == "1"
         self._token = None
+        self._memo: dict[tuple, float | None] = {}
+        self._consecutive_failures = 0
         self.enabled = bool(self.cid and self.secret)
 
     def _auth(self) -> str | None:
@@ -350,14 +355,30 @@ class EbayAdapter:
         return self._token
 
     def value(self, machine: dict) -> float | None:
-        """Median comparable price for this machine, or None if unavailable."""
-        tok = self._auth()
-        if not tok:
-            return None
-        import urllib.parse, urllib.request
+        """Median comparable price for this machine, or None if unavailable.
+
+        Memoized per (cpu, ram) for the life of the adapter: the same CPU
+        appears across many machines and lots, and re-querying it would turn
+        one scan into hundreds of sequential HTTP calls. A few consecutive
+        failures trip a circuit breaker so a degraded eBay API cannot stall
+        a scheduled scan into its job timeout.
+        """
         cpu = machine.get("cpu")
         if not cpu:
             return None
+        if self._consecutive_failures >= self.MAX_CONSECUTIVE_FAILURES:
+            return None
+        memo_key = (cpu, machine.get("ram_gb") or 0)
+        if memo_key in self._memo:
+            return self._memo[memo_key]
+        try:
+            tok = self._auth()
+        except Exception:
+            self._consecutive_failures += 1
+            return None
+        if not tok:
+            return None
+        import urllib.parse, urllib.request
         q = f"desktop computer {cpu} {machine.get('ram_gb') or ''}GB".strip()
         url = (self.INSIGHTS_URL if self.insights else self.BROWSE_URL) + "?" + \
             urllib.parse.urlencode({"q": q, "limit": "50",
@@ -366,20 +387,22 @@ class EbayAdapter:
             "Authorization": f"Bearer {tok}",
             "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"})
         try:
-            with urllib.request.urlopen(req, timeout=30) as r:
+            with urllib.request.urlopen(req, timeout=self.CALL_TIMEOUT) as r:
                 data = json.loads(r.read())
         except Exception:
+            self._consecutive_failures += 1
+            self._memo[memo_key] = None
             return None
+        self._consecutive_failures = 0
         items = data.get("itemSales") or data.get("itemSummaries") or []
         prices = []
         for it in items:
             p = (it.get("lastSoldPrice") or it.get("price") or {}).get("value")
             if p:
                 prices.append(float(p))
-        if not prices:
-            return None
-        prices.sort()
-        return prices[len(prices) // 2]
+        result = sorted(prices)[len(prices) // 2] if prices else None
+        self._memo[memo_key] = result
+        return result
 
 
 # ------------------------------------------------------------------- persistence

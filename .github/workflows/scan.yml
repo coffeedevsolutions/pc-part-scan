@@ -1,0 +1,46 @@
+name: scan
+
+# Harvest live lots + recent closures, fit, grade, write to MongoDB.
+# Schedule is close-time weighted (see docs/ARCHITECTURE.md §5): every 2h
+# through the 12:00-22:00 UTC closing band, plus overnight coverage.
+# Crons only fire once this file is on the default branch.
+
+on:
+  schedule:
+    - cron: "0 12,14,16,18,20,22 * * *"
+    - cron: "0 0,3,8 * * *"
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Deep refresh (more sold pages, more manifest fetches)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install --quiet ./pipeline
+
+      - name: Scan
+        env:
+          # PCPS_STORE=mongo forces the Mongo backend: a missing/empty
+          # MONGODB_URI then fails the job instead of silently writing to
+          # the runner's throwaway filesystem
+          PCPS_STORE: mongo
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+        run: pcps scan ${{ inputs.full && '--full' || '' }}
