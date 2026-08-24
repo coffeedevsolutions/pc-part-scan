@@ -31,6 +31,13 @@ export const HELP = {
   cpuBaseValue: "What the model thinks one machine with this CPU is worth, before RAM and drive adjustments. Pin a value to override it.",
   ranking: "Lots are ordered by headroom multiplied by confidence, so a large number we do not believe does not outrank a smaller one we do. Click any column header to sort by that column instead.",
   jobRuns: "Every scheduled scan, burst and archive, with what it wrote. The pipeline's heartbeat.",
+  floorCeiling: "The range this lot's value sits in: flipping the whole pallet at auction on the left, selling every unit individually on the right. What you actually underwrite against is somewhere between them.",
+  identifiedUnits: "How many of the lot's units have a component we recognise. Below half, we do not publish a price for the lot at all.",
+  bidHistory: "Every bid we have observed, from the hourly scan plus a tighter burst in the final hours. Flat stretches are real: most lots take their bids at the very end.",
+  machineMix: "What we believe is in the lot, from the seller's spec sheet if it has a readable one and from the title if it does not. This is what the parts-out value is computed from, so a wrong row here is a wrong price.",
+  hammer: "What the lot actually closed at, excluding buyer premium. This is the number the models are fitted on.",
+  soldClosed: "When the auction ended. Recent comps are better comps — hardware prices drift.",
+  datasetCounts: "How much the pipeline has accumulated. The models get better as sold lots and readable spec sheets pile up.",
 } as const;
 
 export type HelpKey = keyof typeof HELP;

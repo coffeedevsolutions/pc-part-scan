@@ -1,9 +1,12 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { UNRATED } from "@pcps/valuation";
+import { DEFAULT_CONFIG, UNRATED, regrade, type Config } from "@pcps/valuation";
 
 import { Grade } from "@/components/Fields";
 import { Ago, Countdown } from "@/components/Live";
+import { Stat } from "@/components/Stat";
+import { HelpIcon } from "@/components/Tooltip";
 
 import {
   bidSeries,
@@ -12,12 +15,14 @@ import {
   getManifest,
   getNote,
   isWatched,
+  savedAssumptions,
   snapshotEntry,
 } from "@/lib/data";
 import { agoFrom, remainingFrom, shortDate, usd } from "@/lib/format";
 
 import { BidCurve } from "./BidCurve";
 import { LotControls } from "./LotControls";
+import { ValuationWaterfall } from "./Valuation";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +34,7 @@ export default async function LotPage({
   const { key } = await params;
   if (!/^\d+-\d+$/.test(key)) notFound();
 
-  const [lot, series, manifest, snap, note, action, watched] =
+  const [lot, series, manifest, snap, note, action, watched, saved] =
     await Promise.all([
       getLot(key),
       bidSeries(key),
@@ -38,7 +43,11 @@ export default async function LotPage({
       getNote(key),
       getLotAction(key),
       isWatched(key),
+      savedAssumptions(),
     ]);
+  // the same assumptions the board is using, so a max bid does not change
+  // when you click through to the lot it belongs to
+  const cfg: Config = { ...DEFAULT_CONFIG, ...saved };
   if (!lot) notFound();
   const v = snap?.lot;
   // An abstention: too little of the lot is identifiable to price it. The
@@ -51,7 +60,8 @@ export default async function LotPage({
   // between headroom and a lost deposit.
   const bid = lot.last_obs?.bid ?? v?.current_bid ?? null;
   const bidAt = lot.last_obs?.at ?? null;
-  const headroom = v && bid != null ? v.max_bid - bid : null;
+  const re = v ? regrade({ ...v, current_bid: bid ?? v.current_bid }, cfg) : null;
+  const headroom = re ? re.headroom : null;
 
   return (
     <main>
@@ -65,26 +75,27 @@ export default async function LotPage({
       </p>
 
       <div className="statrow">
-        <div className="stat">
-          <div className="label">{open ? "Closes in" : "Closed"}</div>
-          <div className="value">
-            {open ? (
-              <Countdown
-                endUtc={lot.auction_end_utc}
-                initial={remainingFrom(lot.auction_end_utc)}
-              />
-            ) : (
-              <span className="muted" style={{ fontSize: 17 }}>
-                {shortDate(lot.auction_end_utc)}
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="stat">
-          <div className="label">Current bid</div>
-          <div className="value">{usd(bid)}</div>
-          <div className="muted small">
-            {bidAt ? (
+        <Stat
+          label={open ? "Closes in" : "Closed"}
+          help="closes"
+          helpLabel="the closing time"
+          small={!open}
+        >
+          {open ? (
+            <Countdown
+              endUtc={lot.auction_end_utc}
+              initial={remainingFrom(lot.auction_end_utc)}
+            />
+          ) : (
+            <span className="muted">{shortDate(lot.auction_end_utc)}</span>
+          )}
+        </Stat>
+        <Stat
+          label="Current bid"
+          help="currentBid"
+          helpLabel="the current bid"
+          sub={
+            bidAt ? (
               <>
                 as of <Ago at={bidAt} initial={agoFrom(bidAt)} />
                 {lot.last_obs?.bid_count != null
@@ -93,52 +104,52 @@ export default async function LotPage({
               </>
             ) : (
               "no observation yet"
-            )}
-          </div>
-        </div>
+            )
+          }
+        >
+          {usd(bid)}
+        </Stat>
         {v && (
           <>
-            <div className="stat">
-              <div className="label">Grade · confidence</div>
-              <div className="value">
-                <Grade grade={unrated ? UNRATED : v.grade} />{" "}
-                <span className="muted" style={{ fontSize: 15 }}>
-                  {v.confidence.toFixed(2)}
-                </span>
-              </div>
-            </div>
-            <div className="stat">
-              <div className="label">Max bid</div>
-              <div className="value">
-                {unrated ? <span className="muted">—</span> : usd(v.max_bid)}
-              </div>
-              <div className="muted small">run {snap!.run_id}</div>
-            </div>
-            <div className="stat">
-              <div className="label">Headroom vs current</div>
-              <div
-                className={`value ${
-                  unrated || headroom == null ? "" : headroom >= 0 ? "pos" : "neg"
-                }`}
-              >
-                {unrated || headroom == null ? (
-                  <span className="muted">—</span>
-                ) : (
-                  usd(headroom)
-                )}
-              </div>
-              <div className="muted small">against the bid above</div>
-            </div>
-            <div className="stat">
-              <div className="label">
-                {unrated ? "Units identified" : "Floor → ceiling"}
-              </div>
-              <div className="value" style={{ fontSize: 17 }}>
-                {unrated
-                  ? `${(v.identified_units ?? 0).toLocaleString()} of ${v.units.toLocaleString()}`
-                  : `${usd(v.floor)} → ${usd(v.ceiling)}`}
-              </div>
-            </div>
+            <Stat label="Grade · confidence" help="grade" helpLabel="the grade">
+              <Grade grade={unrated ? UNRATED : v.grade} />{" "}
+              <span className="muted" style={{ fontSize: 15 }}>
+                {v.confidence.toFixed(2)}
+              </span>
+            </Stat>
+            <Stat
+              label="Max bid"
+              help="maxBid"
+              helpLabel="max bid"
+              sub="at your assumptions"
+            >
+              {unrated ? <span className="muted">—</span> : usd(re!.max_bid)}
+            </Stat>
+            <Stat
+              label="Headroom vs current"
+              help="headroom"
+              helpLabel="headroom"
+              sub="against the bid above"
+              valueClass={
+                unrated || headroom == null ? "" : headroom >= 0 ? "pos" : "neg"
+              }
+            >
+              {unrated || headroom == null ? (
+                <span className="muted">—</span>
+              ) : (
+                usd(headroom)
+              )}
+            </Stat>
+            <Stat
+              label={unrated ? "Units identified" : "Floor → ceiling"}
+              help={unrated ? "identifiedUnits" : "floorCeiling"}
+              helpLabel={unrated ? "units identified" : "floor and ceiling"}
+              small
+            >
+              {unrated
+                ? `${(v.identified_units ?? 0).toLocaleString()} of ${v.units.toLocaleString()}`
+                : `${usd(v.floor)} → ${usd(v.ceiling)}`}
+            </Stat>
           </>
         )}
       </div>
@@ -169,7 +180,10 @@ export default async function LotPage({
       />
 
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>Bid history</h2>
+        <h2 style={{ marginTop: 0 }}>
+          Bid history
+          <HelpIcon k="bidHistory" label="the bid history" />
+        </h2>
         <p className="muted small" style={{ marginTop: 0 }}>
           {series.length} observations · dots mark burst samples
         </p>
@@ -205,60 +219,38 @@ export default async function LotPage({
         </details>
       </div>
 
-      {v && (
+      {v && !unrated && (
         <div className="card">
-          <h2 style={{ marginTop: 0 }}>Valuation</h2>
-          {unrated && (
-            <p className="muted small" style={{ marginTop: 0 }}>
-              Shown for diagnosis only. This lot is unrated, so none of these
-              numbers is underwritten — they are what a generic per-unit rate
-              would have produced.
-            </p>
-          )}
-          <table className="data" style={{ maxWidth: 560 }}>
-            <tbody>
-              {Object.entries(v.ceiling_sources).map(([src, val]) => (
-                <tr key={src}>
-                  <td>ceiling · {src.replace(/_/g, " ")}</td>
-                  <td className="num">{usd(val)}</td>
-                </tr>
-              ))}
-              <tr>
-                <td>ceiling (blend, parts-out)</td>
-                <td className="num">{usd(v.ceiling)}</td>
-              </tr>
-              <tr>
-                <td>
-                  floor (resale as lot)
-                  {v.floor_trusted === false && (
-                    <div className="muted small">
-                      not used in the estimate below — the bulk-resale fit is
-                      currently too weak to underwrite against
-                    </div>
-                  )}
-                </td>
-                <td className={`num ${v.floor_trusted === false ? "muted" : ""}`}>
-                  {usd(v.floor)}
-                </td>
-              </tr>
-              <tr>
-                <td>expected revenue (underwritten)</td>
-                <td className="num">{usd(v.expected_revenue)}</td>
-              </tr>
-              <tr>
-                <td>ROI at current bid</td>
-                <td className="num">
-                  {(v.roi_at_current * 100).toFixed(0)}%
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <h2 style={{ marginTop: 0 }}>How this number is built</h2>
+          <p className="muted small" style={{ marginTop: 0, marginBottom: 12 }}>
+            Every step below comes off the one above it. Change an assumption
+            on the <Link href="/">Board</Link> and this chain moves with it.
+          </p>
+          <ValuationWaterfall lot={v} cfg={cfg} bid={bid ?? v.current_bid} />
         </div>
+      )}
+
+      {v && unrated && (
+        <details className="card">
+          {/* folded away on purpose: a green headroom figure is exactly the
+              thing this lot is not entitled to show */}
+          <summary className="muted small">
+            Show what a generic per-unit rate would have produced — diagnosis
+            only, none of it underwritten
+          </summary>
+          <ValuationWaterfall
+            lot={v}
+            cfg={cfg}
+            bid={bid ?? v.current_bid}
+            muted
+          />
+        </details>
       )}
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>
-          Machine mix{" "}
+          Machine mix
+          <HelpIcon k="machineMix" label="the machine mix" />{" "}
           <span className="muted small">
             {manifest
               ? manifest.machines.length

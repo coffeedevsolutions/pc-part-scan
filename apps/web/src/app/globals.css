@@ -248,6 +248,22 @@ tr.rowlink:hover td {
 }
 .card.notice strong { color: var(--text-primary); }
 
+/* the valuation chain: subtotals ruled off, ignored steps struck through */
+table.waterfall { max-width: 640px; }
+table.waterfall td { border-bottom: none; padding: 5px 10px; }
+/* a lone minus sign must never wrap away from the number it negates */
+table.waterfall td.num { white-space: nowrap; }
+table.waterfall .wf-label { font-weight: 500; }
+table.waterfall tr.wf-total td {
+  border-top: 1px solid var(--baseline);
+  font-weight: 650;
+}
+table.waterfall.wf-muted td,
+table.waterfall.wf-muted .wf-label { color: var(--text-muted); font-weight: 400; }
+table.waterfall tr.wf-ignored td,
+table.waterfall tr.wf-ignored .wf-label { color: var(--text-muted); }
+table.waterfall tr.wf-ignored td.num { text-decoration: line-through; }
+
 .statrow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
