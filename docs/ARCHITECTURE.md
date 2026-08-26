@@ -294,9 +294,14 @@ separate concerns, and only the first involves a login screen.
   `lots.latest_grade`, so it's fast even if the sliders below aren't touched.
 - **Lot detail** (`/lot/[key]`) — bid curve (from `bid_observations`, burst
   points highlighted), valuation waterfall (floor / ceiling with each source's
-  contribution: fitted, static, eBay), manifest table with per-machine values,
-  photos + spec-sheet links, notes, watch/pass/bid/won buttons, and the
-  auction link out to GovDeals.
+  contribution: fitted, static, eBay), the manifest as a priced table — every
+  spec-sheet line with what one of its machines is worth, that times the line
+  quantity, and a total that is the ceiling the waterfall starts from — photos
+  + spec-sheet links, notes, watch/pass/bid/won buttons, and the auction link
+  out to GovDeals. The per-line price is `mix[].unit_value`, written by
+  `grade.py` from the same model call the ceiling is summed from, so a ceiling
+  you doubt can be traced to the line you doubt. On a class-priced lot every
+  line carries the same number, and the page says why.
 - **Assumptions** (panel, persisted to `settings`) — target ROI, recovery,
   buyer premium, handling, dead rate. Moving a slider regrades the visible
   lots **in the browser** via `packages/valuation` using the latest

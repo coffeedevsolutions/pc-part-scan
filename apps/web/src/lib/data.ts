@@ -118,6 +118,13 @@ export interface MachineLine {
   chassis: string | null;
   has_drive: boolean | null;
   qty: number;
+  /**
+   * What the model says one machine on this line is worth (grade.py writes
+   * it onto the mix). Present only on lots priced by the machine model or
+   * by class comps, and absent on snapshots written before it existed — so
+   * the mix table shows the price columns only when every row has one.
+   */
+  unit_value?: number;
 }
 
 export interface Snapshot {

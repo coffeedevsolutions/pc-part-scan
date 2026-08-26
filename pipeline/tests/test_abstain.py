@@ -15,6 +15,9 @@ def _model(per_unit: float):
     class M:
         r2 = 0.9
 
+        def value(self, machine):
+            return per_unit
+
         def value_mix(self, mix):
             return sum(m.get("qty", 1) for m in mix) * per_unit
 

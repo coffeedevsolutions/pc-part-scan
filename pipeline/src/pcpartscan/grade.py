@@ -333,6 +333,19 @@ def value_lot(rec: dict, single, basket, ebay, cfg: Config,
     per_source = {}
     per_source["govdeals_singles"] = single.value_mix(mix)
 
+    # What each LINE of the spec sheet is worth, not just the total. The
+    # lot page multiplies these out, so they have to be a price the reader
+    # can check: the GovDeals single-unit model alone, which is the one
+    # source with an opinion on every row. When eBay is blended in below,
+    # the ceiling moves off this total and the lot page says so rather than
+    # quietly showing a column that does not add up.
+    #
+    # Copied rather than mutated: these dicts come straight out of the
+    # manifest cache, and writing a price into that cache would put a
+    # valuation artefact in the manifests collection.
+    mix = [{**m, "unit_value": round(single.value(m), 2)} for m in mix]
+    v.mix = mix
+
     def priced_source(value_of) -> float | None:
         """Total for a mix under one independent source, or None if sparse.
 
@@ -407,9 +420,15 @@ def _value_by_class(v: Valuation, quote: classprice.ClassQuote,
     v.contents_known = True
     v.class_quote = quote.to_dict(bulk_discount)
 
-    v.ceiling = quote.ceiling_per_unit(bulk_discount) * v.units
+    per_unit = quote.ceiling_per_unit(bulk_discount)
+    v.ceiling = per_unit * v.units
     v.ceiling_sources = ({"comps_for_this_kind": round(v.ceiling, 2)}
                          if v.ceiling else {})
+    # This path has one price for the whole lot, so every row carries the
+    # same one -- which is the honest thing to show. It is also the point:
+    # a table where every line is the same number is a reader seeing at a
+    # glance that nothing here was priced on its own merits.
+    v.mix = [{**m, "unit_value": round(per_unit, 2)} for m in v.mix]
     v.floor = quote.floor_per_unit * v.units
     v.floor_trusted = quote.has_floor
 
