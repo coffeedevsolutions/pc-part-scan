@@ -127,6 +127,45 @@ export interface MachineLine {
   unit_value?: number;
 }
 
+export interface RecoveryBand {
+  /** the measured multiple, or null when too few CPUs paired to report one */
+  recovery?: number | null;
+  /** the ask-derived variant carries this name instead */
+  upper_bound?: number | null;
+  n_cpus: number;
+  n_sales?: number;
+  n_listings?: number;
+  min_cpus: number;
+  fee_rate?: number;
+  shipping_assumed?: number;
+  median_days_to_sell?: number | null;
+  per_cpu: {
+    cpu: string;
+    ratio: number;
+    ebay_net_median?: number;
+    ask_net_median?: number;
+    govdeals_median: number;
+    n_ebay?: number;
+    n_asks?: number;
+    n_govdeals: number;
+    median_days_listed?: number | null;
+  }[];
+}
+
+export interface RecoveryReport {
+  run_id: string;
+  measured_at: string;
+  /** from live asking prices: available at once, reads high */
+  bound: RecoveryBand;
+  /** departures a getItem call confirmed had ended -- the one to trust */
+  strict: RecoveryBand;
+  /** every departure, including ones that only left the search results */
+  loose: RecoveryBand;
+  /** best-offer listings counted at ask, which biases the figure up */
+  with_offers: RecoveryBand;
+  shipping: number;
+}
+
 export interface Snapshot {
   run_id: string;
   generated_at: string;
@@ -293,6 +332,22 @@ export async function latestBacktest(): Promise<Backtest | null> {
     .limit(1)
     .next();
   return doc ? clean<Backtest>(doc) : null;
+}
+
+/**
+ * What we actually get for a machine, measured on eBay (`pcps recovery`).
+ *
+ * Null until the collector has run: the whole point is that this number is
+ * measured rather than typed in, so a page showing it must be able to say
+ * "not yet" instead of falling back to a default that looks like evidence.
+ */
+export async function latestRecovery(): Promise<RecoveryReport | null> {
+  const doc = await coll("recoveries")
+    .find({})
+    .sort({ measured_at: -1 })
+    .limit(1)
+    .next();
+  return doc ? clean<RecoveryReport>(doc) : null;
 }
 
 /** Fresher bids than the snapshot: last_obs per key from the lots collection. */

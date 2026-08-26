@@ -399,6 +399,9 @@ class EbayAdapter:
 
     TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token"
     BROWSE_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search"
+    ITEM_URL = "https://api.ebay.com/buy/browse/v1/item"
+
+    SEARCH_LIMIT = 50              # Browse caps a page at 200; 50 is plenty
 
     MAX_CONSECUTIVE_FAILURES = 3   # circuit breaker: stop calling for the run
     CALL_TIMEOUT = 10              # seconds; a degraded API must not stall a scan
@@ -416,6 +419,7 @@ class EbayAdapter:
         self.secret = os.environ.get("EBAY_CLIENT_SECRET")
         self._token = None
         self._memo: dict[tuple, float | None] = {}
+        self._listings: dict[tuple, list[dict] | None] = {}
         self._consecutive_failures = 0
         self.enabled = bool(self.cid and self.secret)
         # None until calibrate() succeeds; the adapter stays silent until then
@@ -441,8 +445,15 @@ class EbayAdapter:
             self._token = json.loads(r.read())["access_token"]
         return self._token
 
-    def ask(self, machine: dict) -> float | None:
-        """Median ACTIVE listing price for this machine. An ask, not a sale.
+    def search(self, cpu: str, ram_gb: int | None = None) -> list[dict] | None:
+        """Raw ACTIVE listings for this CPU, or None if the call failed.
+
+        The distinction between None and [] is the whole point of this
+        method: an empty list means eBay has nothing listed, and None means
+        we did not get to ask. The panel treats a listing's absence as a
+        sale, so a failed query that returned [] instead of None would
+        record every listing under it as sold on the strength of an HTTP
+        error.
 
         Memoized per (cpu, ram) for the life of the adapter: the same CPU
         appears across many machines and lots, and re-querying it would turn
@@ -450,14 +461,13 @@ class EbayAdapter:
         failures trip a circuit breaker so a degraded eBay API cannot stall
         a scheduled scan into its job timeout.
         """
-        cpu = machine.get("cpu")
         if not cpu:
             return None
         if self._consecutive_failures >= self.MAX_CONSECUTIVE_FAILURES:
             return None
-        memo_key = (cpu, machine.get("ram_gb") or 0)
-        if memo_key in self._memo:
-            return self._memo[memo_key]
+        memo_key = (cpu, ram_gb or 0)
+        if memo_key in self._listings:
+            return self._listings[memo_key]
         try:
             tok = self._auth()
         except Exception:
@@ -466,15 +476,19 @@ class EbayAdapter:
         if not tok:
             return None
         import urllib.parse, urllib.request
-        # The RAM clause is dropped entirely when there is no RAM, rather
-        # than left as a bare "GB". calibrate() asks by CPU alone, so every
-        # calibration query carried that stray token and measured the
-        # haircut against a different slice of listings than value() later
-        # applied it to.
-        ram = machine.get("ram_gb")
-        q = f"desktop computer {cpu}" + (f" {ram}GB" if ram else "")
+        from . import ebaypanel
+        # The query and the category come from one place, because they have
+        # to agree about what kind of machine this CPU lives in: "desktop
+        # computer i5-8365u" in PC Desktops matches loose parts, that CPU
+        # having only ever shipped in laptops. The RAM clause is dropped
+        # entirely when there is no RAM rather than left as a bare "GB" --
+        # calibrate() asks by CPU alone, so every calibration query carried
+        # that stray token and measured the haircut against a different
+        # slice of listings than value() later applied it to.
+        q, category = ebaypanel.query_for(cpu, ram_gb)
         url = self.BROWSE_URL + "?" + urllib.parse.urlencode(
-            {"q": q, "limit": "50", "category_ids": "179"})  # PC Desktops
+            {"q": q, "limit": str(self.SEARCH_LIMIT),
+             "category_ids": category})
         req = urllib.request.Request(url, headers={
             "Authorization": f"Bearer {tok}",
             "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"})
@@ -483,17 +497,68 @@ class EbayAdapter:
                 data = json.loads(r.read())
         except Exception:
             self._consecutive_failures += 1
-            self._memo[memo_key] = None
+            self._listings[memo_key] = None
             return None
         self._consecutive_failures = 0
+        items = list(data.get("itemSummaries") or [])
+        self._listings[memo_key] = items
+        return items
+
+    def ask(self, machine: dict) -> float | None:
+        """Median ACTIVE listing price for this machine. An ask, not a sale."""
+        cpu = machine.get("cpu")
+        if not cpu:
+            return None
+        memo_key = (cpu, machine.get("ram_gb") or 0)
+        if memo_key in self._memo:
+            return self._memo[memo_key]
+        items = self.search(cpu, machine.get("ram_gb"))
+        if items is None:
+            self._memo[memo_key] = None
+            return None
         prices = []
-        for it in data.get("itemSummaries") or []:
+        for it in items:
             p = (it.get("price") or {}).get("value")
             if p:
                 prices.append(float(p))
         result = sorted(prices)[len(prices) // 2] if prices else None
         self._memo[memo_key] = result
         return result
+
+    def still_listed(self, item_id: str) -> bool | None:
+        """Is this listing still live? None when we could not find out.
+
+        A listing can leave the search result set without ending -- it fell
+        below the top N on relevance, or the seller revised it. Asking about
+        the item directly separates that from a real ending, which is the
+        difference between a sold comp and a phantom one.
+        """
+        if not item_id:
+            return None
+        try:
+            tok = self._auth()
+        except Exception:
+            return None
+        if not tok:
+            return None
+        import urllib.error, urllib.parse, urllib.request
+        url = (self.ITEM_URL + "/" + urllib.parse.quote(item_id, safe=""))
+        req = urllib.request.Request(url, headers={
+            "Authorization": f"Bearer {tok}",
+            "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"})
+        try:
+            with urllib.request.urlopen(req, timeout=self.CALL_TIMEOUT) as r:
+                data = json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            # 404 is eBay's answer for an item that has ended. Anything else
+            # is our problem, not a statement about the listing.
+            return False if e.code == 404 else None
+        except Exception:
+            return None
+        for av in data.get("estimatedAvailabilities") or []:
+            if av.get("estimatedAvailabilityStatus") == "OUT_OF_STOCK":
+                return False
+        return True
 
     def calibrate(self, singles: list[dict]) -> float | None:
         """Measure the ask-to-realized haircut against sold GovDeals singles.

@@ -21,7 +21,7 @@ export const HELP = {
   expectedRevenue: "What we actually underwrite against: the parts-out value after dead units and your recovery rate.",
   roi: "Return you would clear if you won at the current bid, against your all-in cost.",
   targetRoi: "The return you require. Higher target means lower max bid.",
-  recovery: "What you get per unit through your own channel, as a multiple of what that unit fetches at GovDeals auction \u2014 which is what the ceiling above measures. 100% means you resell at GovDeals rates; 200% means you get double, roughly what parting out on eBay is for. The default of 55% predates that reading and would have been outbid on 92% of closed pallets; see Models \u2192 Backtest.",
+  recovery: "What you get per unit through your own channel, as a multiple of what that unit fetches at GovDeals auction \u2014 which is what the ceiling above measures. 100% means you resell at GovDeals rates; 200% means you get double, roughly what parting out on eBay is for. You should not have to guess this: Models \u2192 What you get for a machine measures it from eBay, by polling listings daily and reading a fixed-price listing that stops appearing as a sale at its last ask. The default of 55% predates all of that and would have been outbid on 92% of closed pallets.",
   deadRate: "Share of units you assume arrive non-functional.",
   buyerPremium: "The seller's buyer premium, added on top of the hammer price.",
   salesTax: "Sales tax, if you are not tax-exempt.",

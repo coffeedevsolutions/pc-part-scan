@@ -1,0 +1,64 @@
+name: ebay-watch
+
+# The collector behind the recovery measurement.
+#
+# Config.recovery -- what you actually get for a machine -- moves the backtest
+# win rate more than every other setting combined, and it was a number a human
+# had to guess. eBay can answer it, but not in one call: Browse serves active
+# listings only, and sold prices sit behind the Marketplace Insights API we do
+# not have access to.
+#
+# So this measures it the long way. Most used-computer listings are fixed-price
+# Good 'Til Cancelled and renew themselves indefinitely, which means a listing
+# that was up yesterday and is gone today has almost certainly sold, at the
+# price it was last asking. Poll daily, keep everything ever seen, and the
+# disappearances become the sold-comp feed eBay would not sell us.
+#
+# That only works if it runs EVERY day without fail. A missed day is not a gap
+# in a chart -- it is a batch of sales that happened where the panel cannot see
+# which listings went, so they are simply lost. Hence its own workflow, on its
+# own schedule, rather than a step bolted onto the scan.
+
+on:
+  schedule:
+    - cron: "0 5 * * *"   # daily 05:00 UTC, before the Monday backtest
+  workflow_dispatch:
+    inputs:
+      max_cpus:
+        description: "How many CPUs to poll, most-comped first"
+        default: "60"
+
+concurrency:
+  group: ebay-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline
+        run: pip install --quiet ./pipeline
+
+      - name: Poll eBay and record departures
+        env:
+          PCPS_STORE: mongo
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+        run: pcps ebay-watch --max-cpus "${{ github.event.inputs.max_cpus || 60 }}"
+
+      # Cheap, read-mostly, and the only place the number is ever printed
+      # where a failure is visible. It reports the ask-based figure from day
+      # one and fills in the measured one as listings sell.
+      - name: Report recovery
+        env:
+          PCPS_STORE: mongo
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: pcps recovery
