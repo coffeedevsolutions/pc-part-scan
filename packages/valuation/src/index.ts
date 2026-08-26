@@ -23,10 +23,11 @@ export interface Config {
    * Handling for a lot of parts rather than machines. Testing, wiping and
    * photographing a PC is not the same work as dropping a charger in a box,
    * and one rate for both is a defect rather than caution: at $3 a unit
-   * handling comes to 121% of expected revenue on the median charger
-   * pallet, and every one in the backtest corpus gets a max bid of zero
-   * however cheap it is. Defaults to the machine rate so nothing changes
-   * until somebody says what their own sorting costs.
+   * handling came to 121% of expected revenue on the median charger pallet,
+   * and every one in the backtest corpus got a max bid of zero however
+   * cheap it was. Defaults to $0 — sorting parts costs this operator
+   * nothing — so a part lot is priced on what it holds, not on assumed
+   * labour. Raise it if sorting ever does cost something.
    */
   part_handling: number;
   recovery: number;
@@ -39,7 +40,7 @@ export const DEFAULT_CONFIG: Config = {
   sales_tax: 0.0,
   pickup_cost: 0.0,
   per_unit_handling: 3.0,
-  part_handling: 3.0,
+  part_handling: 0.0,
   recovery: 0.55,
   dead_rate: 0.1,
   target_roi: 0.6,

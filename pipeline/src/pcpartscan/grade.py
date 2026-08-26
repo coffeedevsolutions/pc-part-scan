@@ -44,14 +44,16 @@ class Config:
     sales_tax: float = 0.00       # if you are not tax-exempt
     pickup_cost: float = 0.00     # flat per-lot travel/freight
     per_unit_handling: float = 3.00   # test, wipe, photograph, pack each machine
-    # The same work on a charger is dropping it in a box. One rate for both
-    # is not conservatism, it is a defect: at $3 a unit, handling comes to
-    # 121% of expected revenue on the median charger pallet, and all 21 in
-    # the backtest corpus get a max bid of zero however cheap they are --
-    # the tool literally cannot recommend one at any price. Defaults to the
-    # same $3 so nothing changes until you say what your own sorting costs;
-    # the lot page shows the rate each lot would need to be worth bidding.
-    part_handling: float = 3.00
+    # The same work on a charger is dropping it in a box, and the operator
+    # this is built for says that costs them nothing -- so it is $0, not the
+    # machine rate. This is not a rounding-down of a small number: at $3 a
+    # unit handling came to 121% of expected revenue on the median charger
+    # pallet and every one of the 21 in the backtest corpus got a max bid of
+    # zero however cheap it was, so the old default was an assumption about
+    # labour silently vetoing a whole class of lot. Raise it if sorting ever
+    # does cost you something; the lot page shows the rate at which each lot
+    # stops being worth bidding.
+    part_handling: float = 0.00
 
     # --- what you actually realize --------------------------------------
     # What you get per unit through YOUR channel, as a multiple of what the

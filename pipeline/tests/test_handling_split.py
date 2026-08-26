@@ -3,14 +3,22 @@
 One handling rate for both is not caution, it is a defect. At $3 a unit
 handling comes to 121% of expected revenue on the median charger pallet,
 and all 21 in the backtest corpus get a max bid of zero however cheap they
-are -- the tool cannot recommend one at any price.
+are -- the tool cannot recommend one at any price. Parts now default to
+$0, which is what this operator's sorting actually costs.
 """
 
 from pcpartscan import grade
 
 
-def test_the_split_is_off_until_the_rates_differ():
+def test_parts_cost_nothing_to_handle_by_default():
     cfg = grade.Config()
+    assert cfg.for_family("part").per_unit_handling == 0.0
+    assert cfg.for_family("computer").per_unit_handling == 3.0
+    assert cfg.for_family(None).per_unit_handling == 3.0
+
+
+def test_the_split_is_a_no_op_when_the_rates_agree():
+    cfg = grade.Config(per_unit_handling=3.0, part_handling=3.0)
     assert cfg.for_family("part") is cfg
     assert cfg.for_family("computer") is cfg
     assert cfg.for_family(None) is cfg
@@ -30,16 +38,16 @@ def test_the_original_config_is_never_mutated():
     assert cfg.per_unit_handling == 4.0
 
 
-def test_a_cheap_part_lot_becomes_biddable_at_a_sane_rate():
+def test_a_cheap_part_lot_is_biddable_and_a_machine_lot_is_not():
     """300 chargers worth about $4.20 a unit."""
     revenue = 300 * 4.20 * 0.9 * 0.55
-    machine = grade.Config()
-    assert machine.for_family("part").max_hammer(revenue, 300) == 0.0
-    split = grade.Config(part_handling=0.25)
-    assert split.for_family("part").max_hammer(revenue, 300) > 0.0
-    # and the machine rate is untouched by the part rate
-    assert (split.for_family("computer").max_hammer(revenue, 300)
-            == machine.max_hammer(revenue, 300))
+    cfg = grade.Config()
+    # the same lot, same revenue: only the handling rate differs
+    assert cfg.for_family("part").max_hammer(revenue, 300) > 0.0
+    assert cfg.for_family("computer").max_hammer(revenue, 300) == 0.0
+    # a workshop where sorting does cost something can say so
+    costly = grade.Config(part_handling=3.0)
+    assert costly.for_family("part").max_hammer(revenue, 300) == 0.0
 
 
 def test_breakeven_says_what_the_rate_would_have_to_be():

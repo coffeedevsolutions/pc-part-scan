@@ -494,14 +494,16 @@ because of an assumption about labour. So `Config.part_handling` applies to
 the part family and `per_unit_handling` to machines, chosen once in
 `Config.for_family()` so every formula downstream is untouched.
 
-It defaults to the same $3, because what sorting costs is a fact about a
-workshop the corpus cannot see. Instead the lot page derives the number
-that decides it: *"at $3.00 a unit handling costs $900, more than the $619
-this lot is expected to make; it would need to be under $1.29 a unit for
-any bid to clear your target return."* Sweeping the rate over the corpus,
-adapters go 0/21 winnable at $3 and at $1, 3/21 at $0.50 and 6/21 at $0.25,
-while desktops stay at 116/1,156 throughout — the split moves exactly what
-it should and nothing else.
+It defaults to **$0**: the operator this is built for says sorting a
+charger costs them nothing, and the corpus cannot contradict that — what
+handling costs is a fact about a workshop, not about GovDeals. Sweeping the
+rate over the corpus, adapters go 0/21 winnable at $3 and at $1, 3/21 at
+$0.50 and 6/21 at $0.25, while desktops stay at 116/1,156 throughout: the
+split moves exactly what it should and nothing else. Where the rate is
+non-zero and binding, the lot page derives the number that decides it:
+*"at $3.00 a unit handling costs $900, more than the $619 this lot is
+expected to make; it would need to be under $1.29 a unit for any bid to
+clear your target return."*
 
 ## 12. Measured and deliberately not built
 

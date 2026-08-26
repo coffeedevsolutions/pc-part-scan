@@ -25,7 +25,7 @@ export const HELP = {
   deadRate: "Share of units you assume arrive non-functional.",
   buyerPremium: "The seller's buyer premium, added on top of the hammer price.",
   salesTax: "Sales tax, if you are not tax-exempt.",
-  partHandling: "The same cost for a lot of chargers, docks or monitors, where the work is sorting rather than testing and wiping. It defaults to the machine rate, and at that rate handling comes to more than the whole expected revenue on the median charger pallet \u2014 which is why every one of them shows a max bid of zero until you set this.",
+  partHandling: "The same cost for a lot of chargers, docks or monitors, where the work is sorting rather than testing and wiping. It is $0 by default, because sorting parts costs you nothing \u2014 at the machine rate handling came to more than the whole expected revenue on the median charger pallet, and every one of them showed a max bid of zero however cheap it was. Raise it if a part lot ever does cost you labour.",
   handling: "Your cost to test, wipe, photograph and pack each machine.",
   pickup: "Flat travel or freight cost for the whole lot.",
   singleR2: "How well the per-machine price model fits sold single-unit lots. 1.0 is perfect; below about 0.5 the estimate is weak.",
