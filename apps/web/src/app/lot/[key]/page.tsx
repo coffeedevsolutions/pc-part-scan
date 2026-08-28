@@ -309,8 +309,15 @@ function Contents({
   // A synthesized one-row "mix" with no CPU is not a machine list, it is the
   // absence of one wearing a table. On a pallet of chargers it read as one
   // unknown laptop x 300, which is worse than showing nothing.
+  //
+  // That rule was right when the row carried no price, and wrong once it
+  // did. Priced, the same row says "300 adapters at $4.17 each = $1,250" --
+  // the arithmetic the ceiling is built from, on the one line there is. It
+  // was hiding the breakdown on 59 of 60 board lots, because most lots are
+  // exactly this shape: one kind of thing, N of them.
   const realMix =
-    mix.length > 1 || mix.some((m) => m.cpu) || !!manifest?.machines.length;
+    priced || mix.length > 1 || mix.some((m) => m.cpu) ||
+    !!manifest?.machines.length;
   return (
     <>
       <table className="data waterfall" style={{ marginBottom: 10 }}>
@@ -402,6 +409,13 @@ function Contents({
  * ceiling is built from — so a ceiling you doubt can be traced to the line
  * you doubt.
  */
+/** How to name a row that has no CPU: the lot's item class, else "units". */
+function kindLabel(lot: SnapshotLot | undefined, qty: number): string {
+  const kind = lot?.item_class;
+  if (!kind) return "unidentified units";
+  return qty === 1 ? kind : `${kind}s`;
+}
+
 function MixTable({
   mix,
   lot,
@@ -411,6 +425,10 @@ function MixTable({
 }) {
   if (!mix.length) return <p className="muted small">Unknown.</p>;
   const priced = mix.every((m) => m.unit_value != null);
+  // A lot of chargers has no CPU, chassis or RAM to show, and five columns of
+  // em-dashes is not a machine list — it is a machine list's absence. When
+  // nothing names a component, the same rows are the item and its count.
+  const machines = mix.some((m) => m.cpu);
   const units = mix.reduce((a, m) => a + m.qty, 0);
   const total = mix.reduce((a, m) => a + (m.unit_value ?? 0) * m.qty, 0);
   // The ceiling blends sources; this column is one of them. Say so rather
@@ -425,14 +443,23 @@ function MixTable({
 
   return (
     <>
-      <table className="data" style={{ maxWidth: priced ? 820 : 640 }}>
+      <table
+        className="data"
+        style={{ maxWidth: machines ? (priced ? 820 : 640) : 520 }}
+      >
         <thead>
           <tr>
-            <th>CPU</th>
-            <th>Chassis</th>
-            <th>Form</th>
-            <th className="num">RAM</th>
-            <th>Drive</th>
+            {machines ? (
+              <>
+                <th>CPU</th>
+                <th>Chassis</th>
+                <th>Form</th>
+                <th className="num">RAM</th>
+                <th>Drive</th>
+              </>
+            ) : (
+              <th>Item</th>
+            )}
             <th className="num">Qty</th>
             {priced && <th className="num">$/unit</th>}
             {priced && <th className="num">Value</th>}
@@ -441,11 +468,22 @@ function MixTable({
         <tbody>
           {mix.map((m, i) => (
             <tr key={i}>
-              <td>{m.cpu ?? "unknown"}</td>
-              <td>{m.chassis ?? "—"}</td>
-              <td>{m.form_factor ?? "—"}</td>
-              <td className="num">{m.ram_gb ? `${m.ram_gb}GB` : "—"}</td>
-              <td>{m.has_drive == null ? "—" : m.has_drive ? "yes" : "no"}</td>
+              {machines ? (
+                <>
+                  <td>{m.cpu ?? "unknown"}</td>
+                  <td>{m.chassis ?? "—"}</td>
+                  <td>{m.form_factor ?? "—"}</td>
+                  <td className="num">{m.ram_gb ? `${m.ram_gb}GB` : "—"}</td>
+                  <td>
+                    {m.has_drive == null ? "—" : m.has_drive ? "yes" : "no"}
+                  </td>
+                </>
+              ) : (
+                <td>
+                  {kindLabel(lot, m.qty)}
+                  {m.chassis && <span className="muted"> · {m.chassis}</span>}
+                </td>
+              )}
               <td className="num">{m.qty.toLocaleString()}</td>
               {priced && <td className="num">{usd(m.unit_value!, 2)}</td>}
               {priced && (
@@ -457,7 +495,7 @@ function MixTable({
         {priced && mix.length > 1 && (
           <tfoot>
             <tr className="wf-total">
-              <td colSpan={5}>Total</td>
+              <td colSpan={machines ? 5 : 1}>Total</td>
               <td className="num">{units.toLocaleString()}</td>
               <td className="num muted">{usd(total / (units || 1), 2)}</td>
               <td className="num">{usd(total)}</td>
@@ -467,10 +505,22 @@ function MixTable({
       </table>
       {priced && byClass && (
         <p className="muted small">
-          Every line carries the same price because nothing on this lot was
-          priced on its own merits — it is {units.toLocaleString()} ×{" "}
-          {usd(mix[0].unit_value!, 2)}, the going rate for {lot?.item_class}s,
-          whatever each line happens to say.
+          {mix.length > 1 ? (
+            <>
+              Every line carries the same price because nothing on this lot
+              was priced on its own merits — it is {units.toLocaleString()} ×{" "}
+              {usd(mix[0].unit_value!, 2)}, the going rate for{" "}
+              {lot?.item_class}s, whatever each line happens to say.
+            </>
+          ) : (
+            <>
+              One line because that is all we know: the lot is{" "}
+              {units.toLocaleString()} {lot?.item_class}
+              {units === 1 ? "" : "s"} at the going rate for the kind, not{" "}
+              {units.toLocaleString()} things we have looked at individually.
+              A spec sheet we could read would break this into real rows.
+            </>
+          )}
         </p>
       )}
       {priced && !byClass && (

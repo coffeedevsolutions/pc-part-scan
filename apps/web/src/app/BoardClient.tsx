@@ -52,7 +52,15 @@ export function BoardClient({
     if (hasServerSaved) return;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setCfg((c) => ({ ...c, ...JSON.parse(raw) }));
+      if (!raw) return;
+      const stored = JSON.parse(raw);
+      setCfg((c) => ({ ...c, ...stored }));
+      // ...and then send it on, because every other page reads the server
+      // copy and nothing else. Without this the Board would grade a lot at
+      // the rates on screen while its own detail page graded the same lot
+      // at the defaults, with no visible reason for the two to disagree.
+      saveAssumptions({ ...base, ...stored } as unknown as Record<string, number>)
+        .catch(() => {});
     } catch {
       /* first visit / blocked storage: keep defaults */
     }

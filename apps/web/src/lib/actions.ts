@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { DEFAULT_CONFIG } from "@pcps/valuation";
+
 import { auth } from "@/auth";
 import { getDb } from "./mongo";
 
@@ -116,20 +118,24 @@ export async function saveComponentPrice(
   revalidatePath("/models");
 }
 
+/**
+ * Persist the Board's assumptions so every other page grades the same way.
+ *
+ * The allowlist is derived from DEFAULT_CONFIG rather than written out. It
+ * used to be a hand-maintained array, and when `part_handling` was added to
+ * Config it was not added here — so the Board applied the new rate locally
+ * while the server copy silently dropped it, and the lot page, which reads
+ * only the server copy, went on grading at a rate the user could see they
+ * had changed. A settings key that exists in the type but not in this list
+ * is invisible for exactly as long as nobody checks, which is why the list
+ * is now the type.
+ */
 export async function saveAssumptions(
   cfg: Record<string, number>,
 ): Promise<void> {
   await requireUser();
   const clean: Record<string, number> = {};
-  for (const k of [
-    "buyer_premium",
-    "sales_tax",
-    "pickup_cost",
-    "per_unit_handling",
-    "recovery",
-    "dead_rate",
-    "target_roi",
-  ]) {
+  for (const k of Object.keys(DEFAULT_CONFIG)) {
     const v = cfg[k];
     if (typeof v === "number" && Number.isFinite(v) && v >= 0) clean[k] = v;
   }
