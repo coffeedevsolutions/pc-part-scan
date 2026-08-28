@@ -39,6 +39,7 @@ export function ValuationWaterfall({
   cfg: baseCfg,
   bid,
   muted = false,
+  editable = false,
 }: {
   lot: SnapshotLot;
   cfg: Config;
@@ -46,10 +47,23 @@ export function ValuationWaterfall({
   /** an unrated lot: show the chain for diagnosis, but never in the
    *  colours that say "this is money on the table" */
   muted?: boolean;
+  /**
+   * Whether an assumptions editor is rendered directly above this chain.
+   *
+   * It is on the rated path (inside ValuationCard) and is not on the
+   * unrated diagnostic path, which renders this component on its own. Copy
+   * that says "editable above" is a lie in the second case, and the reader
+   * has no way to know which one they are looking at.
+   */
+  editable?: boolean;
 }) {
   // A lot of chargers is not handled like a lot of PCs, so the rate is
   // chosen once here and every step below just uses it.
   const cfg = forFamily(baseCfg, lot.item_family);
+  // Where the reader can actually change these. The diagnostic render site
+  // has no editor, so pointing at one above it would send them looking for
+  // a control that is not on the page.
+  const where = editable ? "above" : "on the Board";
   const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 
   const afterDead = lot.ceiling * (1 - cfg.dead_rate);
@@ -167,13 +181,13 @@ export function ValuationWaterfall({
       why:
         lot.item_family === "part"
           ? cfg.per_unit_handling > 0
-            ? `Your handling rate for parts, plus getting the lot home. Sorting ${lot.item_class}s is not the same work as testing and wiping a PC, so the two rates are set apart above.`
+            ? `Your handling rate for parts, plus getting the lot home. Sorting ${lot.item_class}s is not the same work as testing and wiping a PC, so the two rates are set apart ${where}.`
             : cfg.pickup_cost > 0
               ? // The per-unit rate is zero but the pickup is not, so this
                 // step still takes money out. Saying "nothing comes out
                 // here" would contradict the figure beside it.
                 `Getting the lot home. Sorting ${lot.item_class}s itself costs you nothing, so the whole ${usd(fixed)} is pickup — machines are charged ${usd(baseCfg.per_unit_handling, 2)} a unit on top of it.`
-              : `Sorting ${lot.item_class}s costs you nothing, so nothing comes out here. Machines are charged at ${usd(baseCfg.per_unit_handling, 2)} a unit — either rate is editable above.`
+              : `Sorting ${lot.item_class}s costs you nothing, so nothing comes out here. Machines are charged at ${usd(baseCfg.per_unit_handling, 2)} a unit — either rate is editable ${where}.`
           : "Testing, wiping, photographing and packing every unit, plus getting the lot home.",
       amount: fixed,
       sign: "minus",

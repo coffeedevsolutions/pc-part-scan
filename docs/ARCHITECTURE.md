@@ -278,8 +278,19 @@ more reliable.
 
 **Let a late run cover for the missed one.** `pcps scan` asks the store how
 long since its last successful run (`job_runs`), and at
-`CATCHUP_AFTER_HOURS` (3h, one missed slot in the dense band) promotes
-itself to the deep `--full` sweep. A gap hides two things — lots that opened
+`CATCHUP_AFTER_HOURS` promotes itself to the deep `--full` sweep.
+
+That threshold has to clear the largest gap the schedule *itself* asks for,
+or the metric it feeds is worthless. The overnight 03:17 → 08:17 gap is five
+hours by design, so at the three hours this started as, two runs a day
+promoted themselves on a perfectly delivered day and wrote `caught_up:
+true` — which the health routine reads as the scheduler failing. It is 7h:
+five hours of scheduled gap plus two of slack for GitHub starting a job
+late, and `test_catchup.py` parses the cron out of `scan.yml` and fails if
+the two ever drift apart. The accepted cost is that one or two dropped
+slots in the two-hourly band do not promote; a shallow sweep still covers
+four pages, and a false "we were behind" is worse than a missed promotion
+because it lies in the data. A gap hides two things — lots that opened
 and closed inside it, and sold records that scrolled past the shallow
 sweep's first pages — and both are exactly what a deeper sweep recovers. The
 gap and whether it triggered are written to `job_runs.counts`

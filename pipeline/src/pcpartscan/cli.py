@@ -22,11 +22,27 @@ import time
 from dataclasses import asdict
 
 # How stale a scan has to be before the next one sweeps deep to cover for
-# the slots the scheduler dropped. The dense band runs every two hours, so
-# three hours means a single missed slot triggers it -- deliberately eager:
-# a deep sweep costs about a minute more, and a missed slot costs lots we
-# never saw.
-CATCHUP_AFTER_HOURS = 3.0
+# the slots the scheduler dropped.
+#
+# This has to clear the largest gap the schedule ITSELF asks for, or the
+# metric it feeds is worthless. scan.yml runs at 00:17, 03:17, 08:17 and
+# then two-hourly from 12:17, so the overnight 03:17 -> 08:17 gap is five
+# hours BY DESIGN. At the three hours this started life as, the 08:17 and
+# 12:17 runs promoted themselves on a perfectly delivered day and wrote
+# `caught_up: true` -- and the weekly health routine reads a high catch-up
+# rate as "the schedule is unreliable" (ROUTINES section 3). The metric
+# would have been permanently poisoned by the schedule shipped alongside it.
+#
+# So: five hours of scheduled gap plus two hours of slack, because GitHub
+# routinely starts a scheduled job late. test_catchup.py reads the cron out
+# of scan.yml and fails if this stops clearing it, so the two cannot drift
+# apart again.
+#
+# The cost of being this lax is that one or two dropped slots in the
+# two-hourly band do not trigger a deep sweep. That is the right trade: a
+# shallow sweep still covers four pages, and a false "we were behind" is
+# worse than a missed promotion because it lies in the data.
+CATCHUP_AFTER_HOURS = 7.0
 
 
 def needs_catchup(gap_hours: float | None, already_full: bool = False) -> bool:
@@ -687,7 +703,14 @@ def cmd_recovery(a) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The CLI surface, separated from running it so tests can inspect it.
+
+    Notably `pcps scan`'s config-flag defaults, which land in
+    `snapshot.config` and become the base the web app grades from -- they
+    have to agree with grade.Config or the UI labels a value nobody chose
+    as one somebody did.
+    """
     ap = argparse.ArgumentParser(prog="pcps")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -768,7 +791,11 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("digest", help="daily digest inputs (JSON)")
     sub.add_parser("health", help="weekly health-review inputs (JSON)")
 
-    a = ap.parse_args(argv)
+    return ap
+
+
+def main(argv: list[str] | None = None) -> int:
+    a = build_parser().parse_args(argv)
     return {"smoke": cmd_smoke, "backfill": cmd_backfill, "scan": cmd_scan,
             "backtest": cmd_backtest, "resolve": cmd_resolve,
             "burst": cmd_burst, "archive": cmd_archive,

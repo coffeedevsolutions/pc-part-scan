@@ -18,21 +18,6 @@ import { remainingFrom, usd } from "@/lib/format";
 type BoardLot = SnapshotLot & { end_utc: string | null };
 type Row = { lot: BoardLot; v: Regrade };
 
-/**
- * Bumped from v1 when part_handling's default changed from $3 to $0.
- *
- * A v1 blob holds a full config snapshot written by a build where $3 was
- * the default, so it says `part_handling: 3` for everyone who ever touched
- * any slider — indistinguishably from someone who chose $3 on purpose.
- * Replaying one would push $3 back to the server as a deliberate setting
- * and return every charger pallet to a max bid of zero, with nothing on
- * screen to explain it. There is no way to tell the two apart after the
- * fact, so v1 blobs are simply not read: the cost is one device falling
- * back to current defaults, against silently undoing the change.
- *
- * Bump this again whenever a default changes meaning, for the same reason.
- */
-const STORAGE_KEY = "pcps.assumptions.v2";
 
 export function BoardClient({
   lots,
@@ -258,8 +243,9 @@ export function BoardClient({
             type="button"
             className="btn"
             onClick={reset}
+            title="Discard the changes you have made since this page loaded"
           >
-            Reset
+            Discard changes
           </button>
         </div>
       </div>

@@ -49,9 +49,7 @@ export interface Assumptions {
    * setting deliberately left at the default is inherited either way.
    */
   isDefault: (key: keyof Config) => boolean;
-  /** true once the user has moved anything in this session */
-  touched: boolean;
-  /** back to the shipped defaults, and persist that as a deliberate choice */
+  /** discard this session's edits and go back to the saved config */
   reset: () => void;
 }
 
@@ -61,8 +59,9 @@ export function useAssumptions(
 ): Assumptions {
   const base: Config = { ...DEFAULT_CONFIG, ...saved };
   const [cfg, setCfg] = useState<Config>(base);
-  const [touched, setTouched] = useState(false);
   const dirty = useRef(false); // only the user's own edits reach the server
+  // read by the unmount flush, which must not re-run on every edit
+  const latest = useRef(cfg);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -92,6 +91,7 @@ export function useAssumptions(
   }, []);
 
   useEffect(() => {
+    latest.current = cfg;
     if (!dirty.current) return; // hydration must never clobber the server
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
@@ -100,28 +100,43 @@ export function useAssumptions(
     }
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
+      // clearing the handle matters: `flush` tests it to decide whether a
+      // write is still pending, and a stale id makes every later flush
+      // re-post a save that already landed
+      saveTimer.current = null;
       saveAssumptions(cfg as unknown as Record<string, number>).catch(() => {});
     }, SAVE_DEBOUNCE_MS);
   }, [cfg]);
 
-  // Flush a pending save when the page is being left. The debounce exists so
-  // dragging a slider does not write on every frame, but clicking through to
-  // a lot within that window would otherwise land on a page still reading
-  // the previous value.
+  const flush = useCallback(() => {
+    if (!dirty.current || !saveTimer.current) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = null;
+    saveAssumptions(latest.current as unknown as Record<string, number>)
+      .catch(() => {});
+  }, []);
+
+  // Write a pending change out before this page goes away.
+  //
+  // The debounce exists so dragging a slider does not post on every frame.
+  // But clicking a lot inside that window is a Next.js soft navigation: the
+  // document stays visible, so `visibilitychange` never fires, and the lot
+  // page's request goes out carrying the OLD server copy — the exact
+  // "board and lot page disagree" bug this module exists to prevent, for
+  // any click within 800 ms. Unmount is the event that actually
+  // corresponds to leaving the page, so the flush hangs off that;
+  // visibilitychange stays for tab switches and closes, which unmount does
+  // not cover.
   useEffect(() => {
-    const flush = () => {
-      if (!dirty.current || !saveTimer.current) return;
-      clearTimeout(saveTimer.current);
-      saveTimer.current = null;
-      saveAssumptions(cfg as unknown as Record<string, number>).catch(() => {});
-    };
     document.addEventListener("visibilitychange", flush);
-    return () => document.removeEventListener("visibilitychange", flush);
-  }, [cfg]);
+    return () => {
+      document.removeEventListener("visibilitychange", flush);
+      flush();
+    };
+  }, [flush]);
 
   const updateCfg = useCallback((patch: Partial<Config>) => {
     dirty.current = true;
-    setTouched(true);
     setCfg((c) => ({ ...c, ...patch }));
   }, []);
 
@@ -130,11 +145,19 @@ export function useAssumptions(
     [cfg],
   );
 
+  // Back to the SAVED config, not to the shipped defaults.
+  //
+  // Resetting to DEFAULT_CONFIG and marking it dirty meant one unconfirmed
+  // click on a button labelled "Reset" overwrote the server copy with the
+  // defaults 800 ms later — wiping carefully tuned settings on every
+  // device, with the old values stored nowhere (saveAssumptions does a full
+  // replaceOne). "Discard what I changed just now" is what the button has
+  // always meant and is the only non-destructive reading of it.
   const reset = useCallback(() => {
     dirty.current = true;
-    setTouched(true);
-    setCfg({ ...DEFAULT_CONFIG });
-  }, []);
+    setCfg(base);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasServerSaved]);
 
-  return { cfg, updateCfg, isDefault, touched, reset };
+  return { cfg, updateCfg, isDefault, reset };
 }

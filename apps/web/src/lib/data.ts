@@ -394,10 +394,21 @@ export async function getManifest(key: string): Promise<ManifestDoc | null> {
 export async function snapshotEntry(key: string): Promise<{
   run_id: string;
   lot: SnapshotLot;
+  /**
+   * The config the pipeline graded this run with (`pcps scan` builds it
+   * from its CLI flags). Returned because the lot page has to seed its
+   * assumptions from the same base the Board does — seeding from
+   * DEFAULT_CONFIG alone meant a scan run with, say, `--recovery 0.8` had
+   * the Board grading at 0.8 and the lot page at 0.55, which is the
+   * divergence the shared hook is supposed to make impossible.
+   */
+  config: Record<string, number>;
 } | null> {
   const snap = await latestSnapshot();
   const lot = snap?.lots.find((l) => l.lot_key === key);
-  return snap && lot ? { run_id: snap.run_id, lot } : null;
+  return snap && lot
+    ? { run_id: snap.run_id, lot, config: snap.config ?? {} }
+    : null;
 }
 
 export async function searchSold(

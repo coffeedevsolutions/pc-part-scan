@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
 import { UNRATED, regrade, type Config } from "@pcps/valuation";
 
@@ -123,6 +123,12 @@ export function ValuationCard({
       "per_unit_handling",
     ] as (keyof Config)[]
   ).some(isDefault);
+  // Decided once, on mount. As a live value it is a controlled `open`, so
+  // changing the last still-default field flips it false and React shuts
+  // the panel — pulling the slider out from under the user mid-drag. The
+  // panel should open itself because defaults were showing when you
+  // arrived, not police whether they still are.
+  const [startedOpen] = useState(anyDefault);
 
   return (
     <>
@@ -131,7 +137,7 @@ export function ValuationCard({
         the chain moves with it — the same settings the Board uses.
       </p>
 
-      <details className="card assumptions" open={anyDefault}>
+      <details className="card assumptions" open={startedOpen}>
         <summary>
           <strong>Assumptions</strong>{" "}
           <span className="muted">
@@ -161,7 +167,7 @@ export function ValuationCard({
         )}
       </details>
 
-      <ValuationWaterfall lot={lot} cfg={cfg} bid={bid} muted={muted} />
+      <ValuationWaterfall lot={lot} cfg={cfg} bid={bid} muted={muted} editable />
     </>
   );
 }

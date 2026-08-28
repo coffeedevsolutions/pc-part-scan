@@ -74,7 +74,11 @@ export default async function LotPage({
 
   return (
     <AssumptionsScope
-      saved={saved}
+      // the same base the Board seeds with (app/page.tsx): the run's own
+      // config underneath, the user's saved overrides on top. Seeding from
+      // DEFAULT_CONFIG alone let a scan run with non-default CLI flags make
+      // the two pages grade the same lot differently.
+      saved={{ ...(snap?.config ?? {}), ...saved }}
       hasServerSaved={Object.keys(saved).length > 0}
     >
     <main>
