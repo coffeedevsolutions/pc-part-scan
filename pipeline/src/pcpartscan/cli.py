@@ -21,6 +21,26 @@ import sys
 import time
 from dataclasses import asdict
 
+# How stale a scan has to be before the next one sweeps deep to cover for
+# the slots the scheduler dropped. The dense band runs every two hours, so
+# three hours means a single missed slot triggers it -- deliberately eager:
+# a deep sweep costs about a minute more, and a missed slot costs lots we
+# never saw.
+CATCHUP_AFTER_HOURS = 3.0
+
+
+def needs_catchup(gap_hours: float | None, already_full: bool = False) -> bool:
+    """Should this scan sweep deep to cover for slots the scheduler dropped?
+
+    None means no previous successful run to compare against -- a first run
+    on an empty store, where there is nothing to catch up ON and the normal
+    depth is right. Already-full runs are left alone rather than reported as
+    promotions they did not need.
+    """
+    if already_full or gap_hours is None:
+        return False
+    return gap_hours >= CATCHUP_AFTER_HOURS
+
 
 def _counts_line(db) -> str:
     names = ["lots", "bid_observations", "sold", "manifests",
@@ -197,6 +217,31 @@ def cmd_scan(a) -> int:
             "refusing to scan with the file backend in CI: MONGODB_URI is "
             "unset or empty, so all output would be discarded with the runner")
     run = ds.run_id()
+
+    # --- catch up on whatever the scheduler dropped ----------------------
+    #
+    # GitHub runs `schedule:` on a best-effort queue and sheds jobs under
+    # load. This repo asks for nine scans a day and reliably gets three or
+    # four; on 2026-08-28 the 12:00, 14:00 and 16:00 slots all vanished, and
+    # nothing noticed until a stale page was spotted by hand. Nothing inside
+    # the repo can make the scheduler fire, so the run that DOES happen has
+    # to cover for the ones that did not.
+    #
+    # A gap means two things went unseen: lots that opened and closed inside
+    # it, and sold records that scrolled past the shallow sweep's first few
+    # pages. Both are fixed by sweeping deeper, which is exactly what --full
+    # does -- so a late run promotes itself.
+    gap = None
+    if is_mongo and hasattr(ds, "hours_since_last_success"):
+        gap = ds.hours_since_last_success("scan", before_run=run)
+    behind = needs_catchup(gap, a.full)
+    if behind:
+        print(f"last successful scan was {gap:.1f}h ago "
+              f"(>= {CATCHUP_AFTER_HOURS}h): sweeping deep to catch up")
+        a.full = True
+    elif gap is not None:
+        print(f"last successful scan {gap:.1f}h ago")
+
     if is_mongo:
         ds.job_start("scan", run)
     try:
@@ -250,7 +295,11 @@ def cmd_scan(a) -> int:
         print(f"\nrun {run}")
         print(f"dataset: {json.dumps(idx['counts'])}")
         if is_mongo:
-            ds.job_finish("scan", run, counts=idx["counts"])
+            counts = dict(idx["counts"])
+            if gap is not None:
+                counts["hours_since_last_scan"] = round(gap, 2)
+            counts["caught_up"] = bool(behind)
+            ds.job_finish("scan", run, counts=counts)
     except Exception as e:
         if is_mongo:
             ds.job_finish("scan", run, status="error", error=str(e))

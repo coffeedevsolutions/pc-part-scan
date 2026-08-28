@@ -576,3 +576,40 @@ table.data td { vertical-align: middle; }
 table.data tbody tr:hover td {
   background: color-mix(in srgb, var(--series-1) 5%, transparent);
 }
+
+/* --- assumptions: telling an inherited number from a chosen one --------- */
+
+/* Marks a setting still on its shipped default. Deliberately quiet — it is
+   a provenance note, not a warning — but always present, because the whole
+   problem it solves is that a default and a decision used to look
+   identical. */
+.defaulttag {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+
+/* The editor folded into the lot page's valuation card. Nested inside
+   another card, so it drops the outer card's chrome and keeps only the
+   separation. */
+.card .assumptions {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: var(--surface-2, transparent);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.card .assumptions > summary {
+  cursor: pointer;
+  font-size: 13px;
+}
+.card .assumptions .controls {
+  margin-bottom: 4px;
+}

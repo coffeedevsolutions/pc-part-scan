@@ -39,31 +39,42 @@ Prompt sketch:
    manifests stored, and anything systematic the regex parser could learn
    (leave that observation in the summary — do not edit parser code).
 
-## 2. Daily digest — weekday mornings
+## 2. Daily digest — retired 2026-08-28
 
-1. `pcps digest` — top actionable lots, watched lots closing within 24h,
-   sold-price surprises (model badly wrong in either direction), job health.
-2. Write a short human digest: the 3 most actionable lots with one line of
-   reasoning each (headroom, confidence, close time, location), any watched
-   lot closing today, any surprise worth a look, and a one-line "pipeline
-   ok/not ok". No tables, no fluff. This summary is the deliverable — it
-   reaches the owner through the routine's completion notification.
+Ran weekday mornings and summarised the top actionable lots, watched lots
+closing within 24h, and sold-price surprises. Deleted because the Board does
+all of that live, sorted and clickable, for anyone who opens it — a routine
+whose output is a worse copy of a page you already visit is a cost with no
+reader. Nothing replaced it.
 
 ## 3. Weekly health review — Mondays
 
-1. `pcps health` — recent model fits, the close-hour histogram, `raw_extra`
-   key frequencies, job failures, manifest coverage.
-2. Judge: is R² drifting down? Is the bulk-n growing week over week (it
-   should, while triage runs)? Does the close-hour histogram still support
-   the burst window in `.github/workflows/burst.yml` (22:40 UTC weekdays)?
-   Any new `raw_extra` keys that suggest upstream API changes? Repeated job
-   failures?
-3. The final message is the deliverable: one paragraph per real finding with
-   the evidence and a concretely proposed change, or a two-sentence
-   all-clear. It reaches the owner through the routine's completion
-   notification. (Routine-fired sessions carry no GitHub tooling, so
-   findings are reported, not filed as issues — the owner turns them into
-   work.)
+**Rewritten 2026-08-28**, after five of nine scheduled scans silently failed
+to fire and the board served an eight-hour-old snapshot with nothing
+anywhere saying so. It was found by hand, because it was nobody's job.
+
+The Ops page shows the runs that *happened*. This routine is the only thing
+that asks about the runs that *should* have happened and did not, which is
+now its headline question. It reports, in order:
+
+1. **Scheduled delivery** — runs fired vs. runs the cron asked for, over
+   seven days, per workflow. Anything under ~70% is flagged. It also reports
+   how often `pcps scan` promoted itself to a deep sweep
+   (`job_runs.counts.caught_up`, see ARCHITECTURE §5a): a high rate means
+   the data recovered but the schedule is still unreliable.
+2. **Data freshness** — age of the newest snapshot and bid observation.
+3. **The eBay resale panel** — has `ebay-watch` run every day? A missed day
+   is a batch of departures nothing can recover (§11d). Plus panel size and
+   whether `pcps recovery` yet has a measured figure or only an ask-derived
+   one.
+4. **Model health** — single-unit R², bulk k and its trust flag, class-table
+   coverage, week over week. An R² drop over 0.05 is flagged.
+5. **Anything failing** — failed `job_runs`, red workflows, manifest-triage
+   backlog.
+
+The final message is the deliverable and reaches the owner through the
+routine's completion notification. Routine-fired sessions carry no GitHub
+tooling, so findings are reported, not filed as issues.
 
 ## Operational notes
 

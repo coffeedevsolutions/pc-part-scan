@@ -108,7 +108,7 @@ export function ValuationWaterfall({
         cfg.recovery <= 1
           ? `Less what you never recover (${pct(1 - cfg.recovery)})`
           : `Plus what you make above GovDeals rates (${pct(cfg.recovery - 1)})`,
-      why: `Your recovery setting says you realise ${pct(cfg.recovery)} of what a unit fetches at GovDeals auction. Below 100% you are assuming you resell for less than the wholesale market pays.`,
+      why: `Recovery says you realise ${pct(cfg.recovery)} of what a unit fetches at GovDeals auction. Below 100% you are assuming you resell for less than the wholesale market already pays.`,
       amount: Math.abs(afterDead - partsOut),
       sign: partsOut < afterDead ? "minus" : undefined,
     },
@@ -167,13 +167,13 @@ export function ValuationWaterfall({
       why:
         lot.item_family === "part"
           ? cfg.per_unit_handling > 0
-            ? `Your handling rate for parts, plus getting the lot home. Sorting ${lot.item_class}s is not the same work as testing and wiping a PC — the two rates are set apart on the Board.`
+            ? `Your handling rate for parts, plus getting the lot home. Sorting ${lot.item_class}s is not the same work as testing and wiping a PC, so the two rates are set apart above.`
             : cfg.pickup_cost > 0
               ? // The per-unit rate is zero but the pickup is not, so this
                 // step still takes money out. Saying "nothing comes out
                 // here" would contradict the figure beside it.
                 `Getting the lot home. Sorting ${lot.item_class}s itself costs you nothing, so the whole ${usd(fixed)} is pickup — machines are charged ${usd(baseCfg.per_unit_handling, 2)} a unit on top of it.`
-              : `Sorting ${lot.item_class}s costs you nothing, so nothing comes out here. Machines are charged at ${usd(baseCfg.per_unit_handling, 2)} a unit — change either rate on the Board.`
+              : `Sorting ${lot.item_class}s costs you nothing, so nothing comes out here. Machines are charged at ${usd(baseCfg.per_unit_handling, 2)} a unit — either rate is editable above.`
           : "Testing, wiping, photographing and packing every unit, plus getting the lot home.",
       amount: fixed,
       sign: "minus",

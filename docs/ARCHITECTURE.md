@@ -261,6 +261,34 @@ All jobs write a `job_runs` doc on start and finish; a job that fails twice
 consecutively opens a GitHub issue (deduped by label). That is the alerting
 system — free, and it lands where the owner already looks.
 
+## 5a. The scheduler is best-effort, so a run covers for the ones that did not
+
+GitHub runs `schedule:` on a queue it sheds under load. This repo asks for
+nine scans a day and gets three or four. On 2026-08-28 the 12:00, 14:00 and
+16:00 slots all silently failed to fire; the board served an 08:36 snapshot
+for eight hours and nothing in the system noticed.
+
+Nothing inside the repository can make the scheduler fire. Two things help,
+and both are cheap:
+
+**Move every cron off :00.** It is the most contended minute on the queue,
+so an on-the-hour schedule is the likeliest to be dropped. Every workflow
+here now fires at an odd minute (`:13`, `:17`, `:23`). Free, and materially
+more reliable.
+
+**Let a late run cover for the missed one.** `pcps scan` asks the store how
+long since its last successful run (`job_runs`), and at
+`CATCHUP_AFTER_HOURS` (3h, one missed slot in the dense band) promotes
+itself to the deep `--full` sweep. A gap hides two things — lots that opened
+and closed inside it, and sold records that scrolled past the shallow
+sweep's first pages — and both are exactly what a deeper sweep recovers. The
+gap and whether it triggered are written to `job_runs.counts`
+(`hours_since_last_scan`, `caught_up`) so the pattern is queryable rather
+than anecdotal, and the weekly health routine reports on it (ROUTINES §3).
+
+What this does not fix: bid observations inside the gap are gone for good.
+A snapshot can be rebuilt; a bid at 14:00 that nobody recorded cannot.
+
 ## 6. Valuation upgrades
 
 - **eBay in the blend.** `EbayAdapter` memoises per (CPU, RAM) for the life
@@ -327,11 +355,35 @@ separate concerns, and only the first involves a login screen.
   `grade.py` from the same model call the ceiling is summed from, so a ceiling
   you doubt can be traced to the line you doubt. On a class-priced lot every
   line carries the same number, and the page says why.
-- **Assumptions** (panel, persisted to `settings`) — target ROI, recovery,
-  buyer premium, handling, dead rate. Moving a slider regrades the visible
-  lots **in the browser** via `packages/valuation` using the latest
-  `model_runs` coefficients — no round trip, and it can never drift from the
-  pipeline thanks to the parity tests.
+- **Assumptions** (`lib/assumptions.ts`) — target ROI, recovery, dead rate,
+  buyer premium, sales tax, handling (machine and part), pickup. One hook,
+  used by the Board **and** the lot page, persisted to `settings` and
+  mirrored to `localStorage` under a version-stamped key.
+
+  They live in one module because they used to live in two. The Board held
+  the live copy in React state; the lot page read the server copy; and the
+  save action filtered through a hand-written key list that was never
+  updated when `part_handling` was added — so the Board could apply a rate
+  the lot page never saw, with nothing on screen to explain the difference.
+  The allowlist is now `Object.keys(DEFAULT_CONFIG)`, so a setting cannot
+  exist in the type and be invisible in the store.
+
+  The controls sit on the lot page too, not only the Board: that is the page
+  where you are being told a number, and making you navigate away to argue
+  with it is how an assumption becomes invisible. Every field still on its
+  shipped value is marked `default`, because `recovery = 55%` — a figure the
+  backtest says would have been outbid on 92% of closed pallets — was
+  rendering in the same type as a number somebody had actually chosen.
+
+  The storage key is versioned (`pcps.assumptions.v2`) and must be bumped
+  whenever a default changes meaning. A v1 blob says `part_handling: 3` for
+  everyone who ever touched any slider, indistinguishably from someone who
+  chose $3; replaying one would undo the $0 default silently.
+
+  Moving any of them regrades the visible lots **in the browser** via
+  `packages/valuation` against the snapshot and the latest `model_runs`
+  coefficients — no round trip, and it can never drift from the pipeline
+  thanks to the parity tests.
 - **Sold explorer** (`/sold`) — searchable comp browser over `sold` +
   `manifests`; the "what did pallets like this actually clear at" question.
 - **Models** (`/models`) — fit history: R² and k over time, per-CPU fitted

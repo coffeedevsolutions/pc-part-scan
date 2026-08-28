@@ -9,7 +9,12 @@ name: backtest
 
 on:
   schedule:
-    - cron: "0 7 * * 1"   # Mondays 07:00 UTC
+  # Off the hour on purpose. GitHub runs scheduled workflows on a
+  # best-effort queue and :00 is the most contended minute of it, so
+  # an on-the-hour cron is the likeliest to be dropped -- this repo
+  # was losing five of nine daily scans. An odd minute costs nothing
+  # and is delivered far more reliably.
+    - cron: "23 7 * * 1"   # Mondays 07:23 UTC
   workflow_dispatch:
     inputs:
       folds:
