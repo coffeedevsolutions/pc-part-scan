@@ -12,6 +12,22 @@ import type { HelpKey } from "./help-text";
  * fraction it actually computes with (0.60). Typing "60" must never be
  * read as 6000%.
  */
+/**
+ * Marks a field still sitting on its shipped default.
+ *
+ * Without it the panel presents an inherited guess and a considered choice
+ * in identical type. That is not a cosmetic problem here: `recovery`
+ * defaults to 55%, a figure the backtest says would have been outbid on
+ * 92% of closed pallets, and it drives the largest number on every page.
+ */
+function DefaultTag() {
+  return (
+    <span className="defaulttag" title="Still the shipped default — not a value you chose">
+      default
+    </span>
+  );
+}
+
 /** 0.1275 -> "12.75", trimming trailing zeros. */
 function fromFraction(v: number): string {
   return String(Math.round(v * 10000) / 100);
@@ -24,6 +40,7 @@ export function PercentField({
   help,
   step = 1,
   max = 500,
+  isDefault = false,
 }: {
   label: string;
   value: number;
@@ -31,6 +48,7 @@ export function PercentField({
   help?: HelpKey;
   step?: number;
   max?: number;
+  isDefault?: boolean;
 }) {
   const [text, setText] = useState(() => fromFraction(value));
   // follow the value when it changes from elsewhere (Reset, a server load)
@@ -42,6 +60,7 @@ export function PercentField({
       <span className="fieldlabel">
         {label}
         {help && <HelpIcon k={help} label={label} />}
+        {isDefault && <DefaultTag />}
       </span>
       <span className="inputwrap">
         <input
@@ -77,18 +96,21 @@ export function MoneyField({
   onChange,
   help,
   step = 1,
+  isDefault = false,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
   help?: HelpKey;
   step?: number;
+  isDefault?: boolean;
 }) {
   return (
     <label className="field">
       <span className="fieldlabel">
         {label}
         {help && <HelpIcon k={help} label={label} />}
+        {isDefault && <DefaultTag />}
       </span>
       <span className="inputwrap">
         <span className="prefix">$</span>

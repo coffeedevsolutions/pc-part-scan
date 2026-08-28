@@ -1,20 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
-import {
-  DEFAULT_CONFIG,
-  UNRATED,
-  rankKey,
-  regrade,
-  type Config,
-  type Regrade,
-} from "@pcps/valuation";
+import { UNRATED, rankKey, regrade, type Regrade } from "@pcps/valuation";
 
-import { saveAssumptions, setWatch } from "@/lib/actions";
+import { setWatch } from "@/lib/actions";
+import { useAssumptions } from "@/lib/assumptions";
 import { DataTable, type Column } from "@/components/DataTable";
-import { Grade, MoneyField, PercentField } from "@/components/Fields";
+import { AssumptionFields } from "@/components/AssumptionFields";
+import { Grade } from "@/components/Fields";
 import { HelpIcon } from "@/components/Tooltip";
 import type { SnapshotLot } from "@/lib/data";
 import { Countdown } from "@/components/Live";
@@ -23,21 +18,6 @@ import { remainingFrom, usd } from "@/lib/format";
 type BoardLot = SnapshotLot & { end_utc: string | null };
 type Row = { lot: BoardLot; v: Regrade };
 
-/**
- * Bumped from v1 when part_handling's default changed from $3 to $0.
- *
- * A v1 blob holds a full config snapshot written by a build where $3 was
- * the default, so it says `part_handling: 3` for everyone who ever touched
- * any slider — indistinguishably from someone who chose $3 on purpose.
- * Replaying one would push $3 back to the server as a deliberate setting
- * and return every charger pallet to a max bid of zero, with nothing on
- * screen to explain it. There is no way to tell the two apart after the
- * fact, so v1 blobs are simply not read: the cost is one device falling
- * back to current defaults, against silently undoing the change.
- *
- * Bump this again whenever a default changes meaning, for the same reason.
- */
-const STORAGE_KEY = "pcps.assumptions.v2";
 
 export function BoardClient({
   lots,
@@ -50,59 +30,18 @@ export function BoardClient({
   hasServerSaved: boolean;
   watched: string[];
 }) {
-  const base: Config = { ...DEFAULT_CONFIG, ...defaults };
-  const [cfg, setCfg] = useState<Config>(base);
+  // One implementation of "what are the assumptions and how do they
+  // persist", shared with the lot page — see lib/assumptions.ts. It used to
+  // live here, which is how the lot page ended up able to disagree with it.
+  const { cfg, updateCfg, isDefault, reset } = useAssumptions(
+    defaults,
+    hasServerSaved,
+  );
   const [gradeMin, setGradeMin] = useState("all");
   const [state, setState] = useState("all");
   const [watchedOnly, setWatchedOnly] = useState(false);
   const [hideUnrated, setHideUnrated] = useState(false);
   const [watched, setWatched] = useState<Set<string>>(new Set(watchedInit));
-  const touched = useRef(false); // only the user's own edits reach the server
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    // the server copy is the durable cross-device one and wins; localStorage
-    // only fills in when the server has nothing yet
-    if (hasServerSaved) return;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const stored = JSON.parse(raw);
-      setCfg((c) => ({ ...c, ...stored }));
-      // ...and then send it on, because every other page reads the server
-      // copy and nothing else. Without this the Board would grade a lot at
-      // the rates on screen while its own detail page graded the same lot
-      // at the defaults, with no visible reason for the two to disagree.
-      //
-      // Safe to treat as user-chosen only because STORAGE_KEY is versioned:
-      // anything under this key was written by a build whose defaults match
-      // the ones running now, so a value that differs from a default is a
-      // value somebody set.
-      saveAssumptions({ ...base, ...stored } as unknown as Record<string, number>)
-        .catch(() => {});
-    } catch {
-      /* first visit / blocked storage: keep defaults */
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!touched.current) return; // hydration must never clobber the server
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
-    } catch {
-      /* storage unavailable: the sliders still work for this visit */
-    }
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      saveAssumptions(cfg as unknown as Record<string, number>).catch(() => {});
-    }, 800);
-  }, [cfg]);
-
-  function updateCfg(patch: Partial<Config>) {
-    touched.current = true;
-    setCfg((c) => ({ ...c, ...patch }));
-  }
 
   async function onToggleWatch(key: string) {
     const want = !watched.has(key);
@@ -294,74 +233,19 @@ export function BoardClient({
     <>
       <div className="card">
         <div className="controls">
-          <PercentField
-            label="Target ROI"
-            help="targetRoi"
-            value={cfg.target_roi}
-            onChange={(v) => updateCfg({ target_roi: v })}
-            step={5}
-          />
-          <PercentField
-            label="Recovery"
-            help="recovery"
-            value={cfg.recovery}
-            onChange={(v) => updateCfg({ recovery: v })}
-            step={5}
-            max={100}
-          />
-          <PercentField
-            label="Dead rate"
-            help="deadRate"
-            value={cfg.dead_rate}
-            onChange={(v) => updateCfg({ dead_rate: v })}
-            step={5}
-            max={100}
-          />
-          <PercentField
-            label="Buyer premium"
-            help="buyerPremium"
-            value={cfg.buyer_premium}
-            onChange={(v) => updateCfg({ buyer_premium: v })}
-            step={0.5}
-          />
-          <PercentField
-            label="Sales tax"
-            help="salesTax"
-            value={cfg.sales_tax}
-            onChange={(v) => updateCfg({ sales_tax: v })}
-            step={0.5}
-          />
-          <MoneyField
-            label="Handling / machine"
-            help="handling"
-            value={cfg.per_unit_handling}
-            onChange={(v) => updateCfg({ per_unit_handling: v })}
-            step={0.5}
-          />
-          <MoneyField
-            label="Handling / part"
-            help="partHandling"
-            value={cfg.part_handling ?? cfg.per_unit_handling}
-            onChange={(v) => updateCfg({ part_handling: v })}
-            step={0.5}
-          />
-          <MoneyField
-            label="Pickup"
-            help="pickup"
-            value={cfg.pickup_cost}
-            onChange={(v) => updateCfg({ pickup_cost: v })}
-            step={25}
+          <AssumptionFields
+            cfg={cfg}
+            updateCfg={updateCfg}
+            isDefault={isDefault}
           />
           <span className="spacer" />
           <button
             type="button"
             className="btn"
-            onClick={() => {
-              touched.current = true;
-              setCfg(base);
-            }}
+            onClick={reset}
+            title="Discard the changes you have made since this page loaded"
           >
-            Reset
+            Discard changes
           </button>
         </div>
       </div>

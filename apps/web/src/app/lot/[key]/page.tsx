@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { DEFAULT_CONFIG, UNRATED, regrade, type Config } from "@pcps/valuation";
+import { DEFAULT_CONFIG, type Config } from "@pcps/valuation";
 
-import { Grade } from "@/components/Fields";
 import { Ago, Countdown } from "@/components/Live";
 import { Stat } from "@/components/Stat";
 import { HelpIcon } from "@/components/Tooltip";
@@ -25,6 +24,11 @@ import { agoFrom, remainingFrom, shortDate, usd } from "@/lib/format";
 
 import { BidCurve } from "./BidCurve";
 import { LotControls } from "./LotControls";
+import {
+  AssumptionsScope,
+  LotStats,
+  ValuationCard,
+} from "./LotValuation";
 import { ValuationWaterfall } from "./Valuation";
 
 export const dynamic = "force-dynamic";
@@ -63,10 +67,20 @@ export default async function LotPage({
   // between headroom and a lost deposit.
   const bid = lot.last_obs?.bid ?? v?.current_bid ?? null;
   const bidAt = lot.last_obs?.at ?? null;
-  const re = v ? regrade({ ...v, current_bid: bid ?? v.current_bid }, cfg) : null;
-  const headroom = re ? re.headroom : null;
+  // No regrade() here on purpose. Everything downstream of an assumption is
+  // computed once, client-side, in LotValuation — a second copy on the
+  // server is a second answer waiting to disagree with the first the moment
+  // somebody moves a slider.
 
   return (
+    <AssumptionsScope
+      // the same base the Board seeds with (app/page.tsx): the run's own
+      // config underneath, the user's saved overrides on top. Seeding from
+      // DEFAULT_CONFIG alone let a scan run with non-default CLI flags make
+      // the two pages grade the same lot differently.
+      saved={{ ...(snap?.config ?? {}), ...saved }}
+      hasServerSaved={Object.keys(saved).length > 0}
+    >
     <main>
       <h1>{lot.title ?? key}</h1>
       <p className="sub">
@@ -114,35 +128,9 @@ export default async function LotPage({
         </Stat>
         {v && (
           <>
-            <Stat label="Grade · confidence" help="grade" helpLabel="the grade">
-              <Grade grade={unrated ? UNRATED : v.grade} />{" "}
-              <span className="muted" style={{ fontSize: 15 }}>
-                {v.confidence.toFixed(2)}
-              </span>
-            </Stat>
-            <Stat
-              label="Max bid"
-              help="maxBid"
-              helpLabel="max bid"
-              sub="at your assumptions"
-            >
-              {unrated ? <span className="muted">—</span> : usd(re!.max_bid)}
-            </Stat>
-            <Stat
-              label="Headroom vs current"
-              help="headroom"
-              helpLabel="headroom"
-              sub="against the bid above"
-              valueClass={
-                unrated || headroom == null ? "" : headroom >= 0 ? "pos" : "neg"
-              }
-            >
-              {unrated || headroom == null ? (
-                <span className="muted">—</span>
-              ) : (
-                usd(headroom)
-              )}
-            </Stat>
+            {/* client-side: these three move when an assumption moves, and
+                must agree with the chain further down that derives them */}
+            <LotStats lot={v} bid={bid ?? v.current_bid} unrated={unrated} />
             <Stat
               label={
                 v.count_known === false
@@ -237,11 +225,7 @@ export default async function LotPage({
       {v && !unrated && (
         <div className="card">
           <h2 style={{ marginTop: 0 }}>How this number is built</h2>
-          <p className="muted small" style={{ marginTop: 0, marginBottom: 12 }}>
-            Every step below comes off the one above it. Change an assumption
-            on the <Link href="/">Board</Link> and this chain moves with it.
-          </p>
-          <ValuationWaterfall lot={v} cfg={cfg} bid={bid ?? v.current_bid} />
+          <ValuationCard lot={v} bid={bid ?? v.current_bid} />
         </div>
       )}
 
@@ -275,6 +259,7 @@ export default async function LotPage({
         ) : null}
       </div>
     </main>
+    </AssumptionsScope>
   );
 }
 

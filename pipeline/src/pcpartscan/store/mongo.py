@@ -432,6 +432,42 @@ def job_start(job: str, run: str) -> None:
     }, upsert=True)
 
 
+def last_success(job: str, before_run: str | None = None) -> dict | None:
+    """The most recent successful run of `job`, excluding `before_run`.
+
+    Excluding the current run matters: job_start writes a "running" doc
+    before the work begins, and a caller asking "when did this last
+    succeed" during its own run must not be able to see itself.
+    """
+    q: dict = {"job": job, "status": "ok"}
+    if before_run:
+        q["run_id"] = {"$ne": before_run}
+    return get_db().job_runs.find_one(q, sort=[("finished_at", -1)])
+
+
+def hours_ago(ts: str | None, now: dt.datetime | None = None) -> float | None:
+    """Hours between `ts` and now, or None if it is missing or unparseable.
+
+    Naive timestamps are read as UTC, which is what the pipeline writes;
+    treating one as local time would silently shift every gap by the
+    runner's offset and make the catch-up rule fire at the wrong moments.
+    """
+    when = _parse_ts(ts)
+    if when is None:
+        return None
+    now = now or dt.datetime.now(dt.timezone.utc)
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=dt.timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+    return max(0.0, (now - when).total_seconds() / 3600.0)
+
+
+def hours_since_last_success(job: str, before_run: str | None = None) -> float | None:
+    """How long since `job` last finished cleanly. None if it never has."""
+    return hours_ago((last_success(job, before_run) or {}).get("finished_at"))
+
+
 def job_finish(job: str, run: str, status: str = "ok",
                counts: dict | None = None, error: str | None = None) -> None:
     get_db().job_runs.update_one({"_id": f"{job}-{run}"}, {"$set": {

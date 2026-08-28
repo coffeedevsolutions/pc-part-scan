@@ -21,6 +21,42 @@ import sys
 import time
 from dataclasses import asdict
 
+# How stale a scan has to be before the next one sweeps deep to cover for
+# the slots the scheduler dropped.
+#
+# This has to clear the largest gap the schedule ITSELF asks for, or the
+# metric it feeds is worthless. scan.yml runs at 00:17, 03:17, 08:17 and
+# then two-hourly from 12:17, so the overnight 03:17 -> 08:17 gap is five
+# hours BY DESIGN. At the three hours this started life as, the 08:17 and
+# 12:17 runs promoted themselves on a perfectly delivered day and wrote
+# `caught_up: true` -- and the weekly health routine reads a high catch-up
+# rate as "the schedule is unreliable" (ROUTINES section 3). The metric
+# would have been permanently poisoned by the schedule shipped alongside it.
+#
+# So: five hours of scheduled gap plus two hours of slack, because GitHub
+# routinely starts a scheduled job late. test_catchup.py reads the cron out
+# of scan.yml and fails if this stops clearing it, so the two cannot drift
+# apart again.
+#
+# The cost of being this lax is that one or two dropped slots in the
+# two-hourly band do not trigger a deep sweep. That is the right trade: a
+# shallow sweep still covers four pages, and a false "we were behind" is
+# worse than a missed promotion because it lies in the data.
+CATCHUP_AFTER_HOURS = 7.0
+
+
+def needs_catchup(gap_hours: float | None, already_full: bool = False) -> bool:
+    """Should this scan sweep deep to cover for slots the scheduler dropped?
+
+    None means no previous successful run to compare against -- a first run
+    on an empty store, where there is nothing to catch up ON and the normal
+    depth is right. Already-full runs are left alone rather than reported as
+    promotions they did not need.
+    """
+    if already_full or gap_hours is None:
+        return False
+    return gap_hours >= CATCHUP_AFTER_HOURS
+
 
 def _counts_line(db) -> str:
     names = ["lots", "bid_observations", "sold", "manifests",
@@ -197,6 +233,31 @@ def cmd_scan(a) -> int:
             "refusing to scan with the file backend in CI: MONGODB_URI is "
             "unset or empty, so all output would be discarded with the runner")
     run = ds.run_id()
+
+    # --- catch up on whatever the scheduler dropped ----------------------
+    #
+    # GitHub runs `schedule:` on a best-effort queue and sheds jobs under
+    # load. This repo asks for nine scans a day and reliably gets three or
+    # four; on 2026-08-28 the 12:00, 14:00 and 16:00 slots all vanished, and
+    # nothing noticed until a stale page was spotted by hand. Nothing inside
+    # the repo can make the scheduler fire, so the run that DOES happen has
+    # to cover for the ones that did not.
+    #
+    # A gap means two things went unseen: lots that opened and closed inside
+    # it, and sold records that scrolled past the shallow sweep's first few
+    # pages. Both are fixed by sweeping deeper, which is exactly what --full
+    # does -- so a late run promotes itself.
+    gap = None
+    if is_mongo and hasattr(ds, "hours_since_last_success"):
+        gap = ds.hours_since_last_success("scan", before_run=run)
+    behind = needs_catchup(gap, a.full)
+    if behind:
+        print(f"last successful scan was {gap:.1f}h ago "
+              f"(>= {CATCHUP_AFTER_HOURS}h): sweeping deep to catch up")
+        a.full = True
+    elif gap is not None:
+        print(f"last successful scan {gap:.1f}h ago")
+
     if is_mongo:
         ds.job_start("scan", run)
     try:
@@ -250,7 +311,11 @@ def cmd_scan(a) -> int:
         print(f"\nrun {run}")
         print(f"dataset: {json.dumps(idx['counts'])}")
         if is_mongo:
-            ds.job_finish("scan", run, counts=idx["counts"])
+            counts = dict(idx["counts"])
+            if gap is not None:
+                counts["hours_since_last_scan"] = round(gap, 2)
+            counts["caught_up"] = bool(behind)
+            ds.job_finish("scan", run, counts=counts)
     except Exception as e:
         if is_mongo:
             ds.job_finish("scan", run, status="error", error=str(e))
@@ -638,7 +703,14 @@ def cmd_recovery(a) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The CLI surface, separated from running it so tests can inspect it.
+
+    Notably `pcps scan`'s config-flag defaults, which land in
+    `snapshot.config` and become the base the web app grades from -- they
+    have to agree with grade.Config or the UI labels a value nobody chose
+    as one somebody did.
+    """
     ap = argparse.ArgumentParser(prog="pcps")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -719,7 +791,11 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("digest", help="daily digest inputs (JSON)")
     sub.add_parser("health", help="weekly health-review inputs (JSON)")
 
-    a = ap.parse_args(argv)
+    return ap
+
+
+def main(argv: list[str] | None = None) -> int:
+    a = build_parser().parse_args(argv)
     return {"smoke": cmd_smoke, "backfill": cmd_backfill, "scan": cmd_scan,
             "backtest": cmd_backtest, "resolve": cmd_resolve,
             "burst": cmd_burst, "archive": cmd_archive,
