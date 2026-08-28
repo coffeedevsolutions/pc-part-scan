@@ -530,6 +530,3 @@ def write_recovery(run: str, report: dict) -> str:
                        **report}, upsert=True)
     return run
 
-
-def latest_recovery() -> dict | None:
-    return get_db().recoveries.find_one(sort=[("measured_at", -1)])

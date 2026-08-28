@@ -294,16 +294,32 @@ function Contents({
   lot: SnapshotLot | undefined;
   manifest: ManifestDoc | null;
 }) {
-  // The lot's own mix is preferred over the manifest's when it carries
-  // prices: they are the same machines either way (grade.py reads the
-  // manifest to build it), but only the graded copy knows what each line
-  // is worth, and a table with the price columns beats one without.
-  const priced = !!lot?.mix?.length && lot.mix.every((m) => m.unit_value != null);
-  const mix = priced
+  // Which list of machines to show, and whether it carries prices.
+  //
+  // The graded mix is the one with prices on it, so it is preferred — but
+  // only when it is actually the manifest's machines. It is not always:
+  // grade.py reads the manifest only when the count is unknown or the lot
+  // has 5+ units (grade.py `if unknown_count or units >= 5`), and otherwise
+  // synthesizes a single row from the title. Preferring the priced copy
+  // unconditionally therefore replaced a genuine 3-machine spec sheet with
+  // one generic row — fewer facts, dressed up as more, because it had a
+  // price column. The same happened whenever a manifest was parsed after
+  // the last scan: the fresh spec sheet hid behind the stale synthesized
+  // row until the next snapshot.
+  //
+  // So: take the graded mix when it is at least as detailed as the
+  // manifest, and the manifest otherwise. Losing the price columns is the
+  // cheaper loss — the per-unit price is one derived number, and the
+  // manifest rows are what the lot actually contains.
+  const gradedRows = lot?.mix?.length ?? 0;
+  const manifestRows = manifest?.machines.length ?? 0;
+  const gradedIsRicher = gradedRows > 0 && gradedRows >= manifestRows;
+  const mix = gradedIsRicher
     ? lot!.mix
-    : manifest?.machines.length
-      ? manifest.machines
+    : manifestRows
+      ? manifest!.machines
       : (lot?.mix ?? []);
+  const priced = mix.length > 0 && mix.every((m) => m.unit_value != null);
   const q = lot?.class_quote;
   const kind = lot?.item_class;
   // A synthesized one-row "mix" with no CPU is not a machine list, it is the

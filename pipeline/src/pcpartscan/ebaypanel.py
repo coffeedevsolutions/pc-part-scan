@@ -227,11 +227,17 @@ def sales(rows: list[dict], include_best_offer: bool = False,
         price = r.get("last_price")
         if not price or price <= 0:
             continue
+        # Deliberately no "net" here. It used to carry
+        # net_proceeds(price) at the DEFAULT shipping, while recovery()
+        # recomputed it from the raw price with the caller's real shipping
+        # -- so the two disagreed whenever --shipping was set, and the
+        # ready-made field was the wrong one. Net proceeds depend on an
+        # assumption this function is not told, so it reports the price and
+        # lets the caller who owns that assumption apply it.
         out.append({
             "cpu": r.get("cpu"),
             "ram_gb": r.get("ram_gb"),
             "price": float(price),
-            "net": net_proceeds(float(price)),
             "best_offer": bool(r.get("best_offer")),
             "days_listed": _days(r.get("first_seen"), r.get("gone_at")),
         })

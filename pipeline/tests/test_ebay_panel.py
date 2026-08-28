@@ -246,3 +246,18 @@ def test_ram_is_appended_only_when_known():
     assert ebaypanel.query_for("i5-10500", 16)[0].endswith(" 16GB")
     assert not ebaypanel.query_for("i5-10500", None)[0].endswith("GB")
     assert not ebaypanel.query_for("i5-10500", 0)[0].endswith("GB")
+
+
+# --- what the caller owns ------------------------------------------------
+
+def test_sales_reports_price_not_net():
+    """Net proceeds depend on a shipping assumption sales() is not told.
+
+    It used to emit a `net` computed at the DEFAULT shipping while
+    recovery() recomputed one from the raw price with the caller's real
+    shipping. The two disagreed the moment --shipping was set, and the
+    ready-made field was the wrong one -- so it no longer exists.
+    """
+    row = ebaypanel.sales([_row()])[0]
+    assert "net" not in row
+    assert row["price"] == 200.0

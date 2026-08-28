@@ -23,7 +23,21 @@ import { remainingFrom, usd } from "@/lib/format";
 type BoardLot = SnapshotLot & { end_utc: string | null };
 type Row = { lot: BoardLot; v: Regrade };
 
-const STORAGE_KEY = "pcps.assumptions.v1";
+/**
+ * Bumped from v1 when part_handling's default changed from $3 to $0.
+ *
+ * A v1 blob holds a full config snapshot written by a build where $3 was
+ * the default, so it says `part_handling: 3` for everyone who ever touched
+ * any slider — indistinguishably from someone who chose $3 on purpose.
+ * Replaying one would push $3 back to the server as a deliberate setting
+ * and return every charger pallet to a max bid of zero, with nothing on
+ * screen to explain it. There is no way to tell the two apart after the
+ * fact, so v1 blobs are simply not read: the cost is one device falling
+ * back to current defaults, against silently undoing the change.
+ *
+ * Bump this again whenever a default changes meaning, for the same reason.
+ */
+const STORAGE_KEY = "pcps.assumptions.v2";
 
 export function BoardClient({
   lots,
@@ -59,6 +73,11 @@ export function BoardClient({
       // copy and nothing else. Without this the Board would grade a lot at
       // the rates on screen while its own detail page graded the same lot
       // at the defaults, with no visible reason for the two to disagree.
+      //
+      // Safe to treat as user-chosen only because STORAGE_KEY is versioned:
+      // anything under this key was written by a build whose defaults match
+      // the ones running now, so a value that differs from a default is a
+      // value somebody set.
       saveAssumptions({ ...base, ...stored } as unknown as Record<string, number>)
         .catch(() => {});
     } catch {

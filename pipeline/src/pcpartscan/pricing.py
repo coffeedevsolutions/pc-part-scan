@@ -532,12 +532,23 @@ class EbayAdapter:
         below the top N on relevance, or the seller revised it. Asking about
         the item directly separates that from a real ending, which is the
         difference between a sold comp and a phantom one.
+
+        Shares the circuit breaker with search(), which it did not before:
+        confirmations are the one call made in an unbounded loop, so a
+        getItem endpoint that times out rather than answering could burn
+        max_confirm x max_cpus x CALL_TIMEOUT -- hours -- against a job with
+        a 20-minute limit, and take the whole run's polling with it. A 404
+        is an ANSWER (the item ended), so it resets the breaker like any
+        other successful call; only a transport failure trips it.
         """
         if not item_id:
+            return None
+        if self._consecutive_failures >= self.MAX_CONSECUTIVE_FAILURES:
             return None
         try:
             tok = self._auth()
         except Exception:
+            self._consecutive_failures += 1
             return None
         if not tok:
             return None
@@ -552,9 +563,15 @@ class EbayAdapter:
         except urllib.error.HTTPError as e:
             # 404 is eBay's answer for an item that has ended. Anything else
             # is our problem, not a statement about the listing.
-            return False if e.code == 404 else None
-        except Exception:
+            if e.code == 404:
+                self._consecutive_failures = 0
+                return False
+            self._consecutive_failures += 1
             return None
+        except Exception:
+            self._consecutive_failures += 1
+            return None
+        self._consecutive_failures = 0
         for av in data.get("estimatedAvailabilities") or []:
             if av.get("estimatedAvailabilityStatus") == "OUT_OF_STOCK":
                 return False

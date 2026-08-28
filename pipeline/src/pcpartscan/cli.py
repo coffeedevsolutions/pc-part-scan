@@ -18,6 +18,7 @@ import gzip
 import json
 import os
 import sys
+import time
 from dataclasses import asdict
 
 
@@ -483,8 +484,9 @@ def cmd_ebay_watch(a) -> int:
 
     run = ds.run_id()
     ds.job_start("ebay-watch", run)
+    started = time.monotonic()
     totals = {"queries": 0, "failed": 0, "listings": 0, "new": 0,
-              "gone": 0, "confirmed": 0}
+              "gone": 0, "confirmed": 0, "unconfirmed": 0}
     try:
         for cpu in cpus:
             qk = ebaypanel.query_key(cpu, None)
@@ -509,13 +511,33 @@ def cmd_ebay_watch(a) -> int:
             # One confirmation call per disappearance turns "fell out of the
             # search results" into "definitely ended". Both are stored; the
             # estimator decides which population to trust.
+            #
+            # Bounded by wall clock, not just by count. Confirmations are the
+            # only unbounded loop here -- one per departure, across every CPU
+            # -- so at max_confirm x max_cpus x CALL_TIMEOUT a getItem
+            # endpoint that times out instead of answering runs for hours
+            # against a job capped at 20 minutes. The runner would kill the
+            # run mid-way: no job_finish, and every CPU after the current one
+            # simply not polled that day. Polling is the part that cannot be
+            # caught up later, so it is confirmations that must give way.
             for m in marks[:a.max_confirm]:
+                if time.monotonic() - started > a.confirm_seconds:
+                    totals["unconfirmed"] += 1
+                    continue
                 still = ebay.still_listed(m["_id"])
                 if still is True:
                     m["skip"] = True
                 elif still is False:
                     m["gone_reason"] = "confirmed_ended"
                     totals["confirmed"] += 1
+                else:
+                    # Asked and got no answer. Distinct from "vanished",
+                    # which means we never asked: without the distinction an
+                    # eBay outage is indistinguishable in the data from a
+                    # normal day, and quietly pads the all-departures band
+                    # with departures nothing checked.
+                    m["gone_reason"] = "unconfirmed"
+                    totals["unconfirmed"] += 1
             marks = [m for m in marks if not m.get("skip")]
             totals["gone"] += ds.mark_ebay_gone(marks)
 
@@ -523,7 +545,8 @@ def cmd_ebay_watch(a) -> int:
         print(f"polled {totals['queries']} CPUs "
               f"({totals['failed']} failed), {totals['listings']} listings "
               f"({totals['new']} new), {totals['gone']} left "
-              f"({totals['confirmed']} confirmed ended)")
+              f"({totals['confirmed']} confirmed ended, "
+              f"{totals['unconfirmed']} unconfirmed)")
         print(f"panel: {stats['listings']} listings, {stats['live']} live, "
               f"{stats['ended']} ended, over {stats['polls']} polls")
         ds.job_finish("ebay-watch", run, counts=totals)
@@ -598,15 +621,20 @@ def cmd_recovery(a) -> int:
                   f"{(f'{days:.0f}' if days is not None else '--'):>7}")
 
     if best["recovery"] is None:
-        print("\nNot enough departures yet to measure recovery. The upper "
-              "bound above is what asks alone can say; run `pcps ebay-watch` "
-              "daily and this fills in as listings sell.")
-    else:
-        run = ds.run_id()
-        ds.write_recovery(run, {"bound": bound, "strict": strict,
-                                "loose": loose, "with_offers": with_offers,
-                                "shipping": a.shipping})
-        print(f"\nrun {run}")
+        print("\nNot enough departures yet to measure recovery. The figure "
+              "from asks above is what live listings alone can say; run "
+              "`pcps ebay-watch` daily and this fills in as listings sell.")
+
+    # Written every run, measured or not. Gating the write on a measured
+    # recovery meant the Models page had nothing to read for the whole
+    # collection period -- weeks -- and so showed "nothing measured yet"
+    # even once the ask-derived figure was available, which is the number
+    # that panel exists to show in exactly that window.
+    run = ds.run_id()
+    ds.write_recovery(run, {"bound": bound, "strict": strict,
+                            "loose": loose, "with_offers": with_offers,
+                            "shipping": a.shipping})
+    print(f"\nrun {run}")
     return 0
 
 
@@ -677,6 +705,10 @@ def main(argv: list[str] | None = None) -> int:
                    help="how many CPUs to poll, most-comped first")
     p.add_argument("--max-confirm", type=int, default=25,
                    help="confirmation calls per query for vanished listings")
+    p.add_argument("--confirm-seconds", type=float, default=300.0,
+                   help="wall-clock budget for confirmations across the run; "
+                        "polling every CPU matters more than confirming any "
+                        "one departure, so this gives way first")
 
     p = sub.add_parser("recovery",
                        help="what we get for a machine, measured on eBay")
