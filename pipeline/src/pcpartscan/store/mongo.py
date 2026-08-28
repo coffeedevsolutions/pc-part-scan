@@ -17,6 +17,13 @@ Collections (database `pcps` unless PCPS_DB overrides):
   snapshots         graded output of each scan run, _id = run id.
   meta              _id="index": counts, last run, last config.
   job_runs          one doc per scheduled job execution.
+  ebay_listings     every eBay listing we have ever seen, _id = item id.
+                    A row is live until `gone_at` is set; the set of rows
+                    that went from live to gone IS the sold-comp feed,
+                    since Browse will not sell us one (see ebaypanel.py).
+  ebay_polls        one doc per (query, poll). Records that a query was
+                    actually asked and answered, so a listing missing
+                    from a FAILED poll is never mistaken for a sale.
 
 All writes are idempotent upserts except bid_observations, which is guarded
 by a unique (key, run_id, observed_at) index so re-running a backfill or a
@@ -42,6 +49,25 @@ _client: MongoClient | None = None
 _indexed = False
 
 
+def _db_name(client) -> str:
+    """Which database to use: PCPS_DB, else the one named in the URI, else pcps.
+
+    The URI leg matters. `MONGODB_URI=mongodb://host/analytics` names a
+    database and every other Mongo tool honours it, so ignoring it in favour
+    of a hardcoded default means a connection string that reads correctly
+    silently writes somewhere else -- which is a bad afternoon to debug when
+    the collections it wrote to were empty rather than absent.
+    """
+    explicit = os.environ.get("PCPS_DB")
+    if explicit:
+        return explicit
+    try:
+        from_uri = client.get_default_database(default=None)
+    except Exception:
+        from_uri = None
+    return from_uri.name if from_uri is not None else "pcps"
+
+
 def get_db():
     global _client, _indexed
     if _client is None:
@@ -50,7 +76,7 @@ def get_db():
             raise SystemExit("MONGODB_URI is not set; cannot use the mongo store")
         _client = MongoClient(uri, appname="pcps-pipeline", tz_aware=False,
                               serverSelectionTimeoutMS=20000)
-    db = _client[os.environ.get("PCPS_DB", "pcps")]
+    db = _client[_db_name(_client)]
     if not _indexed:
         ensure_indexes(db)
         _indexed = True
@@ -85,6 +111,9 @@ def ensure_indexes(db) -> None:
     db.bid_observations.create_index([("key", 1), ("observed_at", 1)])
     db.sold.create_index([("auction_end_utc", 1)])
     db.job_runs.create_index([("job", 1), ("started_at", -1)])
+    db.ebay_listings.create_index([("query_key", 1), ("gone_at", 1)])
+    db.ebay_listings.create_index([("cpu", 1), ("gone_at", 1)])
+    db.ebay_polls.create_index([("query_key", 1), ("polled_at", -1)])
     _migrate_component_sources(db)
 
 
@@ -409,3 +438,95 @@ def job_finish(job: str, run: str, status: str = "ok",
         "finished_at": utcnow(), "status": status,
         "counts": counts or {}, "error": error,
     }}, upsert=True)
+
+
+# ------------------------------------------------------------- eBay panel
+
+def record_ebay_poll(query_key: str, cpu: str, ram_gb: int | None,
+                     n_items: int, ok: bool) -> None:
+    """Note that a query was asked, and whether eBay answered.
+
+    Insert-only and cheap. Its whole job is to make the difference between
+    "nothing is listed" and "we could not ask" durable, because the panel
+    reads a listing's absence as a sale.
+    """
+    get_db().ebay_polls.insert_one({
+        "query_key": query_key, "cpu": cpu, "ram_gb": ram_gb,
+        "polled_at": utcnow(), "n_items": n_items, "ok": bool(ok),
+    })
+
+
+def upsert_ebay_listings(rows: list[dict], query_key: str) -> dict:
+    """Record what a poll saw. New rows are born live; known rows advance.
+
+    `first_seen` and `polls` are the panel's clock: how long a listing has
+    been up and how many times we have confirmed it. A listing has to have
+    been seen more than once before its disappearance counts for anything,
+    which is what `polls` is for.
+    """
+    if not rows:
+        return {"new": 0, "seen": 0}
+    db = get_db()
+    now = utcnow()
+    ops, ids = [], [r["_id"] for r in rows]
+    existing = {d["_id"] for d in
+                db.ebay_listings.find({"_id": {"$in": ids}}, {"_id": 1})}
+    for r in rows:
+        doc = dict(r, query_key=query_key, last_seen=now)
+        ops.append(UpdateOne(
+            {"_id": r["_id"]},
+            {"$set": doc,
+             "$setOnInsert": {"first_seen": now, "first_price": r["last_price"]},
+             # A listing that reappears after being marked gone was never
+             # sold -- it fell out of search and came back. Clearing the
+             # mark is the correction, and $unset on a field that is not
+             # set is a no-op, so this costs nothing in the normal case.
+             "$unset": {"gone_at": "", "gone_reason": ""},
+             "$inc": {"polls": 1}},
+            upsert=True))
+    db.ebay_listings.bulk_write(ops, ordered=False)
+    return {"new": len(ids) - len(existing), "seen": len(ids)}
+
+
+def live_ebay_listings(query_key: str | None = None) -> list[dict]:
+    """Listings currently believed to be up."""
+    q: dict = {"gone_at": {"$exists": False}}
+    if query_key:
+        q["query_key"] = query_key
+    return list(get_db().ebay_listings.find(q))
+
+
+def mark_ebay_gone(marks: list[dict]) -> int:
+    """Record that listings stopped appearing, with why we think so."""
+    if not marks:
+        return 0
+    ops = [UpdateOne({"_id": m["_id"]},
+                     {"$set": {"gone_at": m["gone_at"],
+                               "gone_reason": m["gone_reason"]}})
+           for m in marks]
+    return get_db().ebay_listings.bulk_write(ops, ordered=False).modified_count
+
+
+def ended_ebay_listings() -> list[dict]:
+    """Every listing that has left, live or confirmed -- the sold-comp feed."""
+    return list(get_db().ebay_listings.find({"gone_at": {"$exists": True}}))
+
+
+def ebay_panel_stats() -> dict:
+    db = get_db()
+    return {
+        "listings": db.ebay_listings.estimated_document_count(),
+        "live": db.ebay_listings.count_documents({"gone_at": {"$exists": False}}),
+        "ended": db.ebay_listings.count_documents({"gone_at": {"$exists": True}}),
+        "confirmed": db.ebay_listings.count_documents(
+            {"gone_reason": "confirmed_ended"}),
+        "polls": db.ebay_polls.estimated_document_count(),
+    }
+
+
+def write_recovery(run: str, report: dict) -> str:
+    get_db().recoveries.replace_one(
+        {"_id": run}, {"_id": run, "run_id": run, "measured_at": utcnow(),
+                       **report}, upsert=True)
+    return run
+

@@ -1,8 +1,12 @@
+import { DEFAULT_CONFIG } from "@pcps/valuation";
+
 import {
   componentPrices,
   latestBacktest,
+  latestRecovery,
   latestSnapshot,
   modelRuns,
+  savedAssumptions,
 } from "@/lib/data";
 import { usd } from "@/lib/format";
 
@@ -11,15 +15,18 @@ import { HelpIcon } from "@/components/Tooltip";
 import { BacktestPanel } from "./Backtest";
 import { ModelTrends } from "./ModelTrends";
 import { PriceEditor } from "./PriceEditor";
+import { RecoveryPanel } from "./Recovery";
 
 export const dynamic = "force-dynamic";
 
 export default async function ModelsPage() {
-  const [runs, pinned, snap, bt] = await Promise.all([
+  const [runs, pinned, snap, bt, rec, saved] = await Promise.all([
     modelRuns(),
     componentPrices(),
     latestSnapshot(),
     latestBacktest(),
+    latestRecovery(),
+    savedAssumptions(),
   ]);
   const classes = Object.values(snap?.class_prices ?? {})
     .filter((q) => q.usable)
@@ -82,6 +89,11 @@ export default async function ModelsPage() {
           </div>
         </div>
       )}
+
+      <RecoveryPanel
+        report={rec}
+        current={saved.recovery ?? DEFAULT_CONFIG.recovery}
+      />
 
       {bt && <BacktestPanel bt={bt} />}
 

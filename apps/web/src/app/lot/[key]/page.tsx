@@ -17,6 +17,7 @@ import {
   isWatched,
   savedAssumptions,
   snapshotEntry,
+  type MachineLine,
   type ManifestDoc,
   type SnapshotLot,
 } from "@/lib/data";
@@ -293,14 +294,46 @@ function Contents({
   lot: SnapshotLot | undefined;
   manifest: ManifestDoc | null;
 }) {
-  const mix = manifest?.machines.length ? manifest.machines : (lot?.mix ?? []);
+  // Which list of machines to show, and whether it carries prices.
+  //
+  // The graded mix is the one with prices on it, so it is preferred — but
+  // only when it is actually the manifest's machines. It is not always:
+  // grade.py reads the manifest only when the count is unknown or the lot
+  // has 5+ units (grade.py `if unknown_count or units >= 5`), and otherwise
+  // synthesizes a single row from the title. Preferring the priced copy
+  // unconditionally therefore replaced a genuine 3-machine spec sheet with
+  // one generic row — fewer facts, dressed up as more, because it had a
+  // price column. The same happened whenever a manifest was parsed after
+  // the last scan: the fresh spec sheet hid behind the stale synthesized
+  // row until the next snapshot.
+  //
+  // So: take the graded mix when it is at least as detailed as the
+  // manifest, and the manifest otherwise. Losing the price columns is the
+  // cheaper loss — the per-unit price is one derived number, and the
+  // manifest rows are what the lot actually contains.
+  const gradedRows = lot?.mix?.length ?? 0;
+  const manifestRows = manifest?.machines.length ?? 0;
+  const gradedIsRicher = gradedRows > 0 && gradedRows >= manifestRows;
+  const mix = gradedIsRicher
+    ? lot!.mix
+    : manifestRows
+      ? manifest!.machines
+      : (lot?.mix ?? []);
+  const priced = mix.length > 0 && mix.every((m) => m.unit_value != null);
   const q = lot?.class_quote;
   const kind = lot?.item_class;
   // A synthesized one-row "mix" with no CPU is not a machine list, it is the
   // absence of one wearing a table. On a pallet of chargers it read as one
   // unknown laptop x 300, which is worse than showing nothing.
+  //
+  // That rule was right when the row carried no price, and wrong once it
+  // did. Priced, the same row says "300 adapters at $4.17 each = $1,250" --
+  // the arithmetic the ceiling is built from, on the one line there is. It
+  // was hiding the breakdown on 59 of 60 board lots, because most lots are
+  // exactly this shape: one kind of thing, N of them.
   const realMix =
-    mix.length > 1 || mix.some((m) => m.cpu) || !!manifest?.machines.length;
+    priced || mix.length > 1 || mix.some((m) => m.cpu) ||
+    !!manifest?.machines.length;
   return (
     <>
       <table className="data waterfall" style={{ marginBottom: 10 }}>
@@ -369,7 +402,7 @@ function Contents({
         </tbody>
       </table>
       {realMix ? (
-        <MixTable mix={mix} />
+        <MixTable mix={mix} lot={lot} />
       ) : (
         <p className="muted small" style={{ margin: 0 }}>
           No per-unit breakdown: nothing named a component we recognise, so
@@ -380,43 +413,145 @@ function Contents({
   );
 }
 
+/**
+ * The spec-sheet lines, each with what one of them is worth and what the
+ * line comes to.
+ *
+ * The table used to stop at Qty, which meant the page could tell you a
+ * pallet held 40 i5-8500s and separately that the whole lot was worth
+ * $3,240, with no way to see which lines carried that and which were
+ * making up the numbers. The per-unit price is the model's actual output;
+ * the extended column is just it times Qty, and the total is what the
+ * ceiling is built from — so a ceiling you doubt can be traced to the line
+ * you doubt.
+ */
+/** How to name a row that has no CPU: the lot's item class, else "units". */
+function kindLabel(lot: SnapshotLot | undefined, qty: number): string {
+  const kind = lot?.item_class;
+  if (!kind) return "unidentified units";
+  return qty === 1 ? kind : `${kind}s`;
+}
+
 function MixTable({
   mix,
+  lot,
 }: {
-  mix: {
-    cpu: string | null;
-    ram_gb: number | null;
-    form_factor: string | null;
-    chassis: string | null;
-    has_drive: boolean | null;
-    qty: number;
-  }[];
+  mix: MachineLine[];
+  lot: SnapshotLot | undefined;
 }) {
   if (!mix.length) return <p className="muted small">Unknown.</p>;
+  const priced = mix.every((m) => m.unit_value != null);
+  // A lot of chargers has no CPU, chassis or RAM to show, and five columns of
+  // em-dashes is not a machine list — it is a machine list's absence. When
+  // nothing names a component, the same rows are the item and its count.
+  const machines = mix.some((m) => m.cpu);
+  const units = mix.reduce((a, m) => a + m.qty, 0);
+  const total = mix.reduce((a, m) => a + (m.unit_value ?? 0) * m.qty, 0);
+  // The ceiling blends sources; this column is one of them. Say so rather
+  // than showing a total that silently disagrees with the number above.
+  // Tolerance scales with the lot: each unit price is rounded to the cent
+  // before being multiplied out, so the column can drift by up to half a
+  // cent a unit without anything being wrong.
+  const blended = priced && lot
+    ? Math.abs(lot.ceiling - total) > Math.max(1, lot.units * 0.01)
+    : false;
+  const byClass = lot?.priced_by === "class";
+
   return (
-    <table className="data" style={{ maxWidth: 640 }}>
-      <thead>
-        <tr>
-          <th>CPU</th>
-          <th>Chassis</th>
-          <th>Form</th>
-          <th className="num">RAM</th>
-          <th>Drive</th>
-          <th className="num">Qty</th>
-        </tr>
-      </thead>
-      <tbody>
-        {mix.map((m, i) => (
-          <tr key={i}>
-            <td>{m.cpu ?? "unknown"}</td>
-            <td>{m.chassis ?? "—"}</td>
-            <td>{m.form_factor ?? "—"}</td>
-            <td className="num">{m.ram_gb ? `${m.ram_gb}GB` : "—"}</td>
-            <td>{m.has_drive == null ? "—" : m.has_drive ? "yes" : "no"}</td>
-            <td className="num">{m.qty}</td>
+    <>
+      <table
+        className="data"
+        style={{ maxWidth: machines ? (priced ? 820 : 640) : 520 }}
+      >
+        <thead>
+          <tr>
+            {machines ? (
+              <>
+                <th>CPU</th>
+                <th>Chassis</th>
+                <th>Form</th>
+                <th className="num">RAM</th>
+                <th>Drive</th>
+              </>
+            ) : (
+              <th>Item</th>
+            )}
+            <th className="num">Qty</th>
+            {priced && <th className="num">$/unit</th>}
+            {priced && <th className="num">Value</th>}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {mix.map((m, i) => (
+            <tr key={i}>
+              {machines ? (
+                <>
+                  <td>{m.cpu ?? "unknown"}</td>
+                  <td>{m.chassis ?? "—"}</td>
+                  <td>{m.form_factor ?? "—"}</td>
+                  <td className="num">{m.ram_gb ? `${m.ram_gb}GB` : "—"}</td>
+                  <td>
+                    {m.has_drive == null ? "—" : m.has_drive ? "yes" : "no"}
+                  </td>
+                </>
+              ) : (
+                <td>
+                  {kindLabel(lot, m.qty)}
+                  {m.chassis && <span className="muted"> · {m.chassis}</span>}
+                </td>
+              )}
+              <td className="num">{m.qty.toLocaleString()}</td>
+              {priced && <td className="num">{usd(m.unit_value!, 2)}</td>}
+              {priced && (
+                <td className="num">{usd(m.unit_value! * m.qty)}</td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+        {priced && mix.length > 1 && (
+          <tfoot>
+            <tr className="wf-total">
+              <td colSpan={machines ? 5 : 1}>Total</td>
+              <td className="num">{units.toLocaleString()}</td>
+              <td className="num muted">{usd(total / (units || 1), 2)}</td>
+              <td className="num">{usd(total)}</td>
+            </tr>
+          </tfoot>
+        )}
+      </table>
+      {priced && byClass && (
+        <p className="muted small">
+          {mix.length > 1 ? (
+            <>
+              Every line carries the same price because nothing on this lot
+              was priced on its own merits — it is {units.toLocaleString()} ×{" "}
+              {usd(mix[0].unit_value!, 2)}, the going rate for{" "}
+              {lot?.item_class}s, whatever each line happens to say.
+            </>
+          ) : (
+            <>
+              One line because that is all we know: the lot is{" "}
+              {units.toLocaleString()} {lot?.item_class}
+              {units === 1 ? "" : "s"} at the going rate for the kind, not{" "}
+              {units.toLocaleString()} things we have looked at individually.
+              A spec sheet we could read would break this into real rows.
+            </>
+          )}
+        </p>
+      )}
+      {priced && !byClass && (
+        <p className="muted small">
+          {blended ? (
+            <>
+              {usd(total)} is what the GovDeals single-unit model makes of
+              these lines. The ceiling used above is {usd(lot!.ceiling)},
+              because it also blends in eBay asks.
+            </>
+          ) : (
+            <>This total is the ceiling the valuation above starts from.</>
+          )}
+        </p>
+      )}
+    </>
   );
 }

@@ -46,13 +46,15 @@ Two structural problems drive most of this plan:
    ┌────────────────────────────▼─────────┐   ┌──────▼──────────────────────┐
    │ scan.yml      9×/day, close-weighted │   │ Vercel (Hobby)              │
    │ burst.yml     peak-window 2-min poll │   │  Next.js workbench          │
-   │ fit.yml       daily refit + eBay     │   │  Auth.js (email allowlist)  │
-   │ archive.yml   weekly dump + prune    │   │  TS valuation (live regrade)│
+   │ ebay.yml      daily resale panel     │   │  Auth.js (email allowlist)  │
+   │ resolve.yml   daily outcome chase    │   │  TS valuation (live regrade)│
+   │ backtest.yml  weekly out-of-sample   │   │                             │
+   │ archive.yml   weekly dump + prune    │   │                             │
    └──────┬───────────────────────────────┘   └──────┬──────────────────────┘
           │ writes                                   │ reads lots/models,
           ▼                                          ▼ writes watchlist/notes
    ┌──────────────────────── MongoDB Atlas M0 (system of record) ───────────┐
-   │ lots · bid_observations · manifests · model_runs · ebay_comps ·        │
+   │ lots · bid_observations · manifests · model_runs · ebay_listings ·     │
    │ component_prices · watchlist · lot_actions · settings · job_runs       │
    └──────┬─────────────────────────────────────────────────────────────────┘
           │ weekly JSONL.gz dump                    ▲
@@ -101,7 +103,7 @@ pc-part-scan/
     web/                       # Next.js App Router, deployed to Vercel
   packages/
     valuation/                 # TS port of grade.py math + zod schemas
-  .github/workflows/           # scan.yml burst.yml fit.yml archive.yml ci.yml
+  .github/workflows/           # scan burst ebay resolve backtest archive ci
   docs/                        # this file, API.md, SCHEMA.md
   data/                        # frozen legacy dataset; used once for backfill,
                                # then removed from the working tree
@@ -127,13 +129,16 @@ GitHub Actions secrets and Vercel env as `MONGODB_URI`.
 | `manifests` | lot key | upsert | machine mix + `parsed_by: "regex"\|"llm"` + confidence |
 | `model_runs` | `run_id` | insert per fit | full coefficients, R², n, k — today's `models.json`/`components.json` merged |
 | `component_prices` | cpu key | upsert | the hand-editable static table, moved out of CSV; UI-editable |
-| `ebay_comps` | `{cpu, ram_gb}` | upsert daily | median comp, n, `fetched_at`; the blend reads only this cache, never eBay directly |
+| `ebay_listings` | eBay item id | upsert daily | every listing ever seen; `gone_at` + `gone_reason` make the departures a sold-comp feed (§11d) |
+| `ebay_polls` | auto | insert daily | proof a query was answered, so a failed poll is never read as a mass sale |
+| `recoveries` | run id | on measure | what `pcps recovery` computed: ask band, measured bands, per-CPU detail |
 | `watchlist`, `lot_actions`, `notes`, `settings` | — | web app | user state: watch/pass/bid/won, per-lot notes, assumption overrides |
 | `job_runs` | run_id | insert | started/finished/counts/errors per scheduled job — the ops heartbeat the UI and routines read |
 
 Indexes: `lots {status, auction_end_utc}`, `lots {location.state}`,
 `bid_observations {key, observed_at}`, `sold {close_date}`,
-`ebay_comps {fetched_at}`.
+`ebay_listings {query_key, gone_at}`, `ebay_listings {cpu, gone_at}`,
+`ebay_polls {query_key, polled_at}`.
 
 ### Fitting 512 MB, honestly
 
@@ -177,10 +182,18 @@ single heaviest band (~21% of all closings).
 |---|---|---|
 | `scan.yml` | 9×/day, dense in the closing band | ~1,100 min |
 | `burst.yml` | 1×/weekday, 20 min, peak window | ~440 min |
-| `fit.yml` | daily, ~4 min | ~120 min |
+| `ebay.yml` | daily, ~3 min (§11d) | ~90 min |
+| `resolve.yml` | daily, ~2 min (§11a) | ~60 min |
 | `archive.yml` | weekly, ~4 min | ~16 min |
+| `backtest.yml` | weekly, ~6 min (§11b) | ~24 min |
 | `ci.yml` | on PR/push | ~150 min |
-| **Total** | | **~1,830 min** (headroom ~170) |
+| **Total** | | **~1,880 min** (headroom ~120) |
+
+Fitting is folded into `scan.yml` rather than run as its own job, which is
+what left room for the three measurement jobs added since. The remaining
+headroom is thin enough that the next daily job needs something to give:
+`scan.yml` outside the closing band is the obvious candidate, since a lot
+eight hours from close does not move.
 
 What this buys vs. an unconstrained schedule: baseline bid curves at 2–3 h
 resolution instead of 1 h, and ~2-minute final-surge resolution for lots
@@ -221,14 +234,19 @@ proposes a new window if seller behaviour drifts. Watched lots closing
 outside the window rely on the 2-hourly scans — worth knowing when deciding
 how long to leave a bid to the last minute.
 
-**`fit.yml` — daily (`30 9 * * *` UTC)**
-`pcps fit`: rebuild observations from Mongo, refit the single-unit model and
-bulk discount, insert a `model_runs` doc. Then `pcps ebay-refresh`: for every
-CPU/config appearing in any open lot's manifest or title, query the eBay
-Browse API, upsert `ebay_comps`. Comp queries are
-deduplicated and cached for 24 h, keeping usage far under the 5,000
-calls/day free limit. If R² drops more than 0.05 from the previous run, the
-job opens a GitHub issue rather than silently shipping a worse model.
+**Fitting** is not its own job. `pcps scan` rebuilds observations from Mongo
+and refits the single-unit model, the bulk discount and the per-class table
+on every run, writing a `model_runs` doc — refitting is seconds of work
+against a corpus that only grows by a sweep's worth each time, so a separate
+daily job would cost a checkout and an install to save nothing.
+
+**`ebay.yml` — daily (`0 5 * * *` UTC)**
+`pcps ebay-watch`: one Browse search per tracked CPU, record every live
+listing, and mark the ones that have stopped appearing (§11d). It gets its
+own job precisely because its value comes from an unbroken daily cadence —
+a missed day is a batch of sales that happened where the panel cannot see
+which listings went, and nothing recovers them. One search per CPU keeps
+usage far under the 5,000 calls/day free limit.
 
 **`archive.yml` — weekly (`0 6 * * 1`)**
 Dump + prune as described in §4. Also posts collection sizes to `job_runs` so
@@ -245,8 +263,14 @@ system — free, and it lands where the owner already looks.
 
 ## 6. Valuation upgrades
 
-- **eBay in the blend.** `EbayAdapter` stops calling the network at grade
-  time; it reads `ebay_comps` from Mongo (populated by `fit.yml`).
+- **eBay in the blend.** `EbayAdapter` memoises per (CPU, RAM) for the life
+  of a run and trips a circuit breaker after three consecutive failures, so
+  a degraded eBay cannot stall a scheduled scan. Its ask-to-realized haircut
+  is measured against sold GovDeals singles, never assumed; until enough
+  pairs exist the source reports nothing and the grader drops it from the
+  blend. That haircut answers "what would this fetch at GovDeals" — a
+  different question from `recovery`, which asks what *we* get, and is
+  measured separately by the panel in §11d.
 - **eBay gives asks, not sales.** Marketplace Insights, the endpoint that
   serves true sold prices, is heavily restricted and we are not getting
   access. Browse returns ACTIVE listings, and an active listing is by
@@ -261,7 +285,8 @@ system — free, and it lands where the owner already looks.
   `EBAY_CLIENT_ID`/`EBAY_CLIENT_SECRET` (GitHub Actions secrets). No eBay
   user login, no user consent screen, no per-user accounts — nothing
   browser-facing. Only the Actions job ever holds eBay credentials; the web
-  app just reads the cached `ebay_comps` collection. If eBay *user*-context
+  app never calls eBay at all; it reads what the jobs wrote. If eBay
+  *user*-context
   APIs ever enter scope (Sell/Trading APIs — e.g. listing parts for sale from
   the workbench), that is the point where an eBay OAuth consent flow and a
   stored refresh token get added to the web app; it is an isolated addition,
@@ -294,9 +319,14 @@ separate concerns, and only the first involves a login screen.
   `lots.latest_grade`, so it's fast even if the sliders below aren't touched.
 - **Lot detail** (`/lot/[key]`) — bid curve (from `bid_observations`, burst
   points highlighted), valuation waterfall (floor / ceiling with each source's
-  contribution: fitted, static, eBay), manifest table with per-machine values,
-  photos + spec-sheet links, notes, watch/pass/bid/won buttons, and the
-  auction link out to GovDeals.
+  contribution: fitted, static, eBay), the manifest as a priced table — every
+  spec-sheet line with what one of its machines is worth, that times the line
+  quantity, and a total that is the ceiling the waterfall starts from — photos
+  + spec-sheet links, notes, watch/pass/bid/won buttons, and the auction link
+  out to GovDeals. The per-line price is `mix[].unit_value`, written by
+  `grade.py` from the same model call the ceiling is summed from, so a ceiling
+  you doubt can be traced to the line you doubt. On a class-priced lot every
+  line carries the same number, and the page says why.
 - **Assumptions** (panel, persisted to `settings`) — target ROI, recovery,
   buyer premium, handling, dead rate. Moving a slider regrades the visible
   lots **in the browser** via `packages/valuation` using the latest
@@ -381,15 +411,15 @@ Monorepo restructure (`pipeline/` + pyproject + `pcps` CLI); `store/mongo.py`;
 asset contains the full backfilled history.
 
 **Phase 2 — Scheduled ingestion**
-`scan.yml` on the close-weighted schedule, `burst.yml` peak window, `fit.yml`
-daily, `ci.yml`, `job_runs` + failure-issue alerting — all inside the §5
+`scan.yml` on the close-weighted schedule (refit folded in), `burst.yml` peak
+window, `ci.yml`, `job_runs` + failure-issue alerting — all inside the §5
 minutes budget. *Done when:* 48 h pass with no manual action, a lot closing
 in the peak window shows ~2-min final-surge resolution, and projected
 month-end Actions spend (from `job_runs`) is under 2,000 min.
 
 **Phase 3 — eBay in the blend**
-Developer account, secrets, `pcps ebay-refresh` in `fit.yml`, `ebay_comps`
-cache, adapter reads cache. *Done when:* graded lots show an eBay
+Developer account, secrets, `pcps ebay-watch` in `ebay.yml`, `ebay_listings`
+panel, adapter measures its own haircut. *Done when:* graded lots show an eBay
 contribution in the valuation breakdown, and the run reports a measured
 ask-to-realized haircut with the pair count behind it.
 
@@ -494,14 +524,77 @@ because of an assumption about labour. So `Config.part_handling` applies to
 the part family and `per_unit_handling` to machines, chosen once in
 `Config.for_family()` so every formula downstream is untouched.
 
-It defaults to the same $3, because what sorting costs is a fact about a
-workshop the corpus cannot see. Instead the lot page derives the number
-that decides it: *"at $3.00 a unit handling costs $900, more than the $619
-this lot is expected to make; it would need to be under $1.29 a unit for
-any bid to clear your target return."* Sweeping the rate over the corpus,
-adapters go 0/21 winnable at $3 and at $1, 3/21 at $0.50 and 6/21 at $0.25,
-while desktops stay at 116/1,156 throughout — the split moves exactly what
-it should and nothing else.
+It defaults to **$0**: the operator this is built for says sorting a
+charger costs them nothing, and the corpus cannot contradict that — what
+handling costs is a fact about a workshop, not about GovDeals. Sweeping the
+rate over the corpus, adapters go 0/21 winnable at $3 and at $1, 3/21 at
+$0.50 and 6/21 at $0.25, while desktops stay at 116/1,156 throughout: the
+split moves exactly what it should and nothing else. Where the rate is
+non-zero and binding, the lot page derives the number that decides it:
+*"at $3.00 a unit handling costs $900, more than the $619 this lot is
+expected to make; it would need to be under $1.29 a unit for any bid to
+clear your target return."*
+
+## 11d. What you get for a machine, measured
+
+`Config.recovery` decides more than every other setting combined. Sweeping it
+0.55 -> 2.00 moves the backtest win rate 14% -> 64%, while target return
+60% -> 20% moves it 14% -> 21%. It was also the one input the system asked a
+human to supply, which is exactly the kind of number this tool exists to stop
+people guessing.
+
+The direct route is eBay's Marketplace Insights API, which serves true sold
+prices. It is heavily restricted and we are not getting access. So the panel
+measures the same thing the long way round, from the Browse API we do have.
+
+**The trick.** Browse returns ACTIVE listings -- asks, not sales. But most
+used-computer listings are fixed-price Good 'Til Cancelled and renew
+themselves indefinitely: left alone, a GTC listing does not expire, it sits
+there. So a listing that was up yesterday and is gone today has almost
+certainly sold, at the price it was last asking. `pcps ebay-watch` polls the
+same queries daily into `ebay_listings`, and the disappearances are a
+sold-comp feed eBay never had to hand us.
+
+`pcps recovery` then pairs those per CPU against the GovDeals single-unit
+sales the ceiling is fitted on:
+
+    recovery = median(eBay sale, net of fees) / median(GovDeals single sale)
+
+Paired per CPU and pooled as a **median of ratios**, not a ratio of pools --
+otherwise whichever CPUs happen to be common on eBay decide the answer for
+the whole corpus.
+
+**Four things it deliberately does not do**, each recorded in the data rather
+than absorbed silently:
+
+| trap | what the panel does |
+|---|---|
+| a listing leaves search without selling | `still_listed()` confirms via getItem; `confirmed_ended` and `vanished` are reported as separate bands |
+| best-offer listings sell below ask | flagged, and excluded from the headline figure |
+| auctions end whether or not they sold | excluded from price entirely; Browse never says what they fetched |
+| a failed query looks like a mass sale | `ebay_polls` records that a query was actually answered; a query that errored is never diffed |
+
+**Two biases that remain, and are stated on the page rather than corrected
+away.** The ask-derived figure reads high twice over -- nothing sells above
+its own ask, and the live pool is a survivor sample that keeps re-counting
+whatever failed to sell. And `median_days_to_sell` reads low while the panel
+is young: a listing cannot be observed taking longer to sell than the
+collector has been running.
+
+**The coupling that matters most.** eBay listings are for machines with a
+drive, an OS and often a warranty; GovDeals pallets frequently have none of
+those (`Drive: no` on every line of a manifest is normal). The gap between
+the two is refurb work, which is `per_unit_handling`. A high recovery
+measured here and a low handling rate on the Board cannot both be right, and
+the page says so where the number is read.
+
+Half the corpus depended on getting one more thing right: 30 of our 61 CPUs
+are laptop parts (`i5-8365u` alone has 151 GovDeals comps), and the eBay
+query was hardcoded to `"desktop computer {cpu}"` in the PC Desktops
+category. `ebaypanel.query_for()` now routes by Intel's own naming -- U/H/HQ
+suffix, Y infix, Core m family -- so the query noun and the category filter
+cannot drift apart. That fix applies to the ceiling's eBay blend too, which
+had the same defect.
 
 ## 12. Measured and deliberately not built
 

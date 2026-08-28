@@ -158,10 +158,22 @@ export function ValuationWaterfall({
       sign: "minus",
     },
     {
-      label: `Less handling (${lot.units.toLocaleString()} × ${usd(cfg.per_unit_handling, 2)}${cfg.pickup_cost ? ` + ${usd(cfg.pickup_cost)} pickup` : ""})`,
+      label:
+        fixed <= 0
+          ? "Less handling (nothing)"
+          : cfg.per_unit_handling > 0
+            ? `Less handling (${lot.units.toLocaleString()} × ${usd(cfg.per_unit_handling, 2)}${cfg.pickup_cost ? ` + ${usd(cfg.pickup_cost)} pickup` : ""})`
+            : `Less pickup (${usd(cfg.pickup_cost)})`,
       why:
         lot.item_family === "part"
-          ? `Your handling rate for parts, plus getting the lot home. Sorting ${lot.item_class}s is not the same work as testing and wiping a PC — set the two rates apart on the Board if they differ for you.`
+          ? cfg.per_unit_handling > 0
+            ? `Your handling rate for parts, plus getting the lot home. Sorting ${lot.item_class}s is not the same work as testing and wiping a PC — the two rates are set apart on the Board.`
+            : cfg.pickup_cost > 0
+              ? // The per-unit rate is zero but the pickup is not, so this
+                // step still takes money out. Saying "nothing comes out
+                // here" would contradict the figure beside it.
+                `Getting the lot home. Sorting ${lot.item_class}s itself costs you nothing, so the whole ${usd(fixed)} is pickup — machines are charged ${usd(baseCfg.per_unit_handling, 2)} a unit on top of it.`
+              : `Sorting ${lot.item_class}s costs you nothing, so nothing comes out here. Machines are charged at ${usd(baseCfg.per_unit_handling, 2)} a unit — change either rate on the Board.`
           : "Testing, wiping, photographing and packing every unit, plus getting the lot home.",
       amount: fixed,
       sign: "minus",

@@ -18,6 +18,7 @@ import gzip
 import json
 import os
 import sys
+import time
 from dataclasses import asdict
 
 
@@ -440,6 +441,203 @@ def cmd_archive(a) -> int:
     return 0
 
 
+def cmd_ebay_watch(a) -> int:
+    """Poll eBay for the CPUs we price, and record what has left since.
+
+    This is the collector for the recovery measurement (see ebaypanel.py).
+    Every run does two things: write down every live listing for each CPU,
+    and notice which listings that were up last time are not up now. The
+    second is the valuable one -- a fixed-price listing that vanishes has
+    almost certainly sold, and that is the only route to a realised eBay
+    price without the Marketplace Insights API we are not getting.
+
+    It is deliberately cheap and repeatable: one search per CPU, at most one
+    confirmation call per disappearance, and nothing is destructive, so a
+    re-run after a failure simply re-observes.
+    """
+    from . import ebaypanel, harvest, pricing
+    from .store import backend as ds
+
+    if not hasattr(ds, "upsert_ebay_listings"):
+        raise SystemExit("ebay-watch needs the mongo store; set MONGODB_URI")
+
+    ebay = pricing.EbayAdapter()
+    if not ebay.enabled:
+        raise SystemExit(
+            "no eBay credentials: set EBAY_CLIENT_ID and EBAY_CLIENT_SECRET")
+
+    # The CPUs worth tracking are the ones we actually price lots with, most
+    # common first: a CPU with two GovDeals comps can never clear
+    # ebaypanel.MIN_GOVDEALS_SALES on the other side of the ratio, so
+    # spending a query on it buys nothing.
+    obs = harvest.load_observations()
+    counts: dict[str, int] = {}
+    for one in obs["singles"]:
+        cpu = (one.get("machine") or {}).get("cpu")
+        if cpu:
+            counts[cpu] = counts.get(cpu, 0) + 1
+    cpus = [c for c, n in sorted(counts.items(), key=lambda kv: -kv[1])
+            if n >= ebaypanel.MIN_GOVDEALS_SALES][:a.max_cpus]
+    if not cpus:
+        print("no CPU has enough GovDeals comps to pair against yet")
+        return 0
+
+    run = ds.run_id()
+    ds.job_start("ebay-watch", run)
+    started = time.monotonic()
+    totals = {"queries": 0, "failed": 0, "listings": 0, "new": 0,
+              "gone": 0, "confirmed": 0, "unconfirmed": 0}
+    try:
+        for cpu in cpus:
+            qk = ebaypanel.query_key(cpu, None)
+            items = ebay.search(cpu)
+            totals["queries"] += 1
+            if items is None:
+                # Never diff on a failed query: with no result set, every
+                # listing under it looks like it disappeared.
+                totals["failed"] += 1
+                ds.record_ebay_poll(qk, cpu, None, 0, ok=False)
+                continue
+            now = ds.utcnow()
+            rows = [r for r in (ebaypanel.normalize(it, cpu, None, now)
+                                for it in items) if r]
+            ds.record_ebay_poll(qk, cpu, None, len(rows), ok=True)
+            res = ds.upsert_ebay_listings(rows, qk)
+            totals["listings"] += res["seen"]
+            totals["new"] += res["new"]
+
+            seen_ids = {r["_id"] for r in rows}
+            marks = ebaypanel.vanished(ds.live_ebay_listings(qk), seen_ids, now)
+            # One confirmation call per disappearance turns "fell out of the
+            # search results" into "definitely ended". Both are stored; the
+            # estimator decides which population to trust.
+            #
+            # Bounded by wall clock, not just by count. Confirmations are the
+            # only unbounded loop here -- one per departure, across every CPU
+            # -- so at max_confirm x max_cpus x CALL_TIMEOUT a getItem
+            # endpoint that times out instead of answering runs for hours
+            # against a job capped at 20 minutes. The runner would kill the
+            # run mid-way: no job_finish, and every CPU after the current one
+            # simply not polled that day. Polling is the part that cannot be
+            # caught up later, so it is confirmations that must give way.
+            for m in marks[:a.max_confirm]:
+                if time.monotonic() - started > a.confirm_seconds:
+                    totals["unconfirmed"] += 1
+                    continue
+                still = ebay.still_listed(m["_id"])
+                if still is True:
+                    m["skip"] = True
+                elif still is False:
+                    m["gone_reason"] = "confirmed_ended"
+                    totals["confirmed"] += 1
+                else:
+                    # Asked and got no answer. Distinct from "vanished",
+                    # which means we never asked: without the distinction an
+                    # eBay outage is indistinguishable in the data from a
+                    # normal day, and quietly pads the all-departures band
+                    # with departures nothing checked.
+                    m["gone_reason"] = "unconfirmed"
+                    totals["unconfirmed"] += 1
+            marks = [m for m in marks if not m.get("skip")]
+            totals["gone"] += ds.mark_ebay_gone(marks)
+
+        stats = ds.ebay_panel_stats()
+        print(f"polled {totals['queries']} CPUs "
+              f"({totals['failed']} failed), {totals['listings']} listings "
+              f"({totals['new']} new), {totals['gone']} left "
+              f"({totals['confirmed']} confirmed ended, "
+              f"{totals['unconfirmed']} unconfirmed)")
+        print(f"panel: {stats['listings']} listings, {stats['live']} live, "
+              f"{stats['ended']} ended, over {stats['polls']} polls")
+        ds.job_finish("ebay-watch", run, counts=totals)
+    except Exception as e:
+        ds.job_finish("ebay-watch", run, status="error", error=str(e))
+        raise
+    print(f"\nrun {run}")
+    return 0
+
+
+def cmd_recovery(a) -> int:
+    """What we actually get for a machine, as a multiple of what it costs.
+
+    Reports two numbers deliberately kept apart. The ask figure comes from
+    live listings and is available immediately, but reads high: nothing
+    sells above its own ask, and the live pool is a survivor sample that
+    keeps re-counting whatever failed to sell. The measured figure comes
+    from listings that have left the panel and is the one to trust -- it
+    needs the collector to have been running long enough for some to sell.
+    """
+    from . import ebaypanel, harvest
+    from .store import backend as ds
+
+    if not hasattr(ds, "ended_ebay_listings"):
+        raise SystemExit("recovery needs the mongo store; set MONGODB_URI")
+
+    obs = harvest.load_observations()
+    singles = obs["singles"]
+    ended = ds.ended_ebay_listings()
+    live = ds.live_ebay_listings()
+
+    bound = ebaypanel.ask_bound(live, singles, shipping=a.shipping)
+    strict = ebaypanel.recovery(
+        ebaypanel.sales(ended, confirmed_only=True), singles, shipping=a.shipping)
+    loose = ebaypanel.recovery(
+        ebaypanel.sales(ended), singles, shipping=a.shipping)
+    with_offers = ebaypanel.recovery(
+        ebaypanel.sales(ended, include_best_offer=True), singles,
+        shipping=a.shipping)
+
+    def line(label, r, extra=""):
+        val = r.get("recovery") if "recovery" in r else r.get("upper_bound")
+        n = r.get("n_sales", r.get("n_listings", 0))
+        if val is None:
+            print(f"  {label:<34} -- {r['n_cpus']}/{r['min_cpus']} CPUs "
+                  f"paired, {n} listings{extra}")
+        else:
+            print(f"  {label:<34} {val:>6.2f}x  "
+                  f"({r['n_cpus']} CPUs, {n} listings){extra}")
+
+    stats = ds.ebay_panel_stats()
+    print(f"panel: {stats['listings']} listings, {stats['live']} live, "
+          f"{stats['ended']} ended ({stats['confirmed']} confirmed), "
+          f"{stats['polls']} polls")
+    print(f"assumptions: {ebaypanel.FEE_RATE:.1%} eBay fee, "
+          f"${ebaypanel.FEE_FIXED:.2f}/order, ${a.shipping:.2f} shipping\n")
+    line("from live asks (reads high)", bound)
+    line("measured (confirmed ended)", strict)
+    line("measured (all departures)", loose)
+    line("measured (incl. best-offer at ask)", with_offers, "  -- biased high")
+
+    best = strict if strict["recovery"] is not None else loose
+    if best.get("median_days_to_sell") is not None:
+        print(f"\n  median days to sell: {best['median_days_to_sell']}")
+    if best["per_cpu"]:
+        print(f"\n{'cpu':<14}{'ratio':>7}{'ebay net':>10}{'govdeals':>10}"
+              f"{'n':>5}{'days':>7}")
+        for c in sorted(best["per_cpu"], key=lambda c: -c["ratio"])[:a.top]:
+            days = c["median_days_listed"]
+            print(f"{c['cpu']:<14}{c['ratio']:>6.2f}x{c['ebay_net_median']:>10,.0f}"
+                  f"{c['govdeals_median']:>10,.0f}{c['n_ebay']:>5}"
+                  f"{(f'{days:.0f}' if days is not None else '--'):>7}")
+
+    if best["recovery"] is None:
+        print("\nNot enough departures yet to measure recovery. The figure "
+              "from asks above is what live listings alone can say; run "
+              "`pcps ebay-watch` daily and this fills in as listings sell.")
+
+    # Written every run, measured or not. Gating the write on a measured
+    # recovery meant the Models page had nothing to read for the whole
+    # collection period -- weeks -- and so showed "nothing measured yet"
+    # even once the ask-derived figure was available, which is the number
+    # that panel exists to show in exactly that window.
+    run = ds.run_id()
+    ds.write_recovery(run, {"bound": bound, "strict": strict,
+                            "loose": loose, "with_offers": with_offers,
+                            "shipping": a.shipping})
+    print(f"\nrun {run}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="pcps")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -501,6 +699,23 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--target-roi", type=float, default=0.60)
     p.add_argument("--recovery", type=float, default=0.55)
 
+    p = sub.add_parser("ebay-watch",
+                       help="poll eBay listings and record what has sold")
+    p.add_argument("--max-cpus", type=int, default=60,
+                   help="how many CPUs to poll, most-comped first")
+    p.add_argument("--max-confirm", type=int, default=25,
+                   help="confirmation calls per query for vanished listings")
+    p.add_argument("--confirm-seconds", type=float, default=300.0,
+                   help="wall-clock budget for confirmations across the run; "
+                        "polling every CPU matters more than confirming any "
+                        "one departure, so this gives way first")
+
+    p = sub.add_parser("recovery",
+                       help="what we get for a machine, measured on eBay")
+    p.add_argument("--shipping", type=float, default=0.0,
+                   help="what you pay to ship one unit, if you eat it")
+    p.add_argument("--top", type=int, default=15)
+
     sub.add_parser("digest", help="daily digest inputs (JSON)")
     sub.add_parser("health", help="weekly health-review inputs (JSON)")
 
@@ -510,6 +725,7 @@ def main(argv: list[str] | None = None) -> int:
             "burst": cmd_burst, "archive": cmd_archive,
             "triage-queue": cmd_triage_queue, "triage-fetch": cmd_triage_fetch,
             "save-manifest": cmd_save_manifest,
+            "ebay-watch": cmd_ebay_watch, "recovery": cmd_recovery,
             "digest": cmd_digest, "health": cmd_health}[a.cmd](a)
 
 
